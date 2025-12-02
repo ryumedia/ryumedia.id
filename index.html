@@ -1,611 +1,439 @@
-<!doctype html>
-<html lang="id" class="h-full">
- <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Timeline Proyek Berkahinaja.id</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="/_sdk/element_sdk.js"></script>
-  <style>
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RyuMedia.id - Solusi Digital Terpadu</title>
+    
+    <!-- Menggunakan Tailwind CSS untuk Styling Cepat dan Responsif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Menggunakan Font Awesome untuk Ikon (Menu, WA, Sosmed) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
         body {
-            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
-        
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* Animasi berdenyut untuk tombol WA */
+        .pulse-animation {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 1); /* Emerald-500 equivalent */
+            transform: scale(1);
+            animation: pulse-green 2s infinite;
         }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
+        @keyframes pulse-green {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
             }
-            to {
-                opacity: 1;
+            70% {
                 transform: scale(1);
+                box-shadow: 0 0 0 15px rgba(16, 185, 129, 0);
             }
-        }
-        
-        .timeline-button {
-            animation: fadeIn 0.6s ease-out forwards;
-            transition: all 0.3s ease;
-        }
-        
-        .timeline-button:nth-child(1) { animation-delay: 0.1s; }
-        .timeline-button:nth-child(2) { animation-delay: 0.2s; }
-        .timeline-button:nth-child(3) { animation-delay: 0.3s; }
-        .timeline-button:nth-child(4) { animation-delay: 0.4s; }
-        .timeline-button:nth-child(5) { animation-delay: 0.5s; }
-        .timeline-button:nth-child(6) { animation-delay: 0.6s; }
-        
-        .timeline-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-        
-        .popup-overlay {
-            animation: slideIn 0.3s ease-out;
-        }
-        
-        .popup-content {
-            animation: slideIn 0.3s ease-out 0.1s both;
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
         }
     </style>
-  <style>@view-transition { navigation: auto; }</style>
-  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
- </head>
- <body class="h-full bg-gradient-to-br from-blue-50 to-indigo-100 font-sans">
-  <div class="max-w-lg mx-auto p-6 h-full"><!-- Header -->
-   <div class="text-center mb-8">
-    <h1 id="timeline-title" class="text-3xl font-bold text-gray-800 mb-2">Timeline Pengembangan Whitelabel</h1>
-    <p id="project-name" class="text-lg text-gray-600 mb-4">Aplikasi Berkahinaja.id</p><!-- Countdown Timer -->
-    <div class="bg-white rounded-xl p-4 shadow-sm mb-4">
-     <p class="text-lg text-gray-500 mb-2">Deadline Proyek:</p>
-     <div class="grid grid-cols-4 gap-2 text-center">
-      <div class="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-lg p-2">
-       <div id="days" class="text-xl font-bold">
-        0
-       </div>
-       <div class="text-xs">
-        Hari
-       </div>
-      </div>
-      <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-lg p-2">
-       <div id="hours" class="text-xl font-bold">
-        0
-       </div>
-       <div class="text-xs">
-        Jam
-       </div>
-      </div>
-      <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-lg p-2">
-       <div id="minutes" class="text-xl font-bold">
-        0
-       </div>
-       <div class="text-xs">
-        Menit
-       </div>
-      </div>
-      <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg p-2">
-       <div id="seconds" class="text-xl font-bold">
-        0
-       </div>
-       <div class="text-xs">
-        Detik
-       </div>
-      </div>
-     </div>
-     <p class="text-base text-gray-500 mt-2 text-center">Target: 3 Desember 2025, 23:59</p>
-    </div>
-   </div><!-- Timeline Buttons -->
-   <div class="space-y-4"><!-- Build Basic Whitelabel --> <button class="timeline-button w-full bg-white rounded-xl p-4 shadow-md border-l-4 border-gray-300 text-left hover:shadow-lg" onclick="showPopup(0)">
-     <div class="flex items-center justify-between">
-      <div class="flex items-center"><span class="text-2xl mr-4">🏗️</span>
-       <div>
-        <h3 class="font-bold text-gray-800">Build Basic Whitelabel</h3>
-        <p class="text-sm text-gray-500">10 November 2025</p>
-       </div>
-      </div>
-      <div class="flex items-center"><span class="status-badge bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full mr-2">⏳ Menunggu</span>
-       <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-       </svg>
-      </div>
-     </div></button> <!-- Fitur Fundraiser --> <button class="timeline-button w-full bg-white rounded-xl p-4 shadow-md border-l-4 border-gray-300 text-left hover:shadow-lg" onclick="showPopup(1)">
-     <div class="flex items-center justify-between">
-      <div class="flex items-center"><span class="text-2xl mr-4">💰</span>
-       <div>
-        <h3 class="font-bold text-gray-800">Fitur Fundraiser</h3>
-        <p class="text-sm text-gray-500">12 November 2025</p>
-       </div>
-      </div>
-      <div class="flex items-center"><span class="status-badge bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full mr-2">⏳ Menunggu</span>
-       <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-       </svg>
-      </div>
-     </div></button> <!-- Fitur User Profil --> <button class="timeline-button w-full bg-white rounded-xl p-4 shadow-md border-l-4 border-gray-300 text-left hover:shadow-lg" onclick="showPopup(2)">
-     <div class="flex items-center justify-between">
-      <div class="flex items-center"><span class="text-2xl mr-4">👤</span>
-       <div>
-        <h3 class="font-bold text-gray-800">Fitur User Profil</h3>
-        <p class="text-sm text-gray-500">17 November 2025</p>
-       </div>
-      </div>
-      <div class="flex items-center"><span class="status-badge bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full mr-2">⏳ Menunggu</span>
-       <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-       </svg>
-      </div>
-     </div></button> <!-- Fitur Grup Mafaza --> <button class="timeline-button w-full bg-white rounded-xl p-4 shadow-md border-l-4 border-gray-300 text-left hover:shadow-lg" onclick="showPopup(3)">
-     <div class="flex items-center justify-between">
-      <div class="flex items-center"><span class="text-2xl mr-4">👥</span>
-       <div>
-        <h3 class="font-bold text-gray-800">Fitur Grup Mafaza</h3>
-        <p class="text-sm text-gray-500">19 November 2025</p>
-       </div>
-      </div>
-      <div class="flex items-center"><span class="status-badge bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full mr-2">⏳ Menunggu</span>
-       <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-       </svg>
-      </div>
-     </div></button> <!-- Fitur Berita (part 1) --> <button class="timeline-button w-full bg-white rounded-xl p-4 shadow-md border-l-4 border-gray-300 text-left hover:shadow-lg" onclick="showPopup(4)">
-     <div class="flex items-center justify-between">
-      <div class="flex items-center"><span class="text-2xl mr-4">📰</span>
-       <div>
-        <h3 class="font-bold text-gray-800">Fitur Berita (part 1)</h3>
-        <p class="text-sm text-gray-500">24 November 2025</p>
-       </div>
-      </div>
-      <div class="flex items-center"><span class="status-badge bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full mr-2">⏳ Menunggu</span>
-       <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-       </svg>
-      </div>
-     </div></button> <!-- Fitur Berita (part 2) --> <button class="timeline-button w-full bg-white rounded-xl p-4 shadow-md border-l-4 border-gray-300 text-left hover:shadow-lg" onclick="showPopup(5)">
-     <div class="flex items-center justify-between">
-      <div class="flex items-center"><span class="text-2xl mr-4">📝</span>
-       <div>
-        <h3 class="font-bold text-gray-800">Fitur Berita (part 2)</h3>
-        <p class="text-sm text-gray-500">26 November 2025</p>
-       </div>
-      </div>
-      <div class="flex items-center"><span class="status-badge bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full mr-2">⏳ Menunggu</span>
-       <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-       </svg>
-      </div>
-     </div></button> <!-- Fitur Kegiatan (part 1) --> <button class="timeline-button w-full bg-white rounded-xl p-4 shadow-md border-l-4 border-gray-300 text-left hover:shadow-lg" onclick="showPopup(6)">
-     <div class="flex items-center justify-between">
-      <div class="flex items-center"><span class="text-2xl mr-4">📅</span>
-       <div>
-        <h3 class="font-bold text-gray-800">Fitur Kegiatan (part 1)</h3>
-        <p class="text-sm text-gray-500">1 Desember 2025</p>
-       </div>
-      </div>
-      <div class="flex items-center"><span class="status-badge bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full mr-2">⏳ Menunggu</span>
-       <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-       </svg>
-      </div>
-     </div></button> <!-- Fitur Kegiatan (part 2) --> <button class="timeline-button w-full bg-white rounded-xl p-4 shadow-md border-l-4 border-gray-300 text-left hover:shadow-lg" onclick="showPopup(7)">
-     <div class="flex items-center justify-between">
-      <div class="flex items-center"><span class="text-2xl mr-4">🎯</span>
-       <div>
-        <h3 class="font-bold text-gray-800">Fitur Kegiatan (part 2)</h3>
-        <p class="text-sm text-gray-500">3 Desember 2025</p>
-       </div>
-      </div>
-      <div class="flex items-center"><span class="status-badge bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full mr-2">⏳ Menunggu</span>
-       <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-       </svg>
-      </div>
-     </div></button>
-   </div>
-  </div><!-- Popup Overlay -->
-  <div id="popup-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" style="display: none;" onclick="closePopup()">
-   <div class="popup-content bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl" onclick="event.stopPropagation()">
-    <div class="flex items-center justify-between mb-4">
-     <div class="flex items-center"><span id="popup-icon" class="text-3xl mr-4">📋</span>
-      <div>
-       <h3 id="popup-title" class="text-xl font-bold text-gray-800">Fase Timeline</h3>
-       <p id="popup-date" class="text-sm text-gray-500">Tanggal</p>
-      </div>
-     </div><button onclick="closePopup()" class="text-gray-400 hover:text-gray-600 transition-colors">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-      </svg></button>
-    </div>
-    <div class="mb-4"><span id="popup-status" class="inline-block bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full mb-4">Status</span>
-     <p id="popup-description" class="text-gray-600 leading-relaxed">Deskripsi detail dari fase ini akan muncul di sini.</p>
-    </div>
-    <div class="border-t pt-4">
-     <h4 class="font-semibold text-gray-800 mb-2">Deliverables:</h4>
-     <ul id="popup-deliverables" class="text-sm text-gray-600 space-y-1">
-      <li>• Item deliverable 1</li>
-      <li>• Item deliverable 2</li>
-     </ul>
-    </div>
-   </div>
-  </div>
-  <script>
-        // Phase data
-        const phases = [
-            {
-                title: "Build Basic Whitelabel",
-                date: "2025-11-10",
-                icon: "🏗️",
-                description: "Membangun struktur aplikasi dasar seperti bigamal.com dengan penyesuaian logo, domain dan google auth",
-                deliverables: [
-                    "berkahinaja.id dapat diakses",
-                    "tema aplikasi dan logo sesuai",
-                    "fitur basic big amal dapat dijalankan"
-                ]
-            },
-            {
-                title: "Fitur Fundraiser",
-                date: "2025-11-12", 
-                icon: "💰",
-                description: "Implementasi sistem fundraising yang memungkinkan pengguna untuk membuat progam yang dapat di tracking sesuai ID Fundraiser. Fitur ini menjadi salah satu core feature dari aplikasi Berkahinaja.id.",
-                deliverables: [
-                    "Program creation dan management",
-                    "Fitur Fundraiser dapat dijalankan",
-                    "Donation tracking system"
-                ]
-            },
-            {
-                title: "Fitur User Profil",
-                date: "2025-11-17",
-                icon: "👤", 
-                description: "Pengembangan sistem profil pengguna yang komprehensif dengan fitur edit profil, upload foto, riwayat aktivitas, dan pengaturan akun. Fitur ini juga memungkinkan pengguna mengubah sendiri status dalam lingkungan berkahinaja.",
-                deliverables: [
-                    "Set status sebagai siswa atau orang tua",
-                    "Upload photo dan fitur edit lainnya",
-                    "Activity history tracking"
-                ]
-            },
-            {
-                title: "Fitur Grup Mafaza", 
-                date: "2025-11-19",
-                icon: "👥",
-                description: "Implementasi sistem grup Mafaza yang memungkinkan pengguna bergabung dalam Grup tertentu, Mendapat berita dan Info khusu, dan berinteraksi dengan sesama anggota. Fitur ini mendukung aspek sosial dari aplikasi.",
-                deliverables: [
-                    "Group creation dan management",
-                    "Member assign system",
-                    "Content sharing dalam grup"
-                ]
-            },
-            {
-                title: "Fitur Berita (part 1)",
-                date: "2025-11-24",
-                icon: "📰",
-                description: "Pengembangan sistem berita tahap pertama yang mencakup tampilan feed berita, kategorisasi, dan sistem pencarian. Bagian ini fokus pada konsumsi konten berita oleh pengguna.",
-                deliverables: [
-                    "News feed dan listing",
-                    "Category filtering system",
-                    "Search functionality",
-                    "News detail view"
-                ]
-            },
-            {
-                title: "Fitur Berita (part 2)",
-                date: "2025-11-26", 
-                icon: "📝",
-                description: "Melanjutkan pengembangan fitur berita dengan fokus pada interaksi pengguna seperti komentar, like, juga memungkinkan untuk berdonasi.",
-                deliverables: [
-                    "Comment system",
-                    "Like functionality",
-                    "Optional Donation Setting"
-                ]
-            },
-            {
-                title: "Fitur Kegiatan (part 1)",
-                date: "2025-12-01", 
-                icon: "📅",
-                description: "Implementasi sistem kegiatan tahap pertama yang memungkinkan pengguna melihat daftar event, detail kegiatan, dan sistem pendaftaran. Fitur ini penting untuk engagement komunitas.",
-                deliverables: [
-                    "Event listing dan calendar view",
-                    "Event detail information",
-                    "Registration system",
-                    "Event search dan filter"
-                ]
-            },
-            {
-                title: "Fitur Kegiatan (part 2)",
-                date: "2025-12-03", 
-                icon: "🎯",
-                description: "Penyelesaian fitur kegiatan dengan implementasi check-in system via QR Code, dan integrasi dengan fitur grup. Tahap final ini memastikan aplikasi siap untuk launch dengan semua fitur terintegrasi.",
-                deliverables: [
-                    "Event check-in system",
-                    "Integration dengan grup Mafaza",
-                    "Final testing dan optimization"
-                ]
-            }
-        ];
+</head>
+<body class="bg-gray-50 text-gray-800">
 
-        // Default configuration
-        const defaultConfig = {
-            timeline_title: "Timeline Pengembangan Aplikasi",
-            project_name: "Aplikasi Whitelabel Berkahinaja.id",
-            background_color: "#f0f7ff",
-            primary_color: "#3b82f6", 
-            secondary_color: "#ffffff",
-            text_color: "#1f2937",
-            accent_color: "#10b981"
-        };
+    <!-- NAVIGASI / HEADER -->
+    <nav class="bg-white fixed w-full z-50 shadow-sm transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center gap-2">
+                    <!-- LOGO BARU -->
+                    <img src="https://blogger.googleusercontent.com/img/a/AVvXsEhvFgQuXueruL156K1tGNke625rK2PN4HuFz9jXCJ1QNkl-bL9WId7ARM8MCD1Lv_7GCESRZJAWA3AVfeMAZPpW_hXvZdXTT81MMOp4qKtVURB3ud9a5JGpW1z97AP0tB8o3pmuzJRr06CQYRmY1blZNtJiSiLb4Zn1iYTu_8xptzWYDr2l47ZH0RlOda0" 
+                         alt="RyuMedia Logo" 
+                         class="h-12 w-auto object-contain">
+                </div>
 
-        // Function to calculate phase status based on current date
-        function getPhaseStatus(phaseIndex) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0); // Reset time to start of day
-            
-            const phaseDate = new Date(phases[phaseIndex].date);
-            phaseDate.setHours(0, 0, 0, 0);
-            
-            // Find current active phase (first phase that hasn't passed)
-            let currentPhaseIndex = -1;
-            for (let i = 0; i < phases.length; i++) {
-                const checkDate = new Date(phases[i].date);
-                checkDate.setHours(0, 0, 0, 0);
-                if (checkDate >= today) {
-                    currentPhaseIndex = i;
-                    break;
-                }
-            }
-            
-            // If all phases have passed, mark all as completed
-            if (currentPhaseIndex === -1) {
-                return {
-                    status: "✓ Selesai",
-                    statusClass: "bg-green-100 text-green-800",
-                    borderClass: "border-green-500"
-                };
-            }
-            
-            // Phase has passed - completed
-            if (phaseIndex < currentPhaseIndex) {
-                return {
-                    status: "✓ Selesai",
-                    statusClass: "bg-green-100 text-green-800",
-                    borderClass: "border-green-500"
-                };
-            }
-            // Current phase - in progress
-            else if (phaseIndex === currentPhaseIndex) {
-                return {
-                    status: "🔄 Sedang Berjalan",
-                    statusClass: "bg-blue-100 text-blue-800",
-                    borderClass: "border-blue-500"
-                };
-            }
-            // Future phases - waiting
-            else {
-                return {
-                    status: "⏳ Menunggu",
-                    statusClass: "bg-gray-100 text-gray-600",
-                    borderClass: "border-gray-300"
-                };
-            }
-        }
+                <!-- Menu Desktop -->
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="#home" class="text-gray-600 hover:text-emerald-600 font-medium transition">Beranda</a>
+                    <a href="#layanan" class="text-gray-600 hover:text-emerald-600 font-medium transition">Layanan</a>
+                    <a href="#portfolio" class="text-gray-600 hover:text-emerald-600 font-medium transition">Portfolio</a>
+                    <a href="#tentang" class="text-gray-600 hover:text-emerald-600 font-medium transition">Tentang Kami</a>
+                    <a href="https://wa.me/6285224131324" class="bg-emerald-600 text-white px-5 py-2.5 rounded-full font-semibold hover:bg-emerald-700 transition shadow-lg hover:shadow-emerald-500/30">
+                        Hubungi Kami
+                    </a>
+                </div>
 
-        // Function to update all phase statuses
-        function updatePhaseStatuses() {
-            const buttons = document.querySelectorAll('.timeline-button');
-            buttons.forEach((button, index) => {
-                const statusInfo = getPhaseStatus(index);
-                const statusElement = button.querySelector('.status-badge');
-                const borderElement = button;
+                <!-- Tombol Hamburger Mobile -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-600 hover:text-emerald-600 focus:outline-none p-2">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Mobile (Hidden by default) -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
+            <div class="px-4 pt-2 pb-6 space-y-2 shadow-lg">
+                <a href="#home" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-emerald-600 hover:bg-gray-50">Beranda</a>
+                <a href="#layanan" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-emerald-600 hover:bg-gray-50">Layanan</a>
+                <a href="#portfolio" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-emerald-600 hover:bg-gray-50">Portfolio</a>
+                <a href="#tentang" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-emerald-600 hover:bg-gray-50">Tentang Kami</a>
+                <a href="https://wa.me/6285224131324" class="block mt-4 text-center bg-emerald-600 text-white px-5 py-3 rounded-lg font-bold hover:bg-emerald-700">
+                    <i class="fab fa-whatsapp mr-2"></i> Chat Sekarang
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section id="home" class="pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 
-                if (statusElement) {
-                    statusElement.textContent = statusInfo.status;
-                    statusElement.className = `status-badge ${statusInfo.statusClass} text-xs px-2 py-1 rounded-full mr-2`;
-                }
+                <!-- Teks Hero -->
+                <div class="z-10 order-2 lg:order-1">
+                    <span class="inline-block py-1 px-3 rounded-full bg-emerald-100 text-emerald-700 text-sm font-semibold mb-4 border border-emerald-200">
+                        Solusi Digital Kreatif & Edukatif
+                    </span>
+                    <h1 class="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mb-6">
+                        Bangun Website, Aplikasi & Game Edukasi Impian Anda
+                    </h1>
+                    <p class="text-lg text-gray-600 mb-8 leading-relaxed max-w-lg">
+                        <strong>ryumedia.id </strong>membantu bisnis dan institusi pendidikan bertransformasi digital melalui Website Profesional, Aplikasi Mobile, dan Game Edukasi Interaktif.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <a href="#layanan" class="px-8 py-4 bg-emerald-600 text-white rounded-lg font-semibold text-center hover:bg-emerald-700 transition shadow-lg hover:shadow-emerald-500/30">
+                            Lihat Layanan
+                        </a>
+                        <a href="#portfolio" class="px-8 py-4 bg-white text-emerald-600 border border-emerald-200 rounded-lg font-semibold text-center hover:bg-emerald-50 transition">
+                            Lihat Karya Kami
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Gambar Hero -->
+                <div class="relative order-1 lg:order-2">
+                    <div class="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white transform rotate-2 hover:rotate-0 transition duration-500">
+                        <!-- GANTI GAMBAR DI SINI: Gambar Utama (Hero Image) -->
+                        <img src="https://blogger.googleusercontent.com/img/a/AVvXsEi0-D_xlv3m0teJyfcTSDyaYHcp-8_krZLpOStU82FzvPsejBE28jAkTI500JNvN5fD9PQziOvDUnv1cwELStKt_PiLr-24s9MuJVEqbObQTvyh2MRQKsGwUqmkrq0S04DnBI9gWYzZ1A3LkZc5wcjr_4OwVfRTLpMcl7iDstFka2QDUU1kwRomOR1t7HE" alt="Tim RyuMedia Bekerja" class="w-full h-auto object-cover">
+                        
+                        <!-- Floating Badge -->
+                        <div class="absolute bottom-6 left-6 bg-white/90 backdrop-blur p-4 rounded-xl shadow-lg border border-gray-100 hidden sm:block">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-green-100 p-2 rounded-full text-green-600">
+                                    <i class="fas fa-check-circle text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500">Layanan Prima</p>
+                                    <p class="font-bold text-gray-900">100+ Klien Puas</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Dekorasi Background -->
+                    <div class="absolute -z-10 top-0 -right-10 w-72 h-72 bg-emerald-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+                    <div class="absolute -z-10 -bottom-10 -left-10 w-72 h-72 bg-teal-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LAYANAN KAMI -->
+    <section id="layanan" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Layanan Unggulan</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Kami menyediakan solusi teknologi end-to-end untuk kebutuhan digital branding dan edukasi Anda.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Card 1: Website -->
+                <div class="bg-gray-50 rounded-2xl p-8 hover:-translate-y-2 transition duration-300 border border-gray-100 shadow-sm hover:shadow-xl group">
+                    <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:bg-blue-600 group-hover:text-white transition">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Pembuatan Website</h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        Mulai dari Landing Page, Company Profile, hingga Toko Online yang responsif, cepat, dan user-friendly.
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-500 mb-6">
+                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> Desain Modern</li>
+                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> Mobile Web Friendly</li>
+                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> Set up Domain & Hosting</li>
+                    </ul>
+                </div>
+
+                <!-- Card 2: Aplikasi Mobile -->
+                <div class="bg-gray-50 rounded-2xl p-8 hover:-translate-y-2 transition duration-300 border border-gray-100 shadow-sm hover:shadow-xl group">
+                    <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:bg-emerald-600 group-hover:text-white transition">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Aplikasi Mobile Web</h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        Pengembangan aplikasi berbasis web untuk bisnis, startup, atau sistem manajemen internal perusahaan.
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-500 mb-6">
+                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> UI/UX User Friendly</li>
+                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> Performa Maksimal</li>
+                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> Dashboard CMS Dinamis</li>
+                    </ul>
+                </div>
+
+                <!-- Card 3: Game Edukasi -->
+                <div class="bg-gray-50 rounded-2xl p-8 hover:-translate-y-2 transition duration-300 border border-gray-100 shadow-sm hover:shadow-xl group">
+                    <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:bg-purple-600 group-hover:text-white transition">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Game Edukasi</h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        Media pembelajaran interaktif berbasis game untuk sekolah, instansi, atau kampanye sosial yang menyenangkan.
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-500 mb-6">
+                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> Interaktif & Seru</li>
+                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> Berbasis Web</li>
+                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> Aset Konten Visual Terbaru</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PORTFOLIO SECTION -->
+    <section id="portfolio" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Karya Terbaru Kami</h2>
+                <p class="text-gray-600">Beberapa project yang telah kami selesaikan dengan bangga.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Portfolio Item 1 -->
+                <div class="group relative overflow-hidden rounded-2xl shadow-lg cursor-pointer">
+                    <!-- GANTI GAMBAR DI SINI: Screenshot Project 1 -->
+                    <img src="https://blogger.googleusercontent.com/img/a/AVvXsEi9yPqy1F-lvTOTEDDE6LyfI4AaG6GknKTZcgluheQ1aWlVRUshCcuxiWsbLUI0aOG3pJV0-bIHXbvijWZklQFyU2ztihxcPUKNrSGzgv2A6ABqYcP1Usrhst3dpfDMCddasXKFyR-8QpC5n9piQV76U_a4MmLVYjwSvGAO7eB_a-573E5HJt4-bCXc1jE" alt="Project Website" class="w-full h-64 object-cover transform group-hover:scale-110 transition duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end p-6">
+                        <div>
+                            <span class="text-emerald-300 text-sm font-semibold">Web Development</span>
+                            <h4 class="text-white text-xl font-bold">UD. Barokah Cilegon</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Portfolio Item 2 -->
+                <div class="group relative overflow-hidden rounded-2xl shadow-lg cursor-pointer">
+                    <!-- GANTI GAMBAR DI SINI: Screenshot Project 2 -->
+                    <img src="https://blogger.googleusercontent.com/img/a/AVvXsEjCtzvttFsqHbCcqNc9D5nnEIWBo3SKJbm3ZbdGnwjtM7GN6xmbY7GbfmqlqwLBifGgzPGmBuupw3KdtOV2bM4pPq6xSuAkJPXPBuIBZcaTrcpHp7GdLX8dHc5aVCiUnEqsqckiE7don7obRM4KoqGtt7iUK6_8MSXwnAxHE00nzYaSG1yA9VQ_oZobexM" alt="Project Apps" class="w-full h-64 object-cover transform group-hover:scale-110 transition duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end p-6">
+                        <div>
+                            <span class="text-emerald-300 text-sm font-semibold">Aplikasi Mobile Web</span>
+                            <h4 class="text-white text-xl font-bold">Laporan Aktivitas Siswa</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Portfolio Item 3 -->
+                <div class="group relative overflow-hidden rounded-2xl shadow-lg cursor-pointer">
+                    <!-- GANTI GAMBAR DI SINI: Screenshot Project 3 -->
+                    <img src="https://blogger.googleusercontent.com/img/a/AVvXsEgd8gliF0QLeTH0qi9EIFfz9IR23fHEk4b2XQIaBV5ph-U4aI4f8hmSPJp2rF98JOHlroDWSkd8zhfLi9ShHrwyfrtX4NA2d3EhjNFwzN7-ta4Ldc1-5kxBPxSsT36bySPqW_lEj1H2u5iBodVhXorhWhhLFxjyQxdKIw4382Sl70dUoQkgpxYevVdyAJw" alt="Project Game" class="w-full h-64 object-cover transform group-hover:scale-110 transition duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end p-6">
+                        <div>
+                            <span class="text-emerald-300 text-sm font-semibold">Game Edukasi</span>
+                            <h4 class="text-white text-xl font-bold">Jumbled Letter Game</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-12">
+                <!-- UPDATE LINK DI SINI: Mengarah ke portfolio.html -->
+                <a href="portfolio.html" class="inline-flex items-center font-semibold text-emerald-600 hover:text-emerald-800 transition">
+                    Lihat Portfolio Selengkapnya <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- KENAPA KAMI (Why Choose Us) -->
+    <section id="tentang" class="py-20 bg-emerald-900 text-white relative overflow-hidden">
+        <!-- Decoration Circles -->
+        <div class="absolute top-0 left-0 w-64 h-64 bg-emerald-800 rounded-full mix-blend-multiply filter blur-3xl opacity-50 -translate-x-1/2 -translate-y-1/2"></div>
+        <div class="absolute bottom-0 right-0 w-80 h-80 bg-teal-800 rounded-full mix-blend-multiply filter blur-3xl opacity-50 translate-x-1/3 translate-y-1/3"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div>
+                    <h2 class="text-3xl lg:text-4xl font-bold mb-6">Mitra Digital Terpercaya Anda</h2>
+                    <p class="text-emerald-200 text-lg mb-8 leading-relaxed">
+                        Kami tidak hanya membuat kode, kami membangun solusi. Di <strong>ryumedia.id</strong>, setiap piksel dan logika program dirancang untuk mencapai tujuan bisnis Anda.
+                    </p>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-full bg-emerald-700 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-rocket text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xl font-bold mb-2">Pengerjaan Cepat & Tepat</h4>
+                                <p class="text-emerald-200 text-sm">Deadline adalah janji. Kami bekerja efisien tanpa mengurangi kualitas.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-full bg-emerald-700 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-headset text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xl font-bold mb-2">Support Prioritas</h4>
+                                <p class="text-emerald-200 text-sm">Kami siap membantu maintenance dan perbaikan teknis pasca peluncuran.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
-                // Update border color
-                borderElement.className = borderElement.className.replace(/border-l-4 border-\w+-\d+/, `border-l-4 ${statusInfo.borderClass}`);
-            });
-        }
+                <div class="bg-emerald-800/50 p-8 rounded-2xl border border-emerald-700 backdrop-blur-sm">
+                    <h3 class="text-2xl font-bold mb-6">Mulai Konsultasi Gratis</h3>
+                    <form class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-emerald-200 mb-1">Nama</label>
+                            <input type="text" class="w-full px-4 py-3 rounded-lg bg-emerald-900/50 border border-emerald-600 focus:border-white focus:outline-none text-white placeholder-emerald-400" placeholder="Nama Anda">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-emerald-200 mb-1">Kebutuhan</label>
+                            <select class="w-full px-4 py-3 rounded-lg bg-emerald-900/50 border border-emerald-600 focus:border-white focus:outline-none text-white">
+                                <option>Pembuatan Website</option>
+                                <option>Aplikasi Mobile Web</option>
+                                <option>Game Edukasi</option>
+                                <option>Lainnya</option>
+                            </select>
+                        </div>
+                        <button type="button" onclick="window.location.href='https://wa.me/6285224131324'" class="w-full py-3 bg-white text-emerald-900 font-bold rounded-lg hover:bg-gray-100 transition">
+                            Kirim Pesan via WhatsApp
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
 
-        // Show popup
-        function showPopup(phaseIndex) {
-            const phase = phases[phaseIndex];
-            const statusInfo = getPhaseStatus(phaseIndex);
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 text-gray-400 py-12 border-t border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <!-- Kolom 1: Brand & Medsos -->
+                <div class="col-span-1 md:col-span-2">
+                    <div class="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                        <img src="https://blogger.googleusercontent.com/img/a/AVvXsEi_9lzi6HL3onxvFGQaYfbwFeZiKOK0GD0BKgyql-cQm2YaLFRq5ZK8OeQyYacbd0LOD2F6otght9umUC-M6cS1wr9FZgq-cP9P1REZyRJJj-x8p5CPRgUYEfTC68i9dPjQA8y5Ujxax_ZCN21DsKWA4lxSqM6timOFCclCA53Bwy81z4-qOUpV2RSO3lQ" alt="RyuMedia Logo" class="h-12 w-auto">
+                    </div>
+                    <p class="max-w-xs mb-6 text-gray-400">Jasa pembuatan website, aplikasi, dan game edukasi terpercaya untuk memajukan bisnis digital Anda.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition group">
+                            <i class="fab fa-instagram text-xl group-hover:text-white"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition group">
+                            <i class="fab fa-facebook-f text-lg group-hover:text-white"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition group">
+                            <i class="fab fa-linkedin-in text-lg group-hover:text-white"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition group">
+                            <i class="fab fa-youtube text-lg group-hover:text-white"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Kolom 2: Layanan -->
+                <div>
+                    <h4 class="text-white font-bold mb-4 text-lg">Layanan</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#layanan" class="hover:text-emerald-400 transition flex items-center gap-2"><i class="fas fa-chevron-right text-xs text-gray-600"></i> Web Development</a></li>
+                        <li><a href="#layanan" class="hover:text-emerald-400 transition flex items-center gap-2"><i class="fas fa-chevron-right text-xs text-gray-600"></i> Mobile Web Apps</a></li>
+                        <li><a href="#layanan" class="hover:text-emerald-400 transition flex items-center gap-2"><i class="fas fa-chevron-right text-xs text-gray-600"></i> Game Edukasi</a></li>
+                        <li><a href="#layanan" class="hover:text-emerald-400 transition flex items-center gap-2"><i class="fas fa-chevron-right text-xs text-gray-600"></i> UI/UX Design</a></li>
+                    </ul>
+                </div>
+
+                <!-- Kolom 3: Kontak -->
+                <div>
+                    <h4 class="text-white font-bold mb-4 text-lg">Hubungi Kami</h4>
+                    <ul class="space-y-4 text-sm">
+                        <li class="flex items-start gap-3">
+                            <div class="mt-1 w-8 h-8 rounded bg-gray-800 flex items-center justify-center flex-shrink-0 text-emerald-500">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <span>Jl. Ciwaru No.18 Ujungberung Kota Bandung</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded bg-gray-800 flex items-center justify-center flex-shrink-0 text-emerald-500">
+                                <i class="fab fa-whatsapp"></i>
+                            </div>
+                            <a href="https://wa.me/6285224131324" class="hover:text-emerald-400 transition">+62 852 2413 1324</a>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded bg-gray-800 flex items-center justify-center flex-shrink-0 text-emerald-500">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <a href="mailto:halo@ryumedia.id" class="hover:text-emerald-400 transition">ryumediadigital@gmail.com</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
             
-            // Format date for display
-            const displayDate = new Date(phase.date).toLocaleDateString('id-ID', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-            });
+            <div class="border-t border-gray-800 pt-8 text-center text-sm text-gray-500">
+                &copy; 2025 RyuMedia.id. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- FLOATING WHATSAPP BUTTON -->
+    <a href="https://wa.me/6285224131324?text=Halo%20RyuMedia,%20saya%20ingin%20konsultasi%20tentang..." 
+       target="_blank"
+       class="fixed bottom-6 right-6 bg-emerald-500 text-white p-4 rounded-full shadow-2xl z-50 hover:bg-emerald-600 transition duration-300 flex items-center gap-2 group pulse-animation">
+        <i class="fab fa-whatsapp text-3xl"></i>
+        <span class="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs transition-all duration-500 ease-in-out font-bold">
+            Chat via WA
+        </span>
+    </a>
+
+    <!-- JAVASCRIPT UNTUK MOBILE MENU -->
+    <script>
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+        const icon = btn.querySelector('i');
+        const navbar = document.getElementById('navbar');
+
+        // Toggle Hamburger Menu
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
             
-            // Update popup content
-            document.getElementById('popup-icon').textContent = phase.icon;
-            document.getElementById('popup-title').textContent = phase.title;
-            document.getElementById('popup-date').textContent = displayDate;
-            document.getElementById('popup-status').textContent = statusInfo.status;
-            document.getElementById('popup-status').className = `inline-block ${statusInfo.statusClass} text-sm px-3 py-1 rounded-full mb-4`;
-            document.getElementById('popup-description').textContent = phase.description;
-            
-            // Update deliverables
-            const deliverablesList = document.getElementById('popup-deliverables');
-            deliverablesList.innerHTML = phase.deliverables.map(item => `<li>• ${item}</li>`).join('');
-            
-            // Show popup
-            document.getElementById('popup-overlay').style.display = 'flex';
-        }
-
-        // Close popup
-        function closePopup() {
-            document.getElementById('popup-overlay').style.display = 'none';
-        }
-
-        // Configuration change handler
-        async function onConfigChange(config) {
-            const timelineTitle = config.timeline_title || defaultConfig.timeline_title;
-            const projectName = config.project_name || defaultConfig.project_name;
-            const backgroundColor = config.background_color || defaultConfig.background_color;
-            const primaryColor = config.primary_color || defaultConfig.primary_color;
-            const secondaryColor = config.secondary_color || defaultConfig.secondary_color;
-            const textColor = config.text_color || defaultConfig.text_color;
-            const fontFamily = config.font_family || 'Inter, system-ui, sans-serif';
-            const fontSize = config.font_size || 16;
-
-            // Update text content
-            document.getElementById('timeline-title').textContent = timelineTitle;
-            document.getElementById('project-name').textContent = projectName;
-
-            // Update colors
-            document.body.style.background = `linear-gradient(to bottom right, ${backgroundColor}, ${primaryColor}20)`;
-            document.body.style.fontFamily = `${fontFamily}, system-ui, sans-serif`;
-
-            // Update font sizes
-            document.getElementById('timeline-title').style.fontSize = `${fontSize * 1.875}px`;
-            document.getElementById('timeline-title').style.color = textColor;
-            document.getElementById('project-name').style.fontSize = `${fontSize * 1.125}px`;
-
-            // Update button colors
-            const buttons = document.querySelectorAll('.timeline-button');
-            buttons.forEach(button => {
-                button.style.backgroundColor = secondaryColor;
-            });
-
-            // Update popup colors
-            const popup = document.querySelector('.popup-content');
-            if (popup) {
-                popup.style.backgroundColor = secondaryColor;
-            }
-        }
-
-        // Capabilities mapping
-        function mapToCapabilities(config) {
-            return {
-                recolorables: [
-                    {
-                        get: () => config.background_color || defaultConfig.background_color,
-                        set: (value) => {
-                            config.background_color = value;
-                            if (window.elementSdk) {
-                                window.elementSdk.setConfig({ background_color: value });
-                            }
-                        }
-                    },
-                    {
-                        get: () => config.primary_color || defaultConfig.primary_color,
-                        set: (value) => {
-                            config.primary_color = value;
-                            if (window.elementSdk) {
-                                window.elementSdk.setConfig({ primary_color: value });
-                            }
-                        }
-                    },
-                    {
-                        get: () => config.secondary_color || defaultConfig.secondary_color,
-                        set: (value) => {
-                            config.secondary_color = value;
-                            if (window.elementSdk) {
-                                window.elementSdk.setConfig({ secondary_color: value });
-                            }
-                        }
-                    },
-                    {
-                        get: () => config.text_color || defaultConfig.text_color,
-                        set: (value) => {
-                            config.text_color = value;
-                            if (window.elementSdk) {
-                                window.elementSdk.setConfig({ text_color: value });
-                            }
-                        }
-                    },
-                    {
-                        get: () => config.accent_color || defaultConfig.accent_color,
-                        set: (value) => {
-                            config.accent_color = value;
-                            if (window.elementSdk) {
-                                window.elementSdk.setConfig({ accent_color: value });
-                            }
-                        }
-                    }
-                ],
-                borderables: [],
-                fontEditable: {
-                    get: () => config.font_family || 'Inter, system-ui, sans-serif',
-                    set: (value) => {
-                        config.font_family = value;
-                        if (window.elementSdk) {
-                            window.elementSdk.setConfig({ font_family: value });
-                        }
-                    }
-                },
-                fontSizeable: {
-                    get: () => config.font_size || 16,
-                    set: (value) => {
-                        config.font_size = value;
-                        if (window.elementSdk) {
-                            window.elementSdk.setConfig({ font_size: value });
-                        }
-                    }
-                }
-            };
-        }
-
-        // Edit panel values mapping
-        function mapToEditPanelValues(config) {
-            return new Map([
-                ["timeline_title", config.timeline_title || defaultConfig.timeline_title],
-                ["project_name", config.project_name || defaultConfig.project_name]
-            ]);
-        }
-
-        // Countdown Timer Function
-        function updateCountdown() {
-            const targetDate = new Date('2025-12-03T23:59:59').getTime();
-            const now = new Date().getTime();
-            const timeLeft = targetDate - now;
-
-            if (timeLeft > 0) {
-                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-
-                document.getElementById('days').textContent = days;
-                document.getElementById('hours').textContent = hours;
-                document.getElementById('minutes').textContent = minutes;
-                document.getElementById('seconds').textContent = seconds;
+            // Ubah icon hamburger ke silang (X)
+            if(menu.classList.contains('hidden')){
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
             } else {
-                document.getElementById('days').textContent = '0';
-                document.getElementById('hours').textContent = '0';
-                document.getElementById('minutes').textContent = '0';
-                document.getElementById('seconds').textContent = '0';
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
             }
-        }
+        });
 
-        // Initialize SDK
-        if (window.elementSdk) {
-            window.elementSdk.init({
-                defaultConfig,
-                onConfigChange,
-                mapToCapabilities,
-                mapToEditPanelValues
+        // Menutup menu saat link diklik (untuk UX yang lebih baik)
+        menu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                menu.classList.add('hidden');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
             });
-        }
+        });
 
-        // Initialize phase statuses
-        updatePhaseStatuses();
-
-        // Start countdown timer
-        updateCountdown();
-        setInterval(updateCountdown, 1000);
-
-        // Update phase statuses every hour to check for date changes
-        setInterval(updatePhaseStatuses, 3600000);
-
-        // Close popup with Escape key
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closePopup();
+        // Efek shadow pada navbar saat scroll
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 10) {
+                navbar.classList.add('shadow-md');
+            } else {
+                navbar.classList.remove('shadow-md');
             }
         });
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99dc651fb75e61bc',t:'MTc2MzAxNzI1Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
