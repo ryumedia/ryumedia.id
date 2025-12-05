@@ -95,7 +95,7 @@
 
 
         const BASE_TICKET_PRICE = 150000;
-        const EXTRA_COMPANION_PRICE = 15000;
+        const EXTRA_COMPANION_PRICE = 20000;
         const EXTRA_LUNCH_PRICE = 25000;
         const MAX_FILE_SIZE_KB = 500;
         const SETTINGS_COLLECTION_PATH = `artifacts/${appId}/public/data/settings`;
@@ -492,7 +492,7 @@
                     <div class="fixed bottom-0 w-full max-w-[512px] left-1/2 transform -translate-x-1/2 p-4 z-50">
                         <!-- Info Kuota Melayang -->
                         <div class="bg-white/80 backdrop-blur-sm p-3 rounded-xl shadow-lg mb-2 text-center border border-emerald-200">
-                            <p class="text-sm font-bold text-emerald-800">Kuota Tersedia:</p>
+                            <p class="text-sm font-bold text-emerald-800">Kuota Terpenuhi: (Pendaftaran akan ditutup jika sudah terpenuhi)</p>
                             <div class="text-xs font-semibold text-gray-600 space-y-1 mt-1">
                                 <p>Kelompok 4-8 Tahun: <span class="font-extrabold text-emerald-600">(${ageGroupQuotas['4-8 Tahun'].registered}/${ageGroupQuotas['4-8 Tahun'].max})</span></p>
                                 <p>Kelompok 9-12 Tahun: <span class="font-extrabold text-emerald-600">(${ageGroupQuotas['9-12 Tahun'].registered}/${ageGroupQuotas['9-12 Tahun'].max})</span></p>
@@ -857,7 +857,7 @@
                             
                             <!-- Info Kuota -->
                             <div class="p-3 bg-blue-100 border border-blue-300 text-blue-800 rounded-xl text-sm font-bold text-center">
-                                <p class="text-sm font-bold text-blue-800">Kuota Tersedia:</p>
+                                <p class="text-sm font-bold text-blue-800">>Kuota Terpenuhi: (Pendaftaran akan ditutup jika sudah terpenuhi)</p>
                                 <div class="text-xs font-semibold text-gray-600 space-y-1 mt-1">
                                     <p>Kelompok 4-8 Tahun: <span class="font-extrabold text-blue-600">(${ageGroupQuotas['4-8 Tahun'].registered}/${ageGroupQuotas['4-8 Tahun'].max})</span></p>
                                     <p>Kelompok 9-12 Tahun: <span class="font-extrabold text-blue-600">(${ageGroupQuotas['9-12 Tahun'].registered}/${ageGroupQuotas['9-12 Tahun'].max})</span></p>
@@ -1315,3 +1315,4 @@
     </script>
 </body>
 </html>
+
