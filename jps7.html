@@ -46,18 +46,53 @@
     <!-- Firebase Imports (PENTING) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // Perbarui impor Firebase untuk memastikan signInWithEmailAndPassword dihapus jika tidak digunakan,
+        // tetapi untuk menjaga fleksibilitas, kita biarkan saja, namun signInWithEmailAndPassword tidak digunakan lagi
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, doc, updateDoc, setDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // --- KONSTANTA DAN INISIALISASI ---
+        // --- KONSTANTA DAN INISIALISASI VARIABEL GLOBAL ---
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        // Coba parse konfigurasi Firebase yang disediakan oleh lingkungan
+        let configProvided = false;
+        try {
+            const tempConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+            if (Object.keys(tempConfig).length > 0 && tempConfig.projectId) {
+                configProvided = true;
+            }
+        } catch (e) {
+            console.error("Failed to parse firebase config:", e);
+        }
+        
+        // Jika tidak ada konfigurasi dari lingkungan, gunakan konfigurasi minimal (ini akan gagal jika tidak diganti)
+        // PENTING: Jika Anda menjalankan di luar editor ini, GANTI BARIS BERIKUT dengan config Anda
+        const firebaseConfig = configProvided ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyB-PEhn-X7L4UOpGLQmsJA3lhMgKlVbrF0",
+            authDomain: "jejakpetualangsiroh.firebaseapp.com",
+            projectId: "jejakpetualangsiroh",
+            storageBucket: "jejakpetualangsiroh.firebasestorage.app",
+            messagingSenderId: "177539566756",
+            appId: "1:177539566756:web:1a863dcd05c1395201ea31"
+        };
+        
+        // Inisialisasi Firebase hanya jika configProvided, atau jika config default berhasil di set
+        let app, auth, db;
+        let isFirebaseInitialized = false;
+
+        try {
+             app = initializeApp(firebaseConfig);
+             auth = getAuth(app);
+             db = getFirestore(app);
+             isFirebaseInitialized = true;
+        } catch (error) {
+            // Ini akan terjadi jika config DUMMY di atas gagal atau project-ID tidak valid
+            console.warn("Firebase initialization failed. Running in UI-only mode.", error);
+            isFirebaseInitialized = false;
+        }
+
 
         const BASE_TICKET_PRICE = 150000;
         const EXTRA_COMPANION_PRICE = 15000;
@@ -75,8 +110,30 @@
         let registrations = [];
         let tempAdminError = null;
 
+        // --- PERBAIKAN: FORM DATA DIPINDAH KE GLOBAL STATE ---
+        // Ini memastikan data tidak hilang saat re-render terjadi
+        let globalRegistrationFormData = {
+            guardianName: '', whatsappNumber: '', numChildren: 1, 
+            numExtraCompanions: 0, numExtraLunch: 0,
+            childrenData: [{ name: '', gender: 'Laki-laki', age: '' }],
+            proofOfTransfer: null, proofOfTransferDataUrl: null,
+        };
+        
+        // Listener Variables - akan diisi di onAuthStateChanged
+        let unsubscribeRegistrations = null; 
+        let unsubscribeSettings = null;
+
         // --- UTILITY FUNCTIONS ---
         
+        const resetGlobalFormData = () => {
+            globalRegistrationFormData = {
+                guardianName: '', whatsappNumber: '', numChildren: 1, 
+                numExtraCompanions: 0, numExtraLunch: 0,
+                childrenData: [{ name: '', gender: 'Laki-laki', age: '' }],
+                proofOfTransfer: null, proofOfTransferDataUrl: null,
+            };
+        };
+
         const formatRupiah = (amount) => {
             return new Intl.NumberFormat('id-ID', {
                 style: 'currency',
@@ -134,10 +191,17 @@
 
         // 1. Authentication
         const initAuth = async () => {
+            if (!isFirebaseInitialized) {
+                isAuthReady = true; // Langsung siap, tetapi tanpa Firebase
+                renderApp();
+                return;
+            }
+
             try {
                 if (initialAuthToken) {
                     await signInWithCustomToken(auth, initialAuthToken);
                 } else {
+                    // Ini memastikan ada current user (anonymous) saat refresh
                     await signInAnonymously(auth);
                 }
             } catch (error) {
@@ -146,49 +210,70 @@
         };
         initAuth();
 
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-            isAuthReady = true;
-            renderApp(); // Initial render after auth ready
-        });
-        
-        // 2. Form Status Listener
-        const settingsDocRef = doc(db, SETTINGS_COLLECTION_PATH, FORM_STATUS_DOC_ID);
-        onSnapshot(settingsDocRef, async (docSnap) => {
-            if (docSnap.exists()) {
-                isFormOpen = docSnap.data().isOpen;
-            } else if (isAuthReady) {
-                try {
-                    await setDoc(settingsDocRef, { isOpen: true, lastUpdated: serverTimestamp() });
-                    isFormOpen = true;
-                } catch (error) {
-                    console.error("Error creating initial form status doc:", error);
-                    isFormOpen = true;
-                }
-            }
-            if (currentPage === 'landing' || currentPage === 'register') renderApp();
-        }, (error) => {
-            console.error("Error fetching form status:", error);
-        });
+        if (isFirebaseInitialized) {
+            onAuthStateChanged(auth, (user) => {
+                currentUser = user;
+                isAuthReady = true;
+                
+                // Reset listeners jika ada
+                if (unsubscribeRegistrations) unsubscribeRegistrations();
+                if (unsubscribeSettings) unsubscribeSettings();
 
-        // 3. Registrations Listener (Hanya aktif di Admin Dashboard)
-        onSnapshot(collection(db, PARTICIPANTS_COLLECTION_PATH), (snapshot) => {
-            registrations = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                registrationDate: doc.data().registrationDate?.toDate().toLocaleString('id-ID') || 'N/A'
-            }));
-            if (currentPage === 'admin-dashboard') renderAdminDashboardContent();
-        }, (error) => {
-            console.error("Error fetching registrations:", error);
-            if (currentPage === 'admin-dashboard') setAdminError("Gagal memuat data pendaftar. Cek konsol untuk detail error izin.");
-        });
+                if (currentUser) {
+                    // 1. Form Status Listener (Sekarang di dalam onAuthStateChanged)
+                    const settingsDocRef = doc(db, SETTINGS_COLLECTION_PATH, FORM_STATUS_DOC_ID);
+                    unsubscribeSettings = onSnapshot(settingsDocRef, async (docSnap) => {
+                        if (docSnap.exists()) {
+                            isFormOpen = docSnap.data().isOpen;
+                        } else {
+                            try {
+                                await setDoc(settingsDocRef, { isOpen: true, lastUpdated: serverTimestamp() });
+                                isFormOpen = true;
+                            } catch (error) {
+                                console.log("Settings doc not found, defaulting to Open.");
+                                isFormOpen = true;
+                            }
+                        }
+                        if (currentPage === 'landing' || currentPage === 'admin-dashboard') renderApp();
+                    }, (error) => {
+                        console.error("Error fetching form status:", error);
+                    });
+
+                    // 2. Registrations Listener
+                    unsubscribeRegistrations = onSnapshot(collection(db, PARTICIPANTS_COLLECTION_PATH), (snapshot) => {
+                        // Prevent re-render from local cache, wait for server confirmation.
+                        // This stops the UI from breaking during interaction (e.g. select dropdown closing).
+                        if (snapshot.metadata.hasPendingWrites) {
+                            return;
+                        }
+                        registrations = snapshot.docs.map(doc => ({
+                            id: doc.id,
+                            ...doc.data(),
+                            registrationDate: doc.data().registrationDate?.toDate().toLocaleString('id-ID') || 'N/A'
+                        }));
+                        if (currentPage === 'admin-dashboard') renderAdminDashboardContent();
+                    }, (error) => {
+                        console.error("Error fetching registrations:", error);
+                        if (currentPage === 'admin-dashboard') setAdminError("Gagal memuat data pendaftar. Cek konsol untuk detail error izin.");
+                    });
+                }
+                
+                renderApp(); // Initial render after auth ready
+            });
+        }
+        
+        // Note: Global listeners removed to prevent timing issues
 
         // --- ADMIN ACTIONS ---
         
         const toggleFormStatus = async () => {
+            if (!isFirebaseInitialized) {
+                console.error("Mode UI-Only: Operasi database tidak dapat dilakukan.");
+                return;
+            }
             if (!isAuthReady) return;
             try {
+                const settingsDocRef = doc(db, SETTINGS_COLLECTION_PATH, FORM_STATUS_DOC_ID);
                 await updateDoc(settingsDocRef, {
                     isOpen: !isFormOpen,
                     lastUpdated: serverTimestamp()
@@ -200,6 +285,10 @@
         };
 
         const deleteRegistration = async (id, name) => {
+            if (!isFirebaseInitialized) {
+                console.error("Mode UI-Only: Operasi database tidak dapat dilakukan.");
+                return;
+            }
             if (!window.confirm(`Anda yakin ingin menghapus data pendaftar ${name}?`)) return;
             try {
                 await deleteDoc(doc(db, PARTICIPANTS_COLLECTION_PATH, id));
@@ -210,6 +299,10 @@
         };
 
         const updateRegistrationStatus = async (id, newStatus) => {
+            if (!isFirebaseInitialized) {
+                console.error("Mode UI-Only: Operasi database tidak dapat dilakukan.");
+                return;
+            }
             try {
                 await updateDoc(doc(db, PARTICIPANTS_COLLECTION_PATH, id), {
                     status: newStatus,
@@ -227,15 +320,27 @@
             document.getElementById('app-container').innerHTML = `
                 <div class="flex flex-col min-h-screen bg-emerald-50 text-gray-800 relative">
                     <!-- Header -->
-                    <header class="bg-emerald-600 text-white p-4 flex justify-between items-center shadow-md rounded-b-3xl z-10">
-                        <h1 class="font-bold text-lg tracking-wide">JPS #7</h1>
+                    <header class="bg-emerald-600 text-white p-4 flex justify-between items-center shadow-md rounded-b-3xl sticky top-0 z-10">
+                        <h1 class="font-bold text-lg tracking-wide">Jejak Petualang Siroh #7</h1>
                         <button onclick="navigate('admin-login')" class="p-2 hover:bg-emerald-700 rounded-full transition-colors" aria-label="Admin Login">
                             ${icon('Settings', 20)}
                         </button>
                     </header>
 
                     <!-- Main Content (Scrollable) -->
-                    <main class="flex-grow p-6 flex flex-col items-center space-y-8 pb-32">
+                    <main class="flex-grow p-6 flex flex-col items-center space-y-8 pb-8">
+                        <!-- Peringatan Jika Firebase Tidak Diinisialisasi -->
+                        ${!isFirebaseInitialized ? `
+                            <div class="w-full bg-red-100 p-4 rounded-xl shadow-inner border border-red-300 space-y-2">
+                                <h3 class="font-bold text-red-700 text-base flex items-center gap-2">
+                                    ${icon('AlertTriangle', 20, 'text-red-600')} PERINGATAN!
+                                </h3>
+                                <p class="text-sm text-red-600">
+                                    Aplikasi berjalan dalam mode **UI-Only** (tanpa database). Untuk menyimpan/memuat data, ganti konfigurasi *DUMMY* di skrip dengan kunci Firebase Project Anda yang sebenarnya.
+                                </p>
+                            </div>
+                        ` : ''}
+
                         <!-- Hero Section - Title and Theme -->
                         <div class="text-center w-full">
                             <div class="w-full h-56 bg-emerald-200 rounded-3xl flex items-center justify-center mb-6 shadow-lg border-4 border-white transform rotate-1 hover:rotate-0 transition-transform duration-500">
@@ -288,7 +393,7 @@
                                 </div>
                             </div>
                             <div class="bg-white p-4 rounded-2xl shadow-md border border-emerald-100 flex items-center gap-4">
-                                <div class="bg-red-100 p-3 rounded-full text-red-600">${icon('MapPin', 24)}</div>
+                                <div class="bg-red-100 p-3 rounded-full text-red-600">${icon('Map', 24)}</div>
                                 <div>
                                     <h4 class="font-bold text-gray-800">Tempat</h4>
                                     <p class="text-sm text-gray-500">Kampung Bamboo Jalan Terusan Padasuka KM 4, Cimenyan Bandung</p>
@@ -320,21 +425,20 @@
                             
                             <h3 class="font-bold text-emerald-800 text-lg border-b pb-2 pt-4">Fasilitas</h3>
                             <ul class="text-sm text-gray-600 space-y-1 list-none p-0">
-                                <li class="flex items-center gap-2 text-base">${icon('CheckCircle', 16, 'text-green-500 flex-shrink-0')}1 Tiket peserta + 1 tiket pendamping</li>
-                                <li class="flex items-center gap-2 text-base">${icon('CheckCircle', 16, 'text-green-500 flex-shrink-0')}Makan siang (anak)</li>
-                                <li class="flex items-center gap-2 text-base">${icon('CheckCircle', 16, 'text-green-500 flex-shrink-0')}Doorprize</li>
-                                <li class="flex items-center gap-2 text-base">${icon('CheckCircle', 16, 'text-green-500 flex-shrink-0')}Link sertifikat & Link dokumentasi</li>
-                                <li class="flex items-center gap-2 text-base">${icon('CheckCircle', 16, 'text-green-500 flex-shrink-0')}Silaturahim dgn keluarga pecinta siroh</li>
+                                <li class="flex items-center gap-2 text-base">${icon('Circle-check-big', 16, 'text-green-500 flex-shrink-0')}1 Tiket peserta + 1 tiket pendamping</li>
+                                <li class="flex items-center gap-2 text-base">${icon('Circle-check-big', 16, 'text-green-500 flex-shrink-0')}Makan siang (anak)</li>
+                                <li class="flex items-center gap-2 text-base">${icon('Circle-check-big', 16, 'text-green-500 flex-shrink-0')}Doorprize</li>
+                                <li class="flex items-center gap-2 text-base">${icon('Circle-check-big', 16, 'text-green-500 flex-shrink-0')}Link sertifikat & Link dokumentasi</li>
+                                <li class="flex items-center gap-2 text-base">${icon('Circle-check-big', 16, 'text-green-500 flex-shrink-0')}Silaturahim dgn keluarga pecinta siroh</li>
                             </ul>
                         </div>
                         
                         <!-- Pricing and Age Recommendation -->
                         <div class="w-full bg-yellow-50 p-5 rounded-3xl shadow-xl space-y-4 border-2 border-yellow-300">
-                            <h3 class="font-bold text-yellow-800 text-lg flex items-center gap-2">${icon('DollarSign', 20)} Harga Tiket Masuk (HTM)</h3>
+                            <h3 class="font-bold text-yellow-800 text-lg flex items-center gap-2">${icon('ticket-check', 20)} Harga Tiket Masuk (HTM)</h3>
                             <div class="space-y-2">
                                 <p class="font-bold text-gray-800">HTM Normal:</p>
                                 <p class="text-xl font-extrabold text-emerald-600">Rp 150.000</p>
-                                <p class="text-sm text-gray-600">(Sudah termasuk 1 anak + 1 pendamping)</p>
                             </div>
                             <p class="text-sm font-semibold text-gray-700">HTM pendamping tambahan: <span class="text-red-500">Rp 15.000</span></p>
                             
@@ -344,9 +448,9 @@
                         </div>
 
                         <!-- Warning Note -->
-                        <div class="w-full bg-red-100 p-4 rounded-xl shadow-inner border border-red-300 space-y-2">
+                        <div class="w-full bg-red-100 p-4 rounded-xl shadow-inner border border-red-300 mt-2">
                             <h3 class="font-bold text-red-700 text-base flex items-center gap-2">
-                                ${icon('AlertTriangle', 20, 'text-red-600')} Peringatan Penting
+                                ${icon('Triangle-Alert', 20, 'text-red-600')} Peringatan Penting
                             </h3>
                             <ul class="text-sm text-red-600 list-disc list-inside ml-2 space-y-1">
                                 <li>Akses menuju lokasi acara cukup menanjak.</li>
@@ -365,13 +469,13 @@
                                 rel="noopener noreferrer"
                                 class="flex-1 bg-white border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 font-bold py-3 px-2 rounded-xl shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2 text-sm"
                             >
-                                ${icon('MessageCircle', 18)}
+                                ${icon('Message-Circle-more', 18)}
                                 Hubungi Admin
                             </a>
                             
                             ${isFormOpen ? `
                                 <button onclick="navigate('register')" class="flex-[1.5] bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-2 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 text-sm">
-                                    ${icon('UserPlus', 18)}
+                                    ${icon('User-Plus', 18)}
                                     Daftar Sekarang
                                 </button>
                             ` : `
@@ -392,7 +496,8 @@
             renderIcons(); // Panggil fungsi render ikon setelah HTML dimuat
         };
 
-        const renderRegistrationForm = (initialFormData = {}) => {
+        // --- RENDER FORMULIR: MENGGUNAKAN GLOBAL STATE ---
+        const renderRegistrationForm = () => { // Tidak ada argumen lagi
             if (!isFormOpen) {
                  document.getElementById('app-container').innerHTML = `
                     <div class="flex flex-col min-h-screen bg-red-50 text-gray-800 relative">
@@ -416,200 +521,20 @@
                  return;
             }
 
-            let formData = initialFormData;
-            if (Object.keys(formData).length === 0) {
-                formData = {
-                    guardianName: '', whatsappNumber: '', numChildren: 1, 
-                    numExtraCompanions: 0, numExtraLunch: 0,
-                    childrenData: [{ name: '', gender: 'Laki-laki', age: '' }],
-                    proofOfTransfer: null, proofOfTransferDataUrl: null,
-                };
-            }
+            // MENGGUNAKAN GLOBAL STATE, BUKAN LOCAL VARIABLE
+            // Ini kunci agar data tidak hilang saat refresh
+            let formData = globalRegistrationFormData;
+
             let status = 'idle'; // 'idle', 'loading', 'success', 'error'
             let error = '';
-
-            const updateForm = () => {
-                const totalPayment = formData.numChildren * BASE_TICKET_PRICE + 
-                                     formData.numExtraCompanions * EXTRA_COMPANION_PRICE + 
-                                     formData.numExtraLunch * EXTRA_LUNCH_PRICE;
-                
-                const childrenInputs = Array.from({ length: formData.numChildren }).map((_, index) => {
-                    const child = formData.childrenData[index] || { name: '', gender: 'Laki-laki', age: '' };
-                    return `
-                        <div class="space-y-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                            <h3 class="font-bold text-base text-emerald-700">Anak #${index + 1}</h3>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Nama Anak ${index + 1} *</label>
-                                <input type="text" data-index="${index}" data-field="name" value="${child.name}" 
-                                    class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 outline-none" placeholder="Nama Anak ${index + 1}" />
-                            </div>
-                            <div class="flex gap-4">
-                                <div class="flex-1">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Usia Anak ${index + 1} (4-12) *</label>
-                                    <input type="number" data-index="${index}" data-field="age" value="${child.age}"
-                                        class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 outline-none" min="4" max="12" />
-                                </div>
-                                <div class="flex-1">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin *</label>
-                                    <select data-index="${index}" data-field="gender" value="${child.gender}"
-                                        class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 outline-none bg-white">
-                                        <option value="Laki-laki" ${child.gender === 'Laki-laki' ? 'selected' : ''}>Laki-laki</option>
-                                        <option value="Perempuan" ${child.gender === 'Perempuan' ? 'selected' : ''}>Perempuan</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                const html = `
-                    <div class="flex flex-col min-h-screen bg-white text-gray-800 relative">
-                        <header class="bg-emerald-600 text-white p-4 flex items-center shadow-md sticky top-0 z-10 rounded-b-3xl">
-                            <button onclick="navigate('landing')" class="mr-4 hover:bg-emerald-700 p-2 rounded-full transition-colors">${icon('ArrowLeft', 24)}</button>
-                            <h1 class="font-bold text-lg">Formulir Pendaftaran JPS #7</h1>
-                        </header>
-                        
-                        <main class="p-6 flex-grow">
-                            <p class="text-sm text-gray-500 mb-6 text-center font-medium">Lengkapi data wali dan peserta untuk memproses pendaftaran.</p>
-
-                            <form id="registration-form" class="space-y-6 bg-emerald-50 p-6 rounded-3xl shadow-lg">
-                                
-                                <!-- 1. Data Wali -->
-                                <div class="space-y-4 p-4 border border-dashed border-emerald-300 rounded-xl bg-white">
-                                    <h2 class="text-xl font-bold text-emerald-800 border-b pb-2 mb-4 flex items-center gap-2">${icon('Users', 20)} Data Wali</h2>
-                                    
-                                    <div>
-                                        <label for="guardianName" class="block text-sm font-bold text-gray-700 mb-1">Nama Orang Tua/Wali *</label>
-                                        <input id="guardianName" type="text" name="guardianName" value="${formData.guardianName}"
-                                            class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-0 outline-none transition-colors" placeholder="Contoh: Gina Arina" required />
-                                    </div>
-
-                                    <div>
-                                        <label for="whatsappNumber" class="block text-sm font-bold text-gray-700 mb-1">Nomor WhatsApp Wali (Diawali 628) *</label>
-                                        <input id="whatsappNumber" type="tel" name="whatsappNumber" value="${formData.whatsappNumber}"
-                                            class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-0 outline-none transition-colors" placeholder="Contoh: 6281212338040" maxlength="15" required />
-                                    </div>
-
-                                    <div>
-                                        <label for="numChildren" class="block text-sm font-bold text-gray-700 mb-1">Jumlah Anak Yang Akan Didaftarkan (1-5) *</label>
-                                        <input id="numChildren" type="number" name="numChildren" value="${formData.numChildren}"
-                                            class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-0 outline-none transition-colors" min="1" max="5" required />
-                                    </div>
-                                </div>
-
-                                <!-- 2. Data Anak (Dynamic) -->
-                                <div class="space-y-4 p-4 border border-dashed border-emerald-300 rounded-xl bg-white">
-                                    <h2 class="text-xl font-bold text-emerald-800 border-b pb-2 mb-4 flex items-center gap-2">${icon('UserPlus', 20)} Data Peserta</h2>
-                                    ${childrenInputs}
-                                </div>
-
-                                <!-- 3. Data Tambahan -->
-                                <div class="space-y-4 p-4 border border-dashed border-emerald-300 rounded-xl bg-white">
-                                    <h2 class="text-xl font-bold text-emerald-800 border-b pb-2 mb-4 flex items-center gap-2">${icon('DollarSign', 20)} Tambahan</h2>
-
-                                    <div>
-                                        <label for="numExtraCompanions" class="block text-sm font-bold text-gray-700 mb-1">Jumlah Pendamping Tambahan (@Rp ${formatRupiah(EXTRA_COMPANION_PRICE)})</label>
-                                        <input id="numExtraCompanions" type="number" name="numExtraCompanions" value="${formData.numExtraCompanions}"
-                                            class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-0 outline-none transition-colors" min="0" />
-                                        <p class="text-xs text-gray-500 mt-1">Setiap peserta sudah termasuk 1 pendamping gratis.</p>
-                                    </div>
-                                    
-                                    <div>
-                                        <label for="numExtraLunch" class="block text-sm font-bold text-gray-700 mb-1">Jumlah Makan Siang Tambahan (@Rp ${formatRupiah(EXTRA_LUNCH_PRICE)})</label>
-                                        <input id="numExtraLunch" type="number" name="numExtraLunch" value="${formData.numExtraLunch}"
-                                            class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-0 outline-none transition-colors" min="0" />
-                                        <p class="text-xs text-gray-500 mt-1">Nasi timbel/liwet + ayam + tempe/ikan asin + sambal lalap + teh tawar/air mineral.</p>
-                                    </div>
-                                </div>
-
-                                <!-- 4. Rincian Pembayaran -->
-                                <div class="p-4 bg-yellow-100 rounded-3xl shadow-inner border border-yellow-300 space-y-3">
-                                    <h2 class="text-xl font-bold text-yellow-800 border-b pb-2 mb-2 flex items-center gap-2">${icon('FileText', 20)} Rincian Pembayaran</h2>
-                                    
-                                    <div class="text-sm space-y-1">
-                                        <div class="flex justify-between text-gray-700">
-                                            <span>Tiket Peserta (${formData.numChildren} x ${formatRupiah(BASE_TICKET_PRICE)})</span>
-                                            <span class="font-semibold">${formatRupiah(formData.numChildren * BASE_TICKET_PRICE)}</span>
-                                        </div>
-                                        <div class="flex justify-between text-gray-700">
-                                            <span>Pendamping Tambahan (${formData.numExtraCompanions} x ${formatRupiah(EXTRA_COMPANION_PRICE)})</span>
-                                            <span class="font-semibold">${formatRupiah(formData.numExtraCompanions * EXTRA_COMPANION_PRICE)}</span>
-                                        </div>
-                                        <div class="flex justify-between text-gray-700">
-                                            <span>Makan Siang Tambahan (${formData.numExtraLunch} x ${formatRupiah(EXTRA_LUNCH_PRICE)})</span>
-                                            <span class="font-semibold">${formatRupiah(formData.numExtraLunch * EXTRA_LUNCH_PRICE)}</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="pt-2 border-t border-yellow-400">
-                                        <div class="flex justify-between text-lg font-extrabold text-red-600">
-                                            <span>TOTAL PEMBAYARAN:</span>
-                                            <span>${formatRupiah(totalPayment)}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 5. Info Pembayaran dan Cancel Policy (Sama seperti sebelumnya...) -->
-                                <div class="p-4 bg-white rounded-3xl shadow-sm border border-gray-200 space-y-4">
-                                    <h2 class="text-xl font-bold text-gray-800 border-b pb-2 mb-2 flex items-center gap-2">${icon('DollarSign', 20)} Info Pembayaran</h2>
-                                    <div class="text-sm">
-                                        <p class="font-bold">Transfer ke:</p>
-                                        <p>Bank BCA: <span class="text-emerald-600 font-extrabold">2831400899</span></p>
-                                        <p>a.n. <span class="font-bold">Gina Arina</span></p>
-                                        <p class="mt-2">CP: Inas <span class="font-bold text-emerald-600">081212338040</span></p>
-                                    </div>
-
-                                    <h2 class="text-xl font-bold text-gray-800 border-b pb-2 mb-2 flex items-center gap-2">${icon('AlertTriangle', 20)} Ketentuan Cancel</h2>
-                                    <ul class="text-sm text-gray-600 list-decimal list-inside ml-2 space-y-1">
-                                        <li>Tidak menerima pembatalan peserta. Jika peserta batal, dipersilakan mencari pengganti atau dapat digantikan dgn peserta Waiting List JPS#7 (silakan hubungi admin untuk info WL).</li>
-                                        <li>Jika tidak ada peserta pengganti dari WL, tidak dapat *refund*.</li>
-                                    </ul>
-                                </div>
-
-                                <!-- 6. Bukti Transfer -->
-                                <div class="space-y-4 p-4 border border-dashed border-emerald-300 rounded-xl bg-white">
-                                    <h2 class="text-xl font-bold text-emerald-800 border-b pb-2 mb-4 flex items-center gap-2">${icon('Upload', 20)} Bukti Transfer (${MAX_FILE_SIZE_KB}KB Max) *</h2>
-                                    
-                                    <label class="block">
-                                        <span class="sr-only">Pilih File Bukti Transfer</span>
-                                        <input id="proofOfTransferInput" type="file" accept="image/*, application/pdf" required
-                                            class="block w-full p-2 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100" />
-                                    </label>
-                                    ${formData.proofOfTransfer ? `
-                                        <p class="text-sm text-gray-600 mt-2">File terpilih: <span class="font-bold">${formData.proofOfTransfer.name}</span></p>
-                                    ` : ''}
-                                </div>
-
-                                <!-- Error Message -->
-                                <div id="form-error-display" class="p-3 bg-red-100 border border-red-300 text-red-600 rounded-xl text-sm font-bold text-center" style="${error ? '' : 'display: none;'}">
-                                    ${error}
-                                </div>
-                                
-                                <!-- Submit Button -->
-                                <button type="submit" id="submit-button" ${status === 'loading' ? 'disabled' : ''}
-                                    class="w-full text-white font-bold py-3 rounded-xl shadow-lg transform active:scale-95 transition-all flex items-center justify-center gap-2 
-                                    ${status === 'loading' ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_4px_0_rgb(6,95,70)] active:shadow-none active:translate-y-1'}">
-                                    ${status === 'loading' ? `${icon('Loader2', 20, 'animate-spin')} Mengirim Data...` : `${icon('Send', 20)} Kirim Pendaftaran`}
-                                </button>
-                            </form>
-                        </main>
-                    </div>
-                `;
-                document.getElementById('app-container').innerHTML = html;
-                renderIcons(); // Panggil fungsi render ikon setelah HTML dimuat
-
-                // Attach event listeners (Delegasi Event)
-                const formElement = document.getElementById('registration-form');
-                if (formElement) {
-                    formElement.addEventListener('change', handleFormChange);
-                    formElement.addEventListener('input', handleFormChange);
-                    formElement.addEventListener('submit', handleSubmit);
-                }
-            };
-
+            
+            // --- HANDLER LOGIC DENGAN PEMBARUAN SELEKTIF (DIPINDAH KE ATAS) ---
+            
             const handleFormChange = async (e) => {
-                const { name, value, type, files } = e.target;
+                const { name, value, type, files, dataset } = e.target;
                 
+                let shouldUpdateContent = false;
+
                 if (type === 'file' && e.target.id === 'proofOfTransferInput') {
                     const file = files[0];
                     if (file) {
@@ -617,41 +542,54 @@
                             error = `Ukuran file terlalu besar (Maks. ${MAX_FILE_SIZE_KB}KB).`;
                             formData.proofOfTransfer = null;
                             formData.proofOfTransferDataUrl = null;
-                            updateForm();
-                            return;
-                        }
-                        try {
-                            formData.proofOfTransfer = file;
-                            formData.proofOfTransferDataUrl = await fileToDataUrl(file);
-                            error = '';
-                        } catch (err) {
-                            error = "Gagal membaca file bukti transfer.";
-                            console.error("File reading error:", err);
+                        } else {
+                            try {
+                                formData.proofOfTransfer = file;
+                                formData.proofOfTransferDataUrl = await fileToDataUrl(file);
+                                error = '';
+                            } catch (err) {
+                                error = "Gagal membaca file bukti transfer.";
+                                console.error("File reading error:", err);
+                            }
                         }
                     } else {
                         formData.proofOfTransfer = null;
                         formData.proofOfTransferDataUrl = null;
                     }
-
+                    shouldUpdateContent = true; // Perlu update info file
                 } else if (name === 'numChildren') {
                     const newNum = parseInt(value) || 0;
                     const actualNum = Math.min(Math.max(1, newNum), 5);
-                    formData.numChildren = actualNum;
                     
-                    const newChildrenData = Array.from({ length: actualNum }, (_, i) => {
-                        return formData.childrenData[i] || { name: '', gender: 'Laki-laki', age: '' };
-                    });
-                    formData.childrenData = newChildrenData;
-
-                } else if (e.target.dataset.field) {
-                    const index = parseInt(e.target.dataset.index);
-                    const field = e.target.dataset.field;
+                    // Hanya update jika nilainya benar-benar berubah
+                    if (formData.numChildren !== actualNum) {
+                        formData.numChildren = actualNum;
+                        const newChildrenData = Array.from({ length: actualNum }, (_, i) => {
+                            return formData.childrenData[i] || { name: '', gender: 'Laki-laki', age: '' };
+                        });
+                        formData.childrenData = newChildrenData;
+                        shouldUpdateContent = true; // Perlu update anak dan pembayaran
+                    }
+                } else if (name === 'numExtraCompanions' || name === 'numExtraLunch') {
+                    formData[name] = parseInt(value) || 0;
+                    shouldUpdateContent = true; // Perlu update rincian pembayaran
+                } else if (dataset.field) {
+                    const index = parseInt(dataset.index);
+                    const field = dataset.field;
                     formData.childrenData[index] = { ...formData.childrenData[index], [field]: value };
-                    
+                    // TIDAK perlu update content, biarkan input ini mempertahankan fokus
                 } else {
                     formData[name] = value;
+                    // TIDAK perlu update content untuk Nama Wali / WA
                 }
-                updateForm();
+                
+                // Update Global State Explicitly (meskipun formData mereferensi global, ini untuk kejelasan)
+                globalRegistrationFormData = formData;
+
+                // Panggil fungsi update selektif hanya jika ada perubahan dinamis yang memerlukan re-render
+                if (shouldUpdateContent) {
+                    updateFormContent(); 
+                }
             };
             
             const isFormValid = () => {
@@ -684,18 +622,31 @@
 
             const handleSubmit = async (e) => {
                 e.preventDefault();
+                if (!isFormOpen) {
+                    error = "Pendaftaran telah ditutup saat Anda mengisi formulir.";
+                    updateFormContent();
+                    return;
+                }
                 if (!isFormValid()) {
-                    updateForm();
+                    updateFormContent(); // Tampilkan error
                     return;
                 }
                 if (!isAuthReady) {
                     error = "Sistem belum siap. Coba lagi sebentar.";
-                    updateForm();
+                    updateFormContent(); // Tampilkan error
                     return;
                 }
                 
                 status = 'loading';
-                updateForm();
+                updateFormContent(); // Ubah tombol submit menjadi loading
+                
+                if (!isFirebaseInitialized) {
+                     console.error("Mode UI-Only: Pendaftaran berhasil di sisi UI, tetapi data TIDAK disimpan ke database. Untuk menyimpan, inisialisasi Firebase dengan benar.");
+                     status = 'success';
+                     resetGlobalFormData(); // Reset form jika sukses
+                     navigate('register-success');
+                     return;
+                }
 
                 const dataToSave = {
                     guardianName: formData.guardianName,
@@ -718,37 +669,287 @@
                 try {
                     await addDoc(collection(db, PARTICIPANTS_COLLECTION_PATH), dataToSave);
                     status = 'success';
-                    renderApp(); // Pindah ke halaman sukses
+                    resetGlobalFormData(); // Reset form data setelah sukses terkirim
+                    navigate('register-success');
                 } catch (err) {
                     console.error("Error saving participant data: ", err);
                     error = "Gagal menyimpan data ke database. Silakan coba lagi.";
                     status = 'error';
-                    updateForm();
+                    updateFormContent(); // Tampilkan error dan kembalikan tombol
                 }
             };
-            
-            if (status === 'success') {
-                document.getElementById('app-container').innerHTML = `
-                    <div class="flex flex-col min-h-screen bg-emerald-50 text-gray-800 relative">
-                        <header class="bg-emerald-600 text-white p-4 flex items-center shadow-md sticky top-0 z-10 rounded-b-3xl">
-                            <h1 class="font-bold text-lg">Pendaftaran Berhasil!</h1>
-                        </header>
-                        <div class="p-8 flex-grow flex flex-col items-center justify-center text-center space-y-6">
-                            ${icon('CheckCircle', 80, 'text-emerald-500 animate-bounce')}
-                            <h3 class="text-2xl font-bold text-emerald-700">Pendaftaran Terkirim!</h3>
-                            <p class="text-gray-600 font-medium max-w-xs">
-                                Terima kasih telah mendaftarkan peserta. Data Anda telah kami terima dan akan segera diverifikasi oleh admin.
-                            </p>
-                            <button onclick="navigate('landing')" class="mt-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
-                                ${icon('ArrowLeft', 18)} Kembali ke Beranda
-                            </button>
+
+            // --- FUNGSI RENDER PARSIAL BARU ---
+            const renderChildInputs = (formData) => {
+                return Array.from({ length: formData.numChildren }).map((_, index) => {
+                    const child = formData.childrenData[index] || { name: '', gender: 'Laki-laki', age: '' };
+                    return `
+                        <div class="space-y-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                            <h3 class="font-bold text-base text-emerald-700">Anak #${index + 1}</h3>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nama Anak ${index + 1} *</label>
+                                <input type="text" data-index="${index}" data-field="name" value="${child.name}" 
+                                    class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 outline-none" placeholder="Nama Anak ${index + 1}" />
+                            </div>
+                            <div class="flex gap-4">
+                                <div class="flex-1">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Usia Anak ${index + 1} (4-12) *</label>
+                                    <input type="number" data-index="${index}" data-field="age" value="${child.age}"
+                                        class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 outline-none" min="4" max="12" />
+                                </div>
+                                <div class="flex-1">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin *</label>
+                                    <select data-index="${index}" data-field="gender" value="${child.gender}"
+                                        class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 outline-none bg-white">
+                                        <option value="Laki-laki" ${child.gender === 'Laki-laki' ? 'selected' : ''}>Laki-laki</option>
+                                        <option value="Perempuan" ${child.gender === 'Perempuan' ? 'selected' : ''}>Perempuan</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            };
+
+            const renderPaymentDetails = (formData, totalPayment) => {
+                return `
+                    <div class="p-4 bg-yellow-100 rounded-3xl shadow-inner border border-yellow-300 space-y-3">
+                        <h2 class="text-xl font-bold text-yellow-800 border-b pb-2 mb-2 flex items-center gap-2">${icon('FileText', 20)} Rincian Pembayaran</h2>
+                        
+                        <div class="text-sm space-y-1">
+                            <div class="flex justify-between text-gray-700">
+                                <span>Tiket Peserta (${formData.numChildren} x ${formatRupiah(BASE_TICKET_PRICE)})</span>
+                                <span class="font-semibold">${formatRupiah(formData.numChildren * BASE_TICKET_PRICE)}</span>
+                            </div>
+                            <div class="flex justify-between text-gray-700">
+                                <span>Pendamping Tambahan (${formData.numExtraCompanions} x ${formatRupiah(EXTRA_COMPANION_PRICE)})</span>
+                                <span class="font-semibold">${formatRupiah(formData.numExtraCompanions * EXTRA_COMPANION_PRICE)}</span>
+                            </div>
+                            <div class="flex justify-between text-gray-700">
+                                <span>Makan Siang Tambahan (${formData.numExtraLunch} x ${formatRupiah(EXTRA_LUNCH_PRICE)})</span>
+                                <span class="font-semibold">${formatRupiah(formData.numExtraLunch * EXTRA_LUNCH_PRICE)}</span>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t border-yellow-400">
+                            <div class="flex justify-between text-lg font-extrabold text-red-600">
+                                <span>TOTAL PEMBAYARAN:</span>
+                                <span>${formatRupiah(totalPayment)}</span>
+                            </div>
                         </div>
                     </div>
                 `;
-                renderIcons();
-            } else {
-                updateForm();
+            };
+            
+            // --- FUNGSI UPDATE UTAMA (Hanya Mengganti Konten Tertentu) ---
+            const updateFormContent = () => {
+                const totalPayment = formData.numChildren * BASE_TICKET_PRICE + 
+                                     formData.numExtraCompanions * EXTRA_COMPANION_PRICE + 
+                                     formData.numExtraLunch * EXTRA_LUNCH_PRICE;
+                
+                // 1. Update Data Anak
+                const childrenContainer = document.getElementById('children-inputs-container');
+                if (childrenContainer) {
+                    childrenContainer.innerHTML = renderChildInputs(formData);
+                }
+
+                // 2. Update Rincian Pembayaran
+                const paymentContainer = document.getElementById('payment-details-container');
+                if (paymentContainer) {
+                    paymentContainer.innerHTML = renderPaymentDetails(formData, totalPayment);
+                }
+                
+                // 3. Update Error Message
+                const errorDisplay = document.getElementById('form-error-display');
+                if (errorDisplay) {
+                    errorDisplay.textContent = error;
+                    errorDisplay.style.display = error ? 'block' : 'none';
+                }
+
+                // 4. Update File Info
+                const fileInfo = document.getElementById('proof-file-info');
+                if (fileInfo) {
+                    fileInfo.innerHTML = formData.proofOfTransfer ? `
+                        <p class="text-sm text-gray-600 mt-2">File terpilih: <span class="font-bold">${formData.proofOfTransfer.name}</span></p>
+                    ` : '';
+                }
+
+                // 5. Update Submit Button Status (jika ada loading)
+                const submitButton = document.getElementById('submit-button');
+                if (submitButton) {
+                    submitButton.disabled = status === 'loading';
+                    submitButton.className = `w-full text-white font-bold py-3 rounded-xl shadow-lg transform active:scale-95 transition-all flex items-center justify-center gap-2 ${
+                        status === 'loading' 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_4px_0_rgb(6,95,70)] active:shadow-none active:translate-y-1'
+                    }`;
+                    submitButton.innerHTML = status === 'loading' ? `${icon('Loader2', 20, 'animate-spin')} Mengirim Data...` : `${icon('Send', 20)} Kirim Pendaftaran`;
+                }
+
+                renderIcons(); // Render ulang ikon hanya pada area yang diubah
+            };
+
+            // --- STRUKTUR HTML UTAMA FORMULIR ---
+
+            const totalPaymentInitial = formData.numChildren * BASE_TICKET_PRICE + 
+                                        formData.numExtraCompanions * EXTRA_COMPANION_PRICE + 
+                                        formData.numExtraLunch * EXTRA_LUNCH_PRICE;
+
+            const html = `
+                <div class="flex flex-col min-h-screen bg-white text-gray-800 relative">
+                    <header class="bg-emerald-600 text-white p-4 flex items-center shadow-md sticky top-0 z-10 rounded-b-3xl">
+                        <button onclick="navigate('landing')" class="mr-4 hover:bg-emerald-700 p-2 rounded-full transition-colors">${icon('undo-2', 24)}</button>
+                        <h1 class="font-bold text-lg">Formulir Pendaftaran JPS #7</h1>
+                    </header>
+                    
+                    <main class="p-6 flex-grow">
+                        <p class="text-sm text-gray-500 mb-6 text-center font-medium">Lengkapi data wali dan peserta untuk memproses pendaftaran.</p>
+
+                        <form id="registration-form" class="space-y-6 bg-emerald-50 p-6 rounded-3xl shadow-lg">
+                            
+                            <!-- 1. Data Wali -->
+                            <div class="space-y-4 p-4 border border-dashed border-emerald-300 rounded-xl bg-white">
+                                <h2 class="text-xl font-bold text-emerald-800 border-b pb-2 mb-4 flex items-center gap-2">${icon('Users', 20)} Data Wali</h2>
+                                
+                                <div>
+                                    <label for="guardianName" class="block text-sm font-bold text-gray-700 mb-1">Nama Orang Tua/Wali *</label>
+                                    <input id="guardianName" type="text" name="guardianName" value="${formData.guardianName}"
+                                        class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-0 outline-none transition-colors" placeholder="Contoh: Gina Arina" required />
+                                </div>
+
+                                <div>
+                                    <label for="whatsappNumber" class="block text-sm font-bold text-gray-700 mb-1">Nomor WhatsApp Wali (Diawali 628) *</label>
+                                    <input id="whatsappNumber" type="tel" name="whatsappNumber" value="${formData.whatsappNumber}"
+                                        class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-0 outline-none transition-colors" placeholder="Contoh: 6281212338040" maxlength="15" required />
+                                </div>
+
+                                <div>
+                                    <label for="numChildren" class="block text-sm font-bold text-gray-700 mb-1">Jumlah Anak Yang Akan Didaftarkan (1-5) *</label>
+                                    <input id="numChildren" type="number" name="numChildren" value="${formData.numChildren}"
+                                        class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-0 outline-none transition-colors" min="1" max="5" required />
+                                </div>
+                            </div>
+
+                            <!-- 2. Data Anak (Dynamic) - ID TARGET BARU -->
+                            <div class="space-y-4 p-4 border border-dashed border-emerald-300 rounded-xl bg-white">
+                                <h2 class="text-xl font-bold text-emerald-800 border-b pb-2 mb-4 flex items-center gap-2">${icon('User-Plus', 20)} Data Peserta</h2>
+                                <div id="children-inputs-container">
+                                    ${renderChildInputs(formData)}
+                                </div>
+                            </div>
+
+                            <!-- 3. Data Tambahan -->
+                            <div class="space-y-4 p-4 border border-dashed border-emerald-300 rounded-xl bg-white">
+                                <h2 class="text-xl font-bold text-emerald-800 border-b pb-2 mb-4 flex items-center gap-2">${icon('ticket-plus', 20)} Tambahan</h2>
+
+                                <div>
+                                    <label for="numExtraCompanions" class="block text-sm font-bold text-gray-700 mb-1">Jumlah Pendamping Tambahan (@Rp ${formatRupiah(EXTRA_COMPANION_PRICE)})</label>
+                                    <input id="numExtraCompanions" type="number" name="numExtraCompanions" value="${formData.numExtraCompanions}"
+                                        class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-0 outline-none transition-colors" min="0" />
+                                    <p class="text-xs text-gray-500 mt-1">Setiap peserta sudah termasuk 1 pendamping gratis.</p>
+                                </div>
+                                
+                                <div>
+                                    <label for="numExtraLunch" class="block text-sm font-bold text-gray-700 mb-1">Jumlah Makan Siang Tambahan (@Rp ${formatRupiah(EXTRA_LUNCH_PRICE)})</label>
+                                    <input id="numExtraLunch" type="number" name="numExtraLunch" value="${formData.numExtraLunch}"
+                                        class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-0 outline-none transition-colors" min="0" />
+                                    <p class="text-xs text-gray-500 mt-1">Nasi timbel/liwet + ayam + tempe/ikan asin + sambal lalap + teh tawar/air mineral.</p>
+                                </div>
+                            </div>
+
+                            <!-- 4. Rincian Pembayaran - ID TARGET BARU -->
+                            <div id="payment-details-container">
+                                ${renderPaymentDetails(formData, totalPaymentInitial)}
+                            </div>
+                            
+                            <!-- 5. Info Pembayaran dan Cancel Policy (Tidak berubah) -->
+                            <div class="p-4 bg-white rounded-3xl shadow-sm border border-gray-200 space-y-4">
+                                <h2 class="text-xl font-bold text-gray-800 border-b pb-2 mb-2 flex items-center gap-2">${icon('Dollar-Sign', 20)} Info Pembayaran</h2>
+                                <div class="text-sm">
+                                    <p class="font-bold">Transfer ke:</p>
+                                    <p>Bank BCA: <span class="text-emerald-600 font-extrabold">2831400899</span></p>
+                                    <p>a.n. <span class="font-bold">Gina Arina</span></p>
+                                    <p class="mt-2">CP: Inas <span class="font-bold text-emerald-600">081212338040</span></p>
+                                </div>
+
+                                <h2 class="text-xl font-bold text-gray-800 border-b pb-2 mb-2 flex items-center gap-2">${icon('Triangle-alert', 20)} Ketentuan Cancel</h2>
+                                <ul class="text-sm text-gray-600 list-decimal list-inside ml-2 space-y-1">
+                                    <li>Tidak menerima pembatalan peserta. Jika peserta batal, dipersilakan mencari pengganti atau dapat digantikan dgn peserta Waiting List JPS#7 (silakan hubungi admin untuk info WL).</li>
+                                    <li>Jika tidak ada peserta pengganti dari WL, tidak dapat *refund*.</li>
+                                </ul>
+                            </div>
+
+                            <!-- 6. Bukti Transfer -->
+                            <div class="space-y-4 p-4 border border-dashed border-emerald-300 rounded-xl bg-white">
+                                <h2 class="text-xl font-bold text-emerald-800 border-b pb-2 mb-4 flex items-center gap-2">${icon('folder-up', 20)} Bukti Transfer (${MAX_FILE_SIZE_KB}KB Max) *</h2>
+                                
+                                <label class="block w-full p-2 text-sm text-center text-emerald-700 bg-emerald-200 rounded-full hover:bg-emerald-300 cursor-pointer">
+                                    <span>Pilih File Bukti Transfer</span>
+                                    <input id="proofOfTransferInput" type="file" accept="image/*, application/pdf" required class="hidden" />
+                                </label>
+                                <div id="proof-file-info">
+                                    ${formData.proofOfTransfer ? `
+                                        <p class="text-sm text-gray-600 mt-2">File terpilih: <span class="font-bold">${formData.proofOfTransfer.name}</span></p>
+                                    ` : ''}
+                                </div>
+                            </div>
+
+                            <!-- Error Message -->
+                            <div id="form-error-display" class="p-3 bg-red-100 border border-red-300 text-red-600 rounded-xl text-sm font-bold text-center" style="${error ? '' : 'display: none;'}">
+                                ${error}
+                            </div>
+                            
+                            <!-- Submit Button -->
+                            <button type="submit" id="submit-button" ${status === 'loading' ? 'disabled' : ''}
+                                class="w-full text-white font-bold py-3 rounded-xl shadow-lg transform active:scale-95 transition-all flex items-center justify-center gap-2 
+                                ${status === 'loading' ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_4px_0_rgb(6,95,70)] active:shadow-none active:translate-y-1'}">
+                                ${status === 'loading' ? `${icon('Loader', 20, 'animate-spin')} Mengirim Data...` : `${icon('Send', 20)} Kirim Pendaftaran`}
+                            </button>
+                        </form>
+                    </main>
+                </div>
+            `;
+            document.getElementById('app-container').innerHTML = html;
+            renderIcons();
+
+            // Attach event listeners (Delegasi Event)
+            const formElement = document.getElementById('registration-form');
+            if (formElement) {
+                formElement.addEventListener('change', handleFormChange);
+                formElement.addEventListener('input', handleFormChange);
+                formElement.addEventListener('submit', handleSubmit);
             }
+        };
+
+        const renderSuccessPage = () => {
+            document.getElementById('app-container').innerHTML = `
+                <div class="flex flex-col min-h-screen bg-emerald-50 text-gray-800 relative">
+                    <header class="bg-emerald-600 text-white p-4 flex items-center shadow-md sticky top-0 z-10 rounded-b-3xl">
+                        <h1 class="font-bold text-lg mx-auto">Pendaftaran Berhasil</h1>
+                    </header>
+                    <div class="p-8 flex-grow flex flex-col items-center justify-center text-center space-y-6">
+                        ${icon('Circle-check-big2', 80, 'text-emerald-500')}
+                        <h2 class="text-3xl font-extrabold text-emerald-900">Terima Kasih!</h2>
+                        <p class="text-gray-600 font-medium max-w-sm">
+                            Pendaftaran Anda telah kami terima. Informasi selanjutnya akan diumumkan melalui Grup WhatsApp.
+                        </p>
+                        
+                        <div class="w-full max-w-xs space-y-4 pt-4">
+                            <a href="#" id="whatsapp-join-link" target="_blank" rel="noopener noreferrer" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
+                                ${icon('MessageCircle', 18)} Gabung Grup WhatsApp
+                            </a>
+                            <button onclick="navigate('landing')" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
+                                ${icon('ArrowLeft', 18)} Kembali ke Beranda
+                            </button>
+                        </div>
+
+                        <p class="text-xs text-gray-400 pt-8">
+                            Jika Anda tidak segera bergabung ke grup, Anda mungkin akan ketinggalan informasi penting.
+                        </p>
+                    </div>
+                </div>
+            `;
+            renderIcons();
         };
 
         const renderAdminLogin = () => {
@@ -780,6 +981,7 @@
             `;
             renderIcons();
 
+            // Mengembalikan logika login statis (Anonymous user + Password 123456)
             document.getElementById('login-form').addEventListener('submit', (e) => {
                 e.preventDefault();
                 const password = document.getElementById('admin-password').value;
@@ -794,6 +996,9 @@
         };
 
         const renderAdminDashboard = () => {
+            // Cek status otentikasi saat ini
+            const currentUserId = currentUser?.uid || 'N/A';
+            
             document.getElementById('app-container').innerHTML = `
                 <div class="flex flex-col min-h-screen bg-gray-50 text-gray-800 relative">
                     <header class="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md rounded-b-3xl sticky top-0 z-10">
@@ -815,18 +1020,30 @@
                         
                         <!-- Display Temporary Admin Action Error -->
                         <div id="admin-error-display"></div>
+                        
+                        <!-- Peringatan Jika Firebase Tidak Diinisialisasi -->
+                        ${!isFirebaseInitialized ? `
+                            <div class="w-full bg-red-100 p-4 rounded-xl shadow-inner border border-red-300 space-y-2 mb-4">
+                                <h3 class="font-bold text-red-700 text-base flex items-center gap-2">
+                                    ${icon('AlertTriangle', 20, 'text-red-600')} MODE UI-ONLY AKTIF
+                                </h3>
+                                <p class="text-sm text-red-600">
+                                    Operasi database (baca/tulis/hapus) dinonaktifkan. Data yang ditampilkan adalah data tiruan atau data yang tersisa dari sesi sebelumnya.
+                                </p>
+                            </div>
+                        ` : ''}
 
                         <!-- Statistics Grid and Registration List will be loaded here -->
                         <div id="dashboard-content">
                             <div class="text-center p-10 bg-white rounded-xl shadow-md">
                                 ${icon('Loader2', 32, 'animate-spin text-indigo-500 mx-auto')}
-                                <p class="mt-4 text-gray-600">Memuat data dari Firebase...</p>
+                                <p class="mt-4 text-gray-600">${isFirebaseInitialized ? 'Memuat data dari Firebase...' : 'Database tidak terhubung.'}</p>
                             </div>
                         </div>
 
                         <!-- User ID Debug -->
                         <div class="text-xs text-gray-400 text-center pt-8">
-                            User ID: ${currentUser?.uid || 'N/A'} (Admin Mode)
+                            User ID: ${currentUserId} (Anonymous Admin Mode)
                         </div>
                     </main>
                 </div>
@@ -1009,7 +1226,10 @@
                     renderLandingPage();
                     break;
                 case 'register':
-                    renderRegistrationForm({}); // Start with empty form
+                    renderRegistrationForm(); // PERBAIKAN: Tidak perlu mengirim objek kosong lagi
+                    break;
+                case 'register-success':
+                    renderSuccessPage();
                     break;
                 case 'admin-login':
                     renderAdminLogin();
