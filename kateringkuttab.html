@@ -1295,11 +1295,25 @@
                 }); 
                 
                 alert("Pesanan Berhasil!"); 
-                await fetchUserPaidDates(); 
-                location.reload(); 
+                await fetchUserPaidDates();
+
+                // 2. Reset Form & Seleksi agar bersih kembali
+                selectedDates.clear(); // Hapus tanggal yang dipilih
+                document.getElementById('proofInput').value = ""; // Reset input file
+                document.getElementById('proofPreview').classList.add('hidden'); // Sembunyikan preview foto
+                updateOrderSummary(); // Reset tampilan total harga jadi 0
+
+                // 3. Pindah langsung ke Tab Riwayat
+                switchMobileTab('history');
+
+                // 4. Kembalikan status tombol (karena halaman tidak direload)
+                btn.disabled = false;
+                btn.innerText = "Kirim Laporan";
+
             } catch (error) { 
                 alert("Gagal: " + error.message); 
-                btn.disabled = false; 
+                btn.disabled = false;
+                btn.innerText = "Kirim Laporan"; // Reset tombol jika error 
             } 
         }
 
