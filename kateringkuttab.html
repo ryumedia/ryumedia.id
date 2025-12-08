@@ -357,10 +357,20 @@
         </div>
     </div>
 
+    <!-- NEW MODAL: Proof View (Popup Gambar) -->
+    <div id="modalProofView" class="hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4">
+        <div class="relative max-w-xs w-full">
+            <button onclick="document.getElementById('modalProofView').classList.add('hidden')" class="absolute -top-10 right-0 text-white hover:text-gray-300 text-2xl">
+                <i class="fas fa-times"></i>
+            </button>
+            <img id="proofImageDisplay" src="" alt="Bukti Transfer" class="w-full h-auto rounded-lg shadow-2xl bg-white">
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, doc, setDoc, updateDoc, deleteDoc, query, orderBy, onSnapshot, where, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+        // REMOVED: Firebase Storage imports
 
         const firebaseConfig = {
             apiKey: "AIzaSyCFnhvOp4iPqTaNUFjzkmGR-EfhDzvtiu8",
@@ -373,7 +383,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const storage = getStorage(app);
+        // REMOVED: storage init
 
         // STATE
         let dbMenus = {};
@@ -383,6 +393,7 @@
         let currentUser = null;
         let selectedDates = new Set();
         let PRICING = { 'reguler': 15000, 'anak_guru': 10000, 'beasiswa': 0 };
+        let ordersDataMap = {}; // New: Store order data locally for modal view
         
         // Views
         let viewDate = new Date(); 
@@ -1227,8 +1238,138 @@
         window.openModalPricing = function() { document.getElementById('modalPricing').classList.remove('hidden'); document.getElementById('priceReguler').value = PRICING.reguler; document.getElementById('priceGuru').value = PRICING.anak_guru; document.getElementById('priceBeasiswa').value = PRICING.beasiswa; }
         window.savePricing = async function() { const btn = document.getElementById('btnSavePricing'); btn.innerText = "..."; btn.disabled = true; const newPricing = { reguler: parseInt(document.getElementById('priceReguler').value)||0, anak_guru: parseInt(document.getElementById('priceGuru').value)||0, beasiswa: parseInt(document.getElementById('priceBeasiswa').value)||0 }; try { await setDoc(doc(db, "settings", "prices"), newPricing); PRICING = newPricing; alert("Harga diperbarui!"); document.getElementById('modalPricing').classList.add('hidden'); } catch (e) { alert("Gagal: " + e.message); } btn.innerText = "Simpan"; btn.disabled = false; }
         window.previewProof = function(input) { const preview = document.getElementById('proofPreview'); if (input.files[0]) { const reader = new FileReader(); reader.onload = (e) => { preview.src = e.target.result; preview.classList.remove('hidden'); }; reader.readAsDataURL(input.files[0]); updateOrderSummary(); } }
-        window.submitOrder = async function() { const btn = document.getElementById('btnOrder'); const fileInput = document.getElementById('proofInput'); btn.disabled = true; btn.innerHTML = '<div class="loader"></div> ...'; try { let downloadURL = null; if (currentUser.price > 0 && fileInput.files[0]) { const storageRef = ref(storage, 'bukti_transfer/' + Date.now() + '-' + fileInput.files[0].name); const snapshot = await uploadBytes(storageRef, fileInput.files[0]); downloadURL = await getDownloadURL(snapshot.ref); } await addDoc(collection(db, "orders"), { userName: currentUser.name, userCategory: currentUser.category, dates: Array.from(selectedDates).sort(), totalPrice: selectedDates.size * currentUser.price, proofUrl: downloadURL, status: "pending", createdAt: new Date() }); alert("Pesanan Berhasil!"); await fetchUserPaidDates(); location.reload(); } catch (error) { alert("Gagal: " + error.message); btn.disabled = false; } }
-        window.fetchOrders = async function() { const tbody = document.getElementById('orderTableBody'); if(tbody) tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center"><div class="loader"></div></td></tr>'; try { const snapshot = await getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc"))); if(tbody) tbody.innerHTML = ""; let totalPorsi = 0; snapshot.forEach(doc => { const d = doc.data(); totalPorsi += d.dates ? d.dates.length : 0; if(tbody) { let orderDate = "-"; if(d.createdAt && d.createdAt.toDate) orderDate = d.createdAt.toDate().toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); const dateList = d.dates ? d.dates.join(", ") : "-"; tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-4 text-xs text-gray-500 font-medium">${orderDate}</td><td class="p-4"><div class="font-bold">${d.userName}</div><div class="text-xs text-gray-500">${d.userCategory}</div></td><td class="p-4"><div class="text-xs">Tgl Catering: <span class="text-gray-600">${dateList}</span></div><div class="font-bold text-green-600 mt-1">Rp ${d.totalPrice.toLocaleString()}</div></td><td class="p-4">${d.proofUrl ? `<a href="${d.proofUrl}" target="_blank" class="text-blue-600 underline text-xs">Lihat Bukti</a>` : '<span class="text-gray-300 text-xs">-</span>'}</td></tr>`; } }); const totalEl = document.getElementById('totalPorsi'); if(totalEl) totalEl.innerText = totalPorsi; } catch (e) { console.error(e); } }
+        
+        // --- NEW: COMPRESS IMAGE FUNCTION (Mencegah Firestore Over Limit) ---
+        function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        // Batasi ukuran gambar agar Base64 tidak terlalu besar
+                        const MAX_WIDTH = 800; // Resolusi cukup untuk dilihat di HP/Laptop
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+                        
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        // Kompres ke JPEG dengan kualitas 0.6 (60%)
+                        // Hasilnya biasanya di bawah 200KB-300KB
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                        resolve(dataUrl);
+                    }
+                }
+                reader.onerror = (error) => reject(error);
+            });
+        }
+
+        // --- UPDATED: SUBMIT ORDER (Simpan Base64 ke Firestore) ---
+        window.submitOrder = async function() { 
+            const btn = document.getElementById('btnOrder'); 
+            const fileInput = document.getElementById('proofInput'); 
+            btn.disabled = true; 
+            btn.innerHTML = '<div class="loader"></div> ...'; 
+            
+            try { 
+                let base64Image = null; 
+                
+                // Jika ada file dan harga > 0 (bukan beasiswa)
+                if (currentUser.price > 0 && fileInput.files[0]) { 
+                    // Proses Kompresi Gambar
+                    base64Image = await compressImage(fileInput.files[0]);
+                } 
+
+                await addDoc(collection(db, "orders"), { 
+                    userName: currentUser.name, 
+                    userCategory: currentUser.category, 
+                    dates: Array.from(selectedDates).sort(), 
+                    totalPrice: selectedDates.size * currentUser.price, 
+                    proofImage: base64Image, // Simpan string Base64 langsung
+                    status: "pending", 
+                    createdAt: new Date() 
+                }); 
+                
+                alert("Pesanan Berhasil!"); 
+                await fetchUserPaidDates(); 
+                location.reload(); 
+            } catch (error) { 
+                alert("Gagal: " + error.message); 
+                btn.disabled = false; 
+            } 
+        }
+
+        // --- UPDATED: FETCH ORDERS (Admin view with Base64 Modal) ---
+        window.fetchOrders = async function() { 
+            const tbody = document.getElementById('orderTableBody'); 
+            if(tbody) tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center"><div class="loader"></div></td></tr>'; 
+            
+            try { 
+                const snapshot = await getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc"))); 
+                if(tbody) tbody.innerHTML = ""; 
+                let totalPorsi = 0; 
+                
+                ordersDataMap = {}; // Reset data lokal
+
+                snapshot.forEach(doc => { 
+                    const d = doc.data(); 
+                    totalPorsi += d.dates ? d.dates.length : 0; 
+                    
+                    // Simpan data order (termasuk proofImage base64) ke memory lokal
+                    // Agar tidak perlu render string base64 yang panjang di HTML
+                    ordersDataMap[doc.id] = d;
+
+                    if(tbody) { 
+                        let orderDate = "-"; 
+                        if(d.createdAt && d.createdAt.toDate) orderDate = d.createdAt.toDate().toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); 
+                        const dateList = d.dates ? d.dates.join(", ") : "-"; 
+                        
+                        // Cek apakah ada bukti gambar
+                        let proofBtn = '<span class="text-gray-300 text-xs">-</span>';
+                        if (d.proofImage) {
+                            // Panggil fungsi viewProof dengan ID dokumen
+                            proofBtn = `<button onclick="viewProof('${doc.id}')" class="bg-blue-100 text-blue-600 px-3 py-1 rounded text-xs font-bold hover:bg-blue-200 transition"><i class="fas fa-eye mr-1"></i> Lihat Bukti</button>`;
+                        } else if (d.proofUrl) {
+                            // Support legacy data (yang masih pakai URL Storage)
+                             proofBtn = `<a href="${d.proofUrl}" target="_blank" class="text-blue-600 underline text-xs">Link Bukti</a>`;
+                        }
+
+                        tbody.innerHTML += `
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="p-4 text-xs text-gray-500 font-medium">${orderDate}</td>
+                                <td class="p-4">
+                                    <div class="font-bold">${d.userName}</div>
+                                    <div class="text-xs text-gray-500">${d.userCategory}</div>
+                                </td>
+                                <td class="p-4">
+                                    <div class="text-xs">Tgl Catering: <span class="text-gray-600">${dateList}</span></div>
+                                    <div class="font-bold text-green-600 mt-1">Rp ${d.totalPrice.toLocaleString()}</div>
+                                </td>
+                                <td class="p-4">${proofBtn}</td>
+                            </tr>`; 
+                    } 
+                }); 
+                
+                const totalEl = document.getElementById('totalPorsi'); 
+                if(totalEl) totalEl.innerText = totalPorsi; 
+            } catch (e) { console.error(e); } 
+        }
+
+        // --- NEW: FUNCTION TO OPEN PROOF MODAL ---
+        window.viewProof = function(orderId) {
+            const orderData = ordersDataMap[orderId];
+            if (orderData && orderData.proofImage) {
+                const imgDisplay = document.getElementById('proofImageDisplay');
+                imgDisplay.src = orderData.proofImage; // Set src ke Base64 string
+                document.getElementById('modalProofView').classList.remove('hidden');
+            } else {
+                alert("Gambar tidak ditemukan atau rusak.");
+            }
+        }
     
         function loadMenusRealtime() {
             onSnapshot(query(collection(db, "menus")), (snapshot) => {
