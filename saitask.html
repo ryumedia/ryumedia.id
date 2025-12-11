@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PT. Sarana Amal Indonesia - Task Management</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c7c7cc; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 min-h-screen flex flex-col">
+
+    <!-- APP CONTAINER -->
+    <div id="app" class="flex-1 flex flex-col">
+        <!-- Loading State -->
+        <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center text-indigo-900">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+            <p class="text-sm font-medium animate-pulse">Menghubungkan ke Database...</p>
+        </div>
+
+        <!-- VIEW: PUBLIC (Main) -->
+        <div id="view-public" class="flex-col min-h-screen hidden">
+            <!-- Header -->
+            <div class="bg-indigo-900 text-white p-4 shadow-md sticky top-0 z-20">
+                <div class="flex justify-between items-start max-w-lg mx-auto">
+                    <div class="flex-1">
+                        <h1 class="text-lg font-bold flex items-center gap-2">
+                            <i data-lucide="briefcase" class="w-5 h-5"></i> PT. Sarana Amal Indonesia
+                        </h1>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-[10px] text-indigo-200 mt-1">
+                            <span>Task Management</span>
+                            <span class="hidden sm:inline text-indigo-400">|</span>
+                            <!-- Menampilkan Tanggal Hari Ini -->
+                            <span id="header-today-date" class="bg-indigo-800 px-2 py-0.5 rounded text-white font-medium border border-indigo-700 w-fit">
+                                <!-- Date injected by JS -->
+                            </span>
+                        </div>
+                    </div>
+                    <!-- Tombol Admin (Icon Only) -->
+                    <button onclick="router.navigate('login')" class="bg-indigo-800 hover:bg-indigo-700 p-2 rounded-full transition text-indigo-200 hover:text-white border border-indigo-700/50">
+                        <i data-lucide="settings" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                
+                <!-- Tabs (Responsive Mobile Style) -->
+                <div class="flex gap-2 mt-4 max-w-lg mx-auto">
+                    <button onclick="ui.switchPublicTab('daily')" id="tab-btn-daily" class="flex-1 px-2 py-2 rounded-lg text-xs font-medium transition bg-white text-indigo-900 flex items-center justify-center gap-1.5 shadow-sm">
+                        <i data-lucide="list-todo" class="w-4 h-4"></i> Harian
+                    </button>
+                    <button onclick="ui.switchPublicTab('recap')" id="tab-btn-recap" class="flex-1 px-2 py-2 rounded-lg text-xs font-medium transition bg-indigo-800 text-indigo-100 hover:bg-indigo-700 flex items-center justify-center gap-1.5">
+                        <i data-lucide="users" class="w-4 h-4"></i> Rekap
+                    </button>
+                    <button onclick="ui.switchPublicTab('projects')" id="tab-btn-projects" class="flex-1 px-2 py-2 rounded-lg text-xs font-medium transition bg-indigo-800 text-indigo-100 hover:bg-indigo-700 flex items-center justify-center gap-1.5">
+                        <i data-lucide="pie-chart" class="w-4 h-4"></i> Project
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <main class="flex-1 py-6 px-4 max-w-lg mx-auto w-full">
+                <!-- Tab 1: Daily Tasks -->
+                <div id="tab-content-daily" class="space-y-4">
+                    <div class="flex justify-between items-center mb-3 border-b pb-2 gap-2">
+                        <h2 class="text-lg font-semibold text-gray-800">Daftar Pekerjaan</h2>
+                        <!-- Date Filter -->
+                        <div class="flex items-center gap-2"> 
+                             <input type="date" id="daily-date-filter" onchange="ui.setDailyDateFilter(this.value)" class="border border-gray-300 rounded-lg px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm text-gray-600">
+                        </div>
+                    </div>
+                    
+                    <div id="list-daily-tasks" class="space-y-3">
+                        <!-- Tasks injected here -->
+                    </div>
+                </div>
+
+                <!-- Tab 2: Recap -->
+                <div id="tab-content-recap" class="hidden space-y-4">
+                    <div class="flex justify-between items-center mb-3 border-b pb-2 gap-2">
+                        <h2 class="text-lg font-semibold text-gray-800">Rekapitulasi</h2>
+                        <!-- Employee Filter Added Here -->
+                        <select id="recap-filter-emp" onchange="ui.setRecapEmployeeFilter(this.value)" class="border border-gray-300 rounded-lg px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm text-gray-600 max-w-[150px]">
+                            <option value="">Semua Karyawan</option>
+                            <!-- Options injected via JS -->
+                        </select>
+                    </div>
+                    <div id="list-recap" class="space-y-4">
+                        <!-- Recap injected here -->
+                    </div>
+                </div>
+
+                <!-- Tab 3: Projects -->
+                <div id="tab-content-projects" class="hidden space-y-4">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">Persentase Project</h2>
+                    <div id="list-projects-public" class="space-y-4">
+                        <!-- Projects injected here -->
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- VIEW: ADMIN LOGIN -->
+        <div id="view-login" class="flex min-h-screen bg-gray-100 items-center justify-center p-4 hidden">
+            <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full">
+                <div class="flex justify-center mb-4">
+                    <div class="bg-indigo-100 p-3 rounded-full">
+                        <i data-lucide="settings" class="w-8 h-8 text-indigo-600"></i>
+                    </div>
+                </div>
+                <h2 class="text-2xl font-bold text-center text-gray-800 mb-2">Panel Admin</h2>
+                <p class="text-center text-gray-500 mb-6 text-sm">Masukkan kode akses untuk melanjutkan.</p>
+                <form onsubmit="admin.login(event)">
+                    <input type="password" id="admin-password" class="w-full border border-gray-300 rounded-lg px-4 py-3 mb-4 focus:ring-2 focus:ring-indigo-500 outline-none transition" placeholder="Password (123456)">
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition mb-4">Masuk</button>
+                </form>
+                <button onclick="router.navigate('public')" class="w-full text-gray-500 text-sm hover:text-gray-700 text-center block">Kembali ke Halaman Utama</button>
+            </div>
+        </div>
+
+        <!-- VIEW: ADMIN DASHBOARD -->
+        <div id="view-admin" class="flex flex-col md:flex-row min-h-screen bg-gray-50 hidden">
+            <!-- Sidebar -->
+            <aside class="bg-white w-full md:w-64 border-r border-gray-200 flex-shrink-0">
+                <div class="p-6 border-b border-gray-100 flex items-center justify-between md:block">
+                    <h2 class="text-xl font-bold text-indigo-900">Admin Panel</h2>
+                    <button class="md:hidden p-2" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+                        <i data-lucide="menu"></i>
+                    </button>
+                </div>
+                <nav id="mobile-menu" class="p-4 space-y-2 hidden md:block">
+                    <button onclick="ui.switchAdminSection('employees')" id="admin-btn-employees" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition bg-indigo-50 text-indigo-700 font-semibold">
+                        <i data-lucide="users" class="w-5 h-5"></i> Data Karyawan
+                    </button>
+                    <button onclick="ui.switchAdminSection('tasks')" id="admin-btn-tasks" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition text-gray-600 hover:bg-gray-50">
+                        <i data-lucide="list-todo" class="w-5 h-5"></i> Input Tugas
+                    </button>
+                    <button onclick="ui.switchAdminSection('projects')" id="admin-btn-projects" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition text-gray-600 hover:bg-gray-50">
+                        <i data-lucide="pie-chart" class="w-5 h-5"></i> Pengaturan Project
+                    </button>
+                    <div class="pt-8 mt-4 border-t border-gray-100">
+                        <button onclick="admin.logout()" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-red-600 hover:bg-red-50 transition">
+                            <i data-lucide="log-out" class="w-5 h-5"></i> Keluar
+                        </button>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Admin Content -->
+            <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+                
+                <!-- Section: Employees -->
+                <div id="admin-section-employees" class="max-w-2xl">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Data Karyawan</h2>
+                    <form onsubmit="dataManager.handleEmployeeSubmit(event)" class="flex gap-2 mb-8">
+                        <input type="text" id="emp-name-input" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Nama Karyawan" required>
+                        <button type="submit" id="btn-save-emp" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 transition">Tambah</button>
+                        <button type="button" id="btn-cancel-emp" onclick="dataManager.resetEmployeeForm()" class="hidden bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400">Batal</button>
+                    </form>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <table class="w-full">
+                            <tbody id="list-admin-employees">
+                                <!-- Employees List -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Section: Tasks -->
+                <div id="admin-section-tasks" class="hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Input Tugas</h2>
+                        <button onclick="ui.openTaskModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Tambah Tugas
+                        </button>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500">Tanggal</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500">Karyawan</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500">Tugas</th>
+                                    <th class="px-4 py-3 text-right font-medium text-gray-500">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="list-admin-tasks">
+                                <!-- Tasks List -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Section: Projects -->
+                <div id="admin-section-projects" class="hidden max-w-4xl">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Pengaturan Project</h2>
+                    <form onsubmit="dataManager.handleProjectSubmit(event)" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-8">
+                        <div class="flex flex-col md:flex-row gap-3">
+                            <input id="project-name-input" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Nama Project Baru..." required>
+                            
+                            <div class="flex items-center gap-2">
+                                <label class="text-sm font-medium text-gray-600 whitespace-nowrap">Target:</label>
+                                <input type="date" id="project-target-input" class="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <button type="submit" id="btn-save-proj" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700">Buat Project</button>
+                        </div>
+                        <div id="btn-cancel-proj" onclick="dataManager.resetProjectForm()" class="hidden mt-2 text-right">
+                            <button type="button" class="text-sm text-gray-500 hover:text-gray-700 underline">Batal Edit</button>
+                        </div>
+                    </form>
+
+                    <div id="list-admin-projects" class="grid gap-6">
+                        <!-- Projects List -->
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+        <!-- MODAL: ADD/EDIT TASK -->
+        <div id="modal-task" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold" id="modal-task-title">Tambah Tugas Baru</h3>
+                    <button onclick="ui.toggleModal('modal-task', false)" class="text-gray-400 hover:text-gray-600"><i data-lucide="x"></i></button>
+                </div>
+                <form onsubmit="dataManager.handleTaskSubmit(event)" class="space-y-4">
+                    <input type="hidden" id="task-id-input"> <!-- Hidden ID for Edit -->
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+                        <input type="date" id="task-date-input" required class="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Karyawan</label>
+                        <select id="task-emp-select" required onchange="dataManager.checkCopyTask()" class="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">-- Pilih --</option>
+                            <!-- Options injected -->
+                        </select>
+                    </div>
+                    
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="task-copy-prev" onchange="dataManager.checkCopyTask()" class="rounded text-indigo-600 focus:ring-indigo-500">
+                        <label for="task-copy-prev" class="text-sm text-gray-600 select-none">Sama dengan tugas sebelumnya</label>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Tugas</label>
+                        <input id="task-name-input" required class="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Contoh: Maintenance Server">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan (Opsional)</label>
+                        <textarea id="task-desc-input" class="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Detail pekerjaan..." rows="3"></textarea>
+                    </div>
+                    
+                    <div class="flex gap-2 pt-2">
+                        <button type="button" onclick="ui.toggleModal('modal-task', false)" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
+                        <button type="submit" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- CONFIG ---
+        // PENTING: Ganti object di bawah ini dengan config dari Firebase Console Anda sendiri
+        // jika dijalankan di komputer lokal (agar tidak error ReferenceError).
+        const manualConfig = {
+            apiKey: "AIzaSyChkoQNPtOyHge6OH_FPgNMSR4rbf6DmrQ",
+            authDomain: "tasksai-6cbcf.firebaseapp.com",
+            projectId: "tasksai-6cbcf",
+            storageBucket: "tasksai-6cbcf.firebasestorage.app",
+            messagingSenderId: "1000574041922",
+            appId: "1:1000574041922:web:b97530be9860ba0d5a12db"
+        };
+
+        // Logika Pintar: Gunakan config bawaan jika ada (Canvas), jika tidak gunakan manual (Lokal)
+        const firebaseConfig = (typeof __firebase_config !== 'undefined') 
+            ? JSON.parse(__firebase_config) 
+            : manualConfig;
+
+        const appId = (typeof __app_id !== 'undefined') ? __app_id : 'my-task-app';
+
+        // Init Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- STATE ---
+        const state = {
+            user: null,
+            isAdmin: false,
+            employees: [],
+            tasks: [],
+            projects: [],
+            editingEmpId: null,
+            editingProjId: null,
+            editingSubProject: null 
+            ,
+            dailyDateFilter: new Date().toISOString().split('T')[0], // Default to today
+            recapEmployeeFilter: '' // Default to all employees
+        };
+
+        // --- AUTH ---
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    try {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } catch (innerError) {
+                        console.warn("Token mismatch, using anonymous login.");
+                        await signInAnonymously(auth);
+                    }
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Auth Error:", error);
+                alert("Gagal Login Database.");
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            state.user = user;
+            if (user) {
+                document.getElementById('loading-screen').classList.add('hidden');
+                
+                // Set Header Date
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                const now = new Date();
+                document.getElementById('header-today-date').innerText = now.toLocaleDateString('id-ID', options);
+ 
+                // Initialize Date Filter with Today's Date (now using state)
+                const filterEl = document.getElementById('daily-date-filter');
+                if (filterEl) filterEl.value = state.dailyDateFilter; // Use state value
+
+                initDataListeners();
+                window.router.navigate('public');
+            } else {
+                document.getElementById('loading-screen').classList.remove('hidden');
+            }
+        });
+
+        initAuth();
+
+        // --- DATA LISTENERS ---
+        function initDataListeners() {
+            if (!state.user) return; 
+
+            // Employees
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'employees'), (snap) => {
+                state.employees = snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => a.name.localeCompare(b.name));
+                render.all();
+            }, (error) => console.error(error));
+
+            // Tasks
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'tasks'), (snap) => {
+                state.tasks = snap.docs.map(d => ({id: d.id, ...d.data()}))
+                                .sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                render.all();
+            }, (error) => console.error(error));
+
+            // Projects
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'projects'), (snap) => {
+                state.projects = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                render.all();
+            }, (error) => console.error(error));
+        }
+
+        // --- HELPER ---
+        const formatDate = (dateString) => {
+            if (!dateString) return '';
+            const options = { day: 'numeric', month: 'short', year: 'numeric' };
+            return new Date(dateString).toLocaleDateString('id-ID', options);
+        };
+
+        const safeWrite = async (operation) => {
+            if (!auth.currentUser) {
+                alert("Koneksi terputus. Mohon refresh halaman.");
+                return;
+            }
+            try {
+                await operation();
+            } catch (error) {
+                console.error("Database Error:", error);
+                alert("Gagal menyimpan data! Error: " + error.message);
+            }
+        };
+
+        // --- RENDERERS ---
+        const render = {
+            all: () => {
+                render.employees();
+                render.tasks();
+                render.recap();
+                render.projects();
+                render.adminProjects();
+            },
+
+            employees: () => {
+                const list = document.getElementById('list-admin-employees');
+                list.innerHTML = state.employees.length ? '' : '<tr><td colspan="2" class="p-4 text-gray-500 text-center">Belum ada karyawan.</td></tr>';
+                state.employees.forEach(emp => {
+                    list.innerHTML += `
+                        <tr class="border-b last:border-0 hover:bg-gray-50">
+                            <td class="px-6 py-4 text-gray-700 font-medium">${emp.name}</td>
+                            <td class="px-6 py-4 text-right flex justify-end gap-2">
+                                <button onclick="dataManager.editEmployee('${emp.id}', '${emp.name}')" class="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                                <button onclick="dataManager.deleteEmployee('${emp.id}')" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                // Dropdown in Modal
+                const select = document.getElementById('task-emp-select');
+                const currentVal = select.value;
+                select.innerHTML = '<option value="">-- Pilih --</option>';
+                state.employees.forEach(emp => {
+                    select.innerHTML += `<option value="${emp.id}">${emp.name}</option>`;
+                });
+                select.value = currentVal; 
+
+                // Dropdown in Recap Filter
+                const recapSelect = document.getElementById('recap-filter-emp');
+                if (recapSelect) {
+                    recapSelect.innerHTML = '<option value="">Semua Karyawan</option>';
+                    state.employees.forEach(emp => {
+                        recapSelect.innerHTML += `<option value="${emp.id}">${emp.name}</option>`;
+                    });
+                }
+
+                lucide.createIcons();
+            },
+
+            tasks: () => {
+                // Public List Filtering
+                const filterEl = document.getElementById('daily-date-filter');
+                if (filterEl) filterEl.value = state.dailyDateFilter; // Set input value from state
+                
+                const selectedDate = state.dailyDateFilter; // Use state for filtering
+                const filteredTasks = state.tasks.filter(task => { 
+                    if (!task.createdAt) return false;
+                    const taskDate = new Date(task.createdAt.seconds * 1000).toISOString().split('T')[0];
+                    return taskDate === selectedDate;
+                });
+
+                const publicList = document.getElementById('list-daily-tasks');
+                
+                if (filteredTasks.length === 0) {
+                    publicList.innerHTML = '<div class="col-span-full text-center p-8 bg-gray-50 rounded-lg text-gray-500">Tidak ada tugas pada tanggal ini.</div>';
+                } else {
+                    publicList.innerHTML = filteredTasks.map(task => `
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full font-bold">${task.employeeName}</span>
+                                <span class="text-xs text-gray-400">${task.createdAt ? new Date(task.createdAt.seconds * 1000).toLocaleDateString('id-ID', {hour: '2-digit', minute:'2-digit'}) : '-'}</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 mb-1">${task.taskName}</h3>
+                            <p class="text-sm text-gray-600">${task.description || '-'}</p>
+                            <!-- Badge 'Ditugaskan' removed as requested -->
+                        </div>
+                    `).join('');
+                }
+
+                // Admin List
+                const adminList = document.getElementById('list-admin-tasks');
+                if (state.tasks.length === 0) {
+                    adminList.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-gray-500">Belum ada tugas diinput.</td></tr>';
+                } else {
+                    adminList.innerHTML = state.tasks.map(task => `
+                        <tr class="border-b last:border-0 hover:bg-gray-50">
+                            <td class="px-4 py-3 text-gray-500 w-32">${task.createdAt ? new Date(task.createdAt.seconds * 1000).toLocaleDateString('id-ID') : '-'}</td>
+                            <td class="px-4 py-3 font-medium text-gray-800">${task.employeeName}</td>
+                            <td class="px-4 py-3 text-gray-700">
+                                <div class="font-medium">${task.taskName}</div>
+                                <div class="text-xs text-gray-400 truncate max-w-xs">${task.description || ''}</div>
+                            </td>
+                            <td class="px-4 py-3 text-right flex justify-end gap-1">
+                                <button onclick="ui.openTaskModal('${task.id}')" class="text-blue-500 hover:text-blue-700 p-1"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                                <button onclick="dataManager.deleteTask('${task.id}')" class="text-red-500 hover:text-red-700 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+                lucide.createIcons();
+            },
+
+            recap: () => {
+                const container = document.getElementById('list-recap');
+                const recapSelect = document.getElementById('recap-filter-emp');
+                if (recapSelect) recapSelect.value = state.recapEmployeeFilter; // Set select value from state
+                
+                const filterId = state.recapEmployeeFilter; // Use state for filtering
+                const stats = {};
+                state.tasks.forEach(task => {
+                    // Pastikan task memiliki employeeId sebelum diproses
+                    const employee = state.employees.find(e => e.id === task.employeeId);
+                    if (!employee) return; // Lewati jika karyawan tidak ditemukan
+
+                    if (!stats[employee.id]) stats[employee.id] = { id: employee.id, name: employee.name, tasks: {} };
+                    const key = task.taskName.trim().toLowerCase();
+                    if (!stats[employee.id].tasks[key]) stats[employee.id].tasks[key] = { originalName: task.taskName, count: 0 };
+                    stats[employee.id].tasks[key].count++;
+                });
+
+                let data = Object.values(stats);
+
+                // Filter logic
+                if (filterId) {
+                    data = data.filter(d => d.id === filterId);
+                }
+
+                if (data.length === 0) {
+                    container.innerHTML = '<div class="text-center p-8 bg-gray-50 rounded-lg text-gray-500">Belum ada data rekap untuk pilihan ini.</div>';
+                } else {
+                    container.innerHTML = data.map(emp => `
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            <div class="bg-gray-50 px-4 py-3 border-b flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-sm">${emp.name.charAt(0)}</div>
+                                <h3 class="font-bold text-gray-800">${emp.name}</h3>
+                            </div>
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-gray-500 uppercase bg-white border-b">
+                                    <tr><th class="px-4 py-3 font-medium">Nama Pekerjaan</th><th class="px-4 py-3 font-medium text-right">Frekuensi</th></tr>
+                                </thead>
+                                <tbody>
+                                    ${Object.values(emp.tasks).map(t => `<tr class="border-b last:border-0 hover:bg-gray-50"><td class="px-4 py-3 text-gray-700">${t.originalName}</td><td class="px-4 py-3 text-right font-bold text-indigo-600">${t.count}x</td></tr>`).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `).join('');
+                }
+            },
+
+            projects: () => {
+                const container = document.getElementById('list-projects-public');
+                if (state.projects.length === 0) {
+                    container.innerHTML = '<div class="col-span-full text-center p-12 bg-gray-50 rounded-xl border border-dashed border-gray-300"><p class="text-gray-500">Belum ada data project.</p></div>';
+                    return;
+                }
+                container.innerHTML = state.projects.map(proj => {
+                    const subs = proj.subProjects || [];
+                    const total = subs.length > 0 ? subs.reduce((acc, curr) => acc + (parseInt(curr.percentage) || 0), 0) / subs.length : 0;
+                    const projTargetDisplay = proj.targetDate ? `<span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs border border-orange-200">Target: ${formatDate(proj.targetDate)}</span>` : '';
+
+                    return `
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-bold text-gray-800">${proj.name}</h3>
+                                <div class="text-2xl font-black text-indigo-600">${Math.round(total)}%</div>
+                            </div>
+                            <div class="mb-4 flex items-center">${projTargetDisplay}</div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6"><div class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" style="width: ${Math.min(total, 100)}%"></div></div>
+                            <div class="space-y-3">
+                                <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sub Project</h4>
+                                ${subs.length === 0 ? '<p class="text-sm text-gray-400 italic">Belum ada sub project</p>' : ''}
+                                ${subs.map(sub => {
+                                    const subTargetDisplay = sub.targetDate ? `<span class="text-[10px] text-gray-500 ml-2">(Target: ${formatDate(sub.targetDate)})</span>` : '';
+                                    return `
+                                    <div class="group">
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <div class="flex items-center"><span class="text-gray-700">${sub.name}</span>${subTargetDisplay}</div>
+                                            <span class="font-semibold text-gray-600">${sub.percentage}%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-100 rounded-full h-1.5"><div class="bg-green-500 h-1.5 rounded-full" style="width: ${Math.min(sub.percentage, 100)}%"></div></div>
+                                    </div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            adminProjects: () => {
+                const container = document.getElementById('list-admin-projects');
+                container.innerHTML = state.projects.map(proj => {
+                    const subs = proj.subProjects || [];
+                    const isEditingSub = state.editingSubProject && state.editingSubProject.projId === proj.id;
+                    const subEditIndex = isEditingSub ? state.editingSubProject.index : -1;
+                    const subEditData = subEditIndex > -1 ? subs[subEditIndex] : {name: '', percentage: '', targetDate: ''};
+                    const projTargetInfo = proj.targetDate ? `<span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded ml-2">Target: ${formatDate(proj.targetDate)}</span>` : '';
+
+                    return `
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
+                                <div class="flex items-center"><h3 class="font-bold text-lg text-gray-800">${proj.name}</h3>${projTargetInfo}</div>
+                                <div class="flex gap-2">
+                                    <button onclick="dataManager.editProject('${proj.id}', '${proj.name}', '${proj.targetDate || ''}')" class="bg-white border border-gray-300 text-blue-600 px-3 py-1.5 rounded-lg text-sm hover:bg-blue-50"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                                    <button onclick="dataManager.deleteProject('${proj.id}')" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-sm hover:bg-red-100 border border-red-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </div>
+                            </div>
+                            <form onsubmit="dataManager.handleSubProjectSubmit(event, '${proj.id}')" class="p-4 bg-indigo-50 border-b flex flex-col gap-2">
+                                <input type="hidden" name="subIndex" value="${subEditIndex}">
+                                <div class="flex flex-col md:flex-row gap-2">
+                                    <input name="subName" value="${subEditData.name}" placeholder="Nama Sub Project" class="flex-1 w-full border border-indigo-200 rounded px-3 py-1.5 text-sm" required>
+                                    <div class="flex items-center gap-1 w-full md:w-auto"><input name="subPercent" value="${subEditData.percentage}" type="number" placeholder="%" min="0" max="100" class="w-20 border border-indigo-200 rounded px-3 py-1.5 text-sm" required><span class="text-gray-500 text-sm">%</span></div>
+                                    <div class="flex items-center gap-1 w-full md:w-auto"><input name="subTarget" type="date" value="${subEditData.targetDate || ''}" class="border border-indigo-200 rounded px-3 py-1.5 text-sm"></div>
+                                    <div class="flex gap-1 w-full md:w-auto">
+                                        ${isEditingSub ? `<button type="button" onclick="dataManager.cancelEditSubProject()" class="bg-gray-300 text-gray-700 px-3 py-1.5 rounded text-sm hover:bg-gray-400">Batal</button>` : ''}
+                                        <button type="submit" class="bg-indigo-600 text-white px-4 py-1.5 rounded text-sm hover:bg-indigo-700 flex-1">${isEditingSub ? 'Update' : 'Simpan'}</button>
+                                    </div>
+                                </div>
+                            </form>
+                            <div class="p-0">
+                                ${subs.length === 0 ? '<div class="p-4 text-center text-gray-400 text-sm italic">Belum ada sub project.</div>' : 
+                                `<table class="w-full text-sm">
+                                    <thead><tr class="border-b text-gray-400 text-xs uppercase bg-white"><th class="px-4 py-2 text-left font-normal">Sub Project</th><th class="px-4 py-2 text-left font-normal">Progress</th><th class="px-4 py-2 text-right font-normal">Aksi</th></tr></thead>
+                                    <tbody>
+                                        ${subs.map((sub, idx) => {
+                                            const subDateInfo = sub.targetDate ? `<br><span class="text-[10px] text-gray-500">Target: ${formatDate(sub.targetDate)}</span>` : '';
+                                            return `<tr class="border-b last:border-0 hover:bg-gray-50 ${subEditIndex === idx ? 'bg-indigo-50' : ''}"><td class="px-4 py-3">${sub.name}${subDateInfo}</td><td class="px-4 py-3"><div class="flex items-center gap-2"><div class="w-24 bg-gray-200 rounded-full h-2"><div class="bg-green-500 h-2 rounded-full" style="width: ${sub.percentage}%"></div></div><span class="text-xs font-bold text-gray-600">${sub.percentage}%</span></div></td><td class="px-4 py-3 text-right flex justify-end gap-1"><button onclick="dataManager.editSubProject('${proj.id}', ${idx})" class="text-blue-400 hover:text-blue-600"><i data-lucide="pencil" class="w-4 h-4"></i></button><button onclick="dataManager.deleteSubProject('${proj.id}', ${idx})" class="text-red-400 hover:text-red-600"><i data-lucide="x" class="w-4 h-4"></i></button></td></tr>`;
+                                        }).join('')}
+                                    </tbody>
+                                </table>`}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                lucide.createIcons();
+            }
+        };
+
+        // --- MANAGERS ---
+        window.ui = {
+            switchPublicTab: (tabName) => {
+                ['daily', 'recap', 'projects'].forEach(t => {
+                    document.getElementById(`tab-content-${t}`).classList.add('hidden');
+                    const btn = document.getElementById(`tab-btn-${t}`);
+                    if (t === tabName) {
+                        btn.classList.remove('bg-indigo-800', 'text-indigo-100');
+                        btn.classList.add('bg-white', 'text-indigo-900');
+                    } else {
+                        btn.classList.add('bg-indigo-800', 'text-indigo-100');
+                        btn.classList.remove('bg-white', 'text-indigo-900');
+                    }
+                });
+                document.getElementById(`tab-content-${tabName}`).classList.remove('hidden');
+                lucide.createIcons();
+            },
+            switchAdminSection: (secName) => {
+                ['employees', 'tasks', 'projects'].forEach(s => {
+                    document.getElementById(`admin-section-${s}`).classList.add('hidden');
+                    const btn = document.getElementById(`admin-btn-${s}`);
+                    if (s === secName) {
+                        btn.classList.add('bg-indigo-50', 'text-indigo-700', 'font-semibold');
+                        btn.classList.remove('text-gray-600', 'hover:bg-gray-50');
+                    } else {
+                        btn.classList.remove('bg-indigo-50', 'text-indigo-700', 'font-semibold');
+                        btn.classList.add('text-gray-600', 'hover:bg-gray-50');
+                    }
+                });
+                document.getElementById(`admin-section-${secName}`).classList.remove('hidden');
+                document.getElementById('mobile-menu').classList.add('hidden');
+            },
+            toggleModal: (id, show) => {
+                const el = document.getElementById(id);
+                if (show) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            },
+            openTaskModal: (taskId = null) => {
+                const modalTitle = document.getElementById('modal-task-title');
+                const idInput = document.getElementById('task-id-input');
+                const nameInput = document.getElementById('task-name-input');
+                const descInput = document.getElementById('task-desc-input');
+                const empSelect = document.getElementById('task-emp-select');
+                const dateInput = document.getElementById('task-date-input');
+                const copyCheck = document.getElementById('task-copy-prev');
+
+                if (taskId) {
+                    const task = state.tasks.find(t => t.id === taskId);
+                    if (!task) return;
+                    modalTitle.innerText = "Edit Tugas";
+                    idInput.value = taskId;
+                    nameInput.value = task.taskName;
+                    descInput.value = task.description || '';
+                    empSelect.value = task.employeeId;
+                    if(task.createdAt) {
+                        const date = new Date(task.createdAt.seconds * 1000);
+                        dateInput.value = date.toISOString().split('T')[0];
+                    } else {
+                        dateInput.value = new Date().toISOString().split('T')[0];
+                    }
+                    copyCheck.checked = false;
+                    copyCheck.disabled = true; 
+                } else {
+                    modalTitle.innerText = "Tambah Tugas Baru";
+                    idInput.value = "";
+                    nameInput.value = "";
+                    descInput.value = "";
+                    empSelect.value = "";
+                    dateInput.value = new Date().toISOString().split('T')[0];
+                    copyCheck.checked = false;
+                    copyCheck.disabled = false;
+                }
+                ui.toggleModal('modal-task', true);
+            }
+            ,
+            setDailyDateFilter: (date) => {
+                state.dailyDateFilter = date;
+                render.all(); // Re-render everything with the new filter
+            },
+            setRecapEmployeeFilter: (employeeId) => {
+                state.recapEmployeeFilter = employeeId;
+                render.all(); // Re-render everything with the new filter
+            }
+
+        };
+
+        window.router = {
+            navigate: (viewName) => {
+                ['public', 'login', 'admin'].forEach(v => {
+                    document.getElementById(`view-${v}`).classList.add('hidden');
+                });
+                document.getElementById(`view-${viewName}`).classList.remove('hidden');
+                lucide.createIcons();
+            }
+        };
+
+        window.admin = {
+            login: (e) => {
+                e.preventDefault();
+                const pwd = document.getElementById('admin-password').value;
+                if (pwd === '123456') {
+                    state.isAdmin = true;
+                    document.getElementById('admin-password').value = '';
+                    window.router.navigate('admin');
+                } else {
+                    alert('Password Salah!');
+                }
+            },
+            logout: () => {
+                state.isAdmin = false;
+                window.router.navigate('login');
+            }
+        };
+
+        window.dataManager = {
+            handleEmployeeSubmit: async (e) => {
+                e.preventDefault();
+                const input = document.getElementById('emp-name-input');
+                const name = input.value.trim();
+                if(!name) return;
+                await safeWrite(async () => {
+                    if (state.editingEmpId) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'employees', state.editingEmpId), { name });
+                        dataManager.resetEmployeeForm();
+                    } else {
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'employees'), { name });
+                        input.value = '';
+                    }
+                });
+            },
+            editEmployee: (id, currentName) => {
+                state.editingEmpId = id;
+                const input = document.getElementById('emp-name-input');
+                const btnSave = document.getElementById('btn-save-emp');
+                const btnCancel = document.getElementById('btn-cancel-emp');
+                input.value = currentName;
+                input.focus();
+                btnSave.innerText = "Update";
+                btnCancel.classList.remove('hidden');
+            },
+            resetEmployeeForm: () => {
+                state.editingEmpId = null;
+                document.getElementById('emp-name-input').value = '';
+                document.getElementById('btn-save-emp').innerText = "Tambah";
+                document.getElementById('btn-cancel-emp').classList.add('hidden');
+            },
+            deleteEmployee: async (id) => {
+                if(confirm("Hapus karyawan ini?")) {
+                    await safeWrite(async () => {
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'employees', id));
+                        if (state.editingEmpId === id) dataManager.resetEmployeeForm();
+                    });
+                }
+            },
+            handleTaskSubmit: async (e) => {
+                e.preventDefault();
+                const id = document.getElementById('task-id-input').value;
+                const empId = document.getElementById('task-emp-select').value;
+                const taskName = document.getElementById('task-name-input').value;
+                const desc = document.getElementById('task-desc-input').value;
+                const dateStr = document.getElementById('task-date-input').value;
+                if(!empId || !taskName || !dateStr) return;
+                const emp = state.employees.find(e => e.id === empId);
+                const dateObj = new Date(dateStr); 
+                await safeWrite(async () => {
+                    if (id) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tasks', id), {
+                            employeeId: empId,
+                            employeeName: emp ? emp.name : 'Unknown',
+                            taskName,
+                            description: desc,
+                            createdAt: Timestamp.fromDate(dateObj)
+                        });
+                    } else {
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'tasks'), {
+                            employeeId: empId,
+                            employeeName: emp ? emp.name : 'Unknown',
+                            taskName,
+                            description: desc,
+                            createdAt: Timestamp.fromDate(dateObj)
+                        });
+                    }
+                    ui.toggleModal('modal-task', false);
+                });
+            },
+            checkCopyTask: () => {
+                const isChecked = document.getElementById('task-copy-prev').checked;
+                const empId = document.getElementById('task-emp-select').value;
+                if (isChecked && empId) {
+                    const empTasks = state.tasks.filter(t => t.employeeId === empId);
+                    if (empTasks.length > 0) {
+                        const last = empTasks[0]; 
+                        document.getElementById('task-name-input').value = last.taskName;
+                        document.getElementById('task-desc-input').value = last.description;
+                    } else {
+                        alert('Belum ada tugas sebelumnya untuk karyawan ini.');
+                        document.getElementById('task-copy-prev').checked = false;
+                    }
+                }
+            },
+            deleteTask: async (id) => {
+                if(confirm("Hapus tugas ini?")) {
+                    await safeWrite(async () => {
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tasks', id));
+                    });
+                }
+            },
+            handleProjectSubmit: async (e) => {
+                e.preventDefault();
+                const nameInput = document.getElementById('project-name-input');
+                const dateInput = document.getElementById('project-target-input');
+                const name = nameInput.value.trim();
+                const targetDate = dateInput.value; 
+                if(!name) return;
+                await safeWrite(async () => {
+                    if (state.editingProjId) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'projects', state.editingProjId), { name, targetDate });
+                        dataManager.resetProjectForm();
+                    } else {
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'projects'), { name, targetDate, subProjects: [] });
+                        nameInput.value = '';
+                        dateInput.value = '';
+                    }
+                });
+            },
+            editProject: (id, currentName, currentDate) => {
+                state.editingProjId = id;
+                const nameInput = document.getElementById('project-name-input');
+                const dateInput = document.getElementById('project-target-input');
+                const btnSave = document.getElementById('btn-save-proj');
+                const btnCancel = document.getElementById('btn-cancel-proj');
+                nameInput.value = currentName;
+                dateInput.value = currentDate || '';
+                nameInput.focus();
+                btnSave.innerText = "Update";
+                btnCancel.classList.remove('hidden');
+            },
+            resetProjectForm: () => {
+                state.editingProjId = null;
+                document.getElementById('project-name-input').value = '';
+                document.getElementById('project-target-input').value = '';
+                document.getElementById('btn-save-proj').innerText = "Buat Project";
+                document.getElementById('btn-cancel-proj').classList.add('hidden');
+            },
+            deleteProject: async (id) => {
+                if(confirm("Hapus project ini beserta isinya?")) {
+                    await safeWrite(async () => {
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'projects', id));
+                        if (state.editingProjId === id) dataManager.resetProjectForm();
+                    });
+                }
+            },
+            handleSubProjectSubmit: async (e, projId) => {
+                e.preventDefault();
+                const form = e.target;
+                const subIndex = parseInt(form.subIndex.value);
+                const name = form.subName.value;
+                const percentage = parseInt(form.subPercent.value);
+                const targetDate = form.subTarget.value; 
+                const project = state.projects.find(p => p.id === projId);
+                if(!project) return;
+                await safeWrite(async () => {
+                    let updatedSubs = [...(project.subProjects || [])];
+                    if (subIndex > -1) {
+                        updatedSubs[subIndex] = { name, percentage, targetDate };
+                    } else {
+                        updatedSubs.push({ name, percentage, targetDate });
+                    }
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'projects', projId), { subProjects: updatedSubs });
+                    if (subIndex > -1) dataManager.cancelEditSubProject();
+                    else form.reset();
+                });
+            },
+            editSubProject: (projId, index) => {
+                state.editingSubProject = { projId, index };
+                render.adminProjects(); 
+            },
+            cancelEditSubProject: () => {
+                state.editingSubProject = null;
+                render.adminProjects();
+            },
+            deleteSubProject: async (projId, idx) => {
+                if(!confirm("Hapus sub project ini?")) return;
+                await safeWrite(async () => {
+                    const project = state.projects.find(p => p.id === projId);
+                    const updatedSubs = project.subProjects.filter((_, i) => i !== idx);
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'projects', projId), { subProjects: updatedSubs });
+                    if (state.editingSubProject && state.editingSubProject.projId === projId && state.editingSubProject.index === idx) {
+                        dataManager.cancelEditSubProject();
+                    }
+                });
+            }
+        };
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
