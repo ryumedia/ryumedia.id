@@ -529,6 +529,7 @@
         
         // Dapur State
         let dapurDate = new Date();
+        let dapurChecklistData = new Set(); // NEW: To store checked items
 
         // --- INIT & SESSION ---
         async function loadPricing() {
@@ -1300,11 +1301,17 @@
                 allNotOrdered = {};
                 notOrderedSnap.forEach(doc => { const d = doc.data(); allNotOrdered[`${d.userName}_${d.date}`] = true; });
 
+                // NEW: Fetch Dapur Checklist Data
+                const checklistSnap = await getDocs(collection(db, "dapurChecklist"));
+                dapurChecklistData = new Set();
+                checklistSnap.forEach(doc => dapurChecklistData.add(doc.id));
+
+
 
                 // 3. Get All Students for status/jenjang info
                 const userSnap = await getDocs(query(collection(db, "users"), where("role", "==", "Murid")));
                 allStudents = []; // Re-use global allStudents
-                userSnap.forEach(doc => allStudents.push(doc.data()));
+                userSnap.forEach(doc => allStudents.push({ id: doc.id, ...doc.data() }));
 
                 renderDapurOrders();
             } catch(e) { console.error(e); }
@@ -1567,6 +1574,24 @@
             }
         }
 
+        // --- NEW: DAPUR CHECKLIST ---
+        window.toggleDapurChecklist = async function(checkbox, date, studentId) {
+            const docId = `${date}_${studentId}`;
+            checkbox.disabled = true;
+            try {
+                if (checkbox.checked) {
+                    // Add to checklist
+                    await setDoc(doc(db, "dapurChecklist", docId), { createdAt: new Date() });
+                    dapurChecklistData.add(docId);
+                } else {
+                    // Remove from checklist
+                    await deleteDoc(doc(db, "dapurChecklist", docId));
+                    dapurChecklistData.delete(docId);
+                }
+            } catch (e) { console.error("Checklist error:", e); alert("Gagal menyimpan checklist."); }
+            finally { checkbox.disabled = false; }
+        }
+
         // --- NEW: DAPUR SANTRI LAMA ---
         window.renderDapurSantriLama = async function() {
             const container = document.getElementById('dapurSantriLamaList');
@@ -1598,14 +1623,17 @@
                     return;
                 }
 
-                santriLamaOrders.sort((a, b) => a.name.localeCompare(b.name)).forEach(student => {
+                santriLamaOrders.sort((a, b) => (a.class || "").localeCompare(b.class || "") || a.name.localeCompare(b.name)).forEach(student => {
+                    const docId = `${dateInput}_${student.id}`;
+                    const isChecked = dapurChecklistData.has(docId);
+
                     container.innerHTML += `
                         <div class="bg-white p-4 rounded-xl shadow-sm border flex justify-between items-center">
                             <div>
                                 <div class="font-bold text-gray-800">${student.name}</div>
                                 <div class="text-xs text-gray-500">${student.class || '-'}</div>
                             </div>
-                            <input type="checkbox" class="h-6 w-6 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <input type="checkbox" onchange="toggleDapurChecklist(this, '${dateInput}', '${student.id}')" class="h-6 w-6 rounded border-gray-300 text-blue-600 focus:ring-blue-500" ${isChecked ? 'checked' : ''}>
                         </div>
                     `;
                 });
