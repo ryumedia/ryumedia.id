@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; }
@@ -33,6 +34,7 @@
         .cell-refund { background-color: #fef9c3; color: #a16207; } /* Kuning */
         .cell-holiday { background-color: #fee2e2; color: #ef4444; cursor: not-allowed; } /* Merah */
         .cell-unpaid { background-color: white; color: #cbd5e1; } /* Putih */
+        .cell-not-ordered { background-color: #e5e7eb; color: #6b7280; } /* Abu-abu */
 
         /* Utils */
         .hidden { display: none !important; }
@@ -152,14 +154,25 @@
                         </div>
                     </div>
                 </div>
+                <!-- Tab Notes (NEW) -->
+                <div id="tabContent-notes" class="hidden p-4 animate-fade-in">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-gray-800">Catatan Khusus</h3>
+                        <button onclick="openModalNote()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm shadow hover:bg-blue-700 flex items-center gap-2 whitespace-nowrap"><i class="fas fa-plus"></i> Tambah</button>
+                    </div>
+                    <div id="notesListContainer" class="space-y-3">
+                         <div class="text-center py-10 text-gray-400">Tidak ada catatan.</div>
+                    </div>
+                </div>
             </div>
             
             <!-- Bottom Navigation -->
             <div class="sticky bottom-0 w-full bg-white border-t flex justify-around items-center h-16 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20">
                 <button onclick="switchMobileTab('menu')" id="nav-menu" class="mobile-tab active flex flex-col items-center justify-center w-full h-full text-gray-400 hover:bg-gray-50 transition"><i class="fas fa-book-open text-xl mb-1 transition-transform"></i><span class="text-[10px] font-medium">Menu</span></button>
                 <button onclick="switchMobileTab('order')" id="nav-order" class="mobile-tab flex flex-col items-center justify-center w-full h-full text-gray-400 hover:bg-gray-50 transition"><i class="fas fa-edit text-xl mb-1 transition-transform"></i><span class="text-[10px] font-medium">Laporan</span></button>
-                <button onclick="switchMobileTab('history')" id="nav-history" class="mobile-tab flex flex-col items-center justify-center w-full h-full text-gray-400 hover:bg-gray-50 transition"><i class="fas fa-history text-xl mb-1 transition-transform"></i><span class="text-[10px] font-medium">Riwayat</span></button>
                 <button onclick="switchMobileTab('profile')" id="nav-profile" class="mobile-tab flex flex-col items-center justify-center w-full h-full text-gray-400 hover:bg-gray-50 transition"><i class="fas fa-user text-xl mb-1 transition-transform"></i><span class="text-[10px] font-medium">Profil</span></button>
+                <button onclick="switchMobileTab('history')" id="nav-history" class="mobile-tab flex flex-col items-center justify-center w-full h-full text-gray-400 hover:bg-gray-50 transition"><i class="fas fa-history text-xl mb-1 transition-transform"></i><span class="text-[10px] font-medium">Riwayat</span></button>
+                <button onclick="switchMobileTab('notes')" id="nav-notes" class="mobile-tab flex flex-col items-center justify-center w-full h-full text-gray-400 hover:bg-gray-50 transition"><i class="fas fa-sticky-note text-xl mb-1 transition-transform"></i><span class="text-[10px] font-medium">Catatan</span></button>
             </div>
         </div>
 
@@ -181,6 +194,7 @@
                     <button onclick="switchAdminTab('allergies')" id="tab-allergies" class="nav-item w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-medium transition text-gray-600 hover:bg-gray-50"><i class="fas fa-exclamation-triangle w-5"></i> Daftar Alergi</button>
                     <button onclick="switchAdminTab('finance')" id="tab-finance" class="nav-item w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-medium transition text-gray-600 hover:bg-gray-50"><i class="fas fa-wallet w-5"></i> Keuangan</button>
                     <button onclick="switchAdminTab('rekap')" id="tab-rekap" class="nav-item w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-medium transition text-gray-600 hover:bg-gray-50"><i class="fas fa-table w-5"></i> Rekap Pemesanan</button>
+                    <button onclick="switchAdminTab('notes')" id="tab-notes" class="nav-item w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-medium transition text-gray-600 hover:bg-gray-50"><i class="fas fa-sticky-note w-5"></i> Catatan</button>
                 </nav>
             </aside>
             <div class="flex-1 p-4 md:p-8 overflow-y-auto">
@@ -193,7 +207,18 @@
                 </div>
 
                 <!-- Header Data Murid -> Data Santri -->
-                <div id="section-students" class="cms-section"><div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4"><h2 class="text-2xl font-bold text-slate-800">Data Santri <span id="studentCount" class="text-gray-400 font-normal text-lg ml-2">(...)</span></h2><div class="flex gap-3 w-full md:w-auto"><div class="relative flex-grow md:flex-grow-0 w-full md:w-64"><i class="fas fa-search absolute left-3 top-3 text-gray-400"></i><input type="text" id="searchStudentInput" onkeyup="filterStudents()" placeholder="Cari nama..." class="pl-10 pr-4 py-2 border rounded-lg outline-none w-full text-sm"></div><button onclick="openModalUser('murid')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm shadow hover:bg-blue-700 flex items-center gap-2 whitespace-nowrap"><i class="fas fa-plus"></i> Tambah</button></div></div><div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 border-b text-gray-600"><tr><th class="p-4">Nama Santri</th><th class="p-4">Kelas</th><th class="p-4">Email</th><th class="p-4">Kategori</th><th class="p-4 text-center">Aksi</th></tr></thead><tbody id="studentTableBody"></tbody></table></div></div>
+                
+                <div id="section-students" class="cms-section">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <h2 class="text-2xl font-bold text-slate-800">Data Santri <span id="studentCount" class="text-gray-400 font-normal text-lg ml-2">(...)</span></h2>
+                        <div class="flex gap-3 w-full md:w-auto">
+                            <div class="relative flex-grow md:flex-grow-0 w-full md:w-64"><i class="fas fa-search absolute left-3 top-3 text-gray-400"></i><input type="text" id="searchStudentInput" onkeyup="filterStudents()" placeholder="Cari nama..." class="pl-10 pr-4 py-2 border rounded-lg outline-none w-full text-sm"></div>
+                            <button onclick="openModalUpload()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm shadow hover:bg-green-700 flex items-center gap-2 whitespace-nowrap"><i class="fas fa-file-excel"></i> Upload</button>
+                            <button onclick="openModalUser('murid')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm shadow hover:bg-blue-700 flex items-center gap-2 whitespace-nowrap"><i class="fas fa-plus"></i> Tambah</button>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 border-b text-gray-600"><tr><th class="p-4">Nama Santri</th><th class="p-4">Kelas</th><th class="p-4">Jenjang</th><th class="p-4">Status</th><th class="p-4">Email</th><th class="p-4">Kategori</th><th class="p-4 text-center">Aksi</th></tr></thead><tbody id="studentTableBody"></tbody></table></div>
+                </div>
                 <div id="section-admins" class="cms-section hidden"><div class="flex justify-between mb-6"><h2 class="text-2xl font-bold text-slate-800">Data Admin</h2><button onclick="openModalUser('admin')" class="bg-slate-700 text-white px-4 py-2 rounded-lg text-sm shadow hover:bg-slate-800 flex items-center gap-2"><i class="fas fa-plus"></i> Tambah Admin</button></div><div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 border-b text-gray-600"><tr><th class="p-4">Nama Admin</th><th class="p-4">Email</th><th class="p-4">Role</th><th class="p-4 text-center">Aksi</th></tr></thead><tbody id="adminTableBody"></tbody></table></div></div>
                 <div id="section-food" class="cms-section hidden"><h2 class="text-2xl font-bold text-slate-800 mb-6">Manage Menu (Grid)</h2><div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start"><div class="bg-white p-6 rounded-xl shadow-sm border sticky top-0"><h3 class="font-bold text-lg mb-4 border-b pb-2">Editor Menu</h3><div class="mb-4"><label class="block text-xs font-bold text-gray-400 mb-1">MENGATUR TANGGAL</label><div id="adminSelectedDateDisplay" class="font-bold text-blue-700 text-lg">Pilih tanggal di kalender</div><input type="hidden" id="adminSelectedDateRaw"></div><div id="adminMenuForm" class="opacity-50 pointer-events-none transition-opacity"><div class="flex items-center justify-between mb-4 bg-gray-50 p-3 rounded-lg border"><span class="text-sm font-semibold text-gray-700">Set Sebagai Libur?</span><div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in"><input type="checkbox" name="toggle" id="menuHolidayInput" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300"/><label for="toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label></div></div><div id="menuNameContainer"><label class="block text-xs font-bold text-gray-500 mb-1">NAMA MAKANAN</label><input type="text" id="menuNameInput" class="w-full border p-2 rounded-lg mb-4 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Contoh: Ayam Bakar"></div><button onclick="saveMenu()" id="btnSaveMenu" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-medium">Simpan Menu</button></div><p class="text-[10px] text-gray-400 mt-4 text-center">Tips: Klik tanggal di kanan untuk mulai mengedit.</p></div><div class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border"><div class="flex justify-between items-center mb-6"><div class="flex items-center gap-2"><button onclick="changeAdminMonth(-1)" class="p-2 bg-gray-100 hover:bg-gray-200 rounded text-gray-600"><i class="fas fa-chevron-left"></i></button><span id="adminMonthLabel" class="font-bold text-lg w-40 text-center">Desember 2025</span><button onclick="changeAdminMonth(1)" class="p-2 bg-gray-100 hover:bg-gray-200 rounded text-gray-600"><i class="fas fa-chevron-right"></i></button></div><div class="flex gap-3 text-[10px]"><span class="flex items-center gap-1"><div class="w-3 h-3 bg-green-100 border border-green-300 rounded"></div> Ada Menu</span><span class="flex items-center gap-1"><div class="w-3 h-3 bg-red-100 border border-red-300 rounded"></div> Libur</span></div></div><div class="grid grid-cols-4 gap-2 mb-2 text-center text-xs font-bold text-gray-400 uppercase"><div>Sen</div><div>Selasa</div><div>Rabu</div><div>Kamis</div></div><div id="adminCalendarGrid" class="grid grid-cols-4 gap-2 text-sm"></div></div></div></div>
                 <div id="section-finance" class="cms-section hidden"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-slate-800">Laporan Pesanan</h2><div class="flex gap-2"><button onclick="openModalPricing()" class="bg-yellow-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-yellow-600 flex items-center gap-2 shadow"><i class="fas fa-tags"></i> Edit Harga</button><button onclick="fetchOrders()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300 shadow"><i class="fas fa-sync-alt"></i> Refresh</button></div></div><div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 border-b"><tr><th class="p-4">Tanggal Order</th><th class="p-4">Pemesan</th><th class="p-4">Detail</th><th class="p-4">Bukti</th></tr></thead><tbody id="orderTableBody"><tr><td colspan="4" class="p-4 text-center text-gray-400">Memuat data...</td></tr></tbody></table></div></div>
@@ -208,10 +233,11 @@
                             <button onclick="changeRekapMonth(1)" class="p-2 bg-white border rounded shadow-sm hover:bg-gray-50"><i class="fas fa-chevron-right"></i></button>
                         </div>
                     </div>
-                    <div class="flex gap-4 text-xs mb-4">
+                    <div class="flex gap-4 text-xs mb-4 flex-wrap">
                          <div class="flex items-center gap-2"><div class="w-4 h-4 bg-green-100 border border-green-400"></div> Lunas</div>
                          <div class="flex items-center gap-2"><div class="w-4 h-4 bg-white border"></div> Kosong</div>
                          <div class="flex items-center gap-2"><div class="w-4 h-4 bg-yellow-100 border border-yellow-400"></div> Refund</div>
+                         <div class="flex items-center gap-2"><div class="w-4 h-4 bg-gray-200 border border-gray-400"></div> Tidak Pesan</div>
                          <div class="flex items-center gap-2"><div class="w-4 h-4 bg-red-100 border border-red-400"></div> Libur</div>
                     </div>
                     <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
@@ -250,13 +276,25 @@
                     </div>
                 </div>
 
+                <!-- SECTION: CATATAN (NEW FOR ADMIN) -->
+                <div id="section-notes" class="cms-section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800">Semua Catatan</h2>
+                        <button onclick="openModalNote()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm shadow hover:bg-blue-700 flex items-center gap-2 whitespace-nowrap"><i class="fas fa-plus"></i> Tambah Catatan</button>
+                    </div>
+                    <div id="adminNotesListContainer" class="space-y-3">
+                         <div class="text-center py-10 text-gray-400">Memuat catatan...</div>
+                    </div>
+                </div>
+
+
             </div>
         </div>
 
         <!-- NEW: Dashboard Dapur (Mobile View) -->
         <div id="adminDapurDashboard" class="hidden w-full max-w-lg mx-auto bg-white h-full flex flex-col relative shadow-2xl border-x border-gray-200 z-50 absolute inset-0">
             <!-- Header Dapur -->
-            <div class="bg-white border-b p-4 flex justify-between items-center shadow-sm z-10">
+            <div class="bg-white border-b p-4 flex justify-between items-center shadow-sm z-10 flex-shrink-0">
                 <div>
                     <h2 class="font-bold text-lg text-slate-800">Dashboard Dapur</h2>
                     <p class="text-xs text-gray-500 font-medium" id="dapurDateDisplay">...</p>
@@ -296,6 +334,31 @@
                      </div>
                      <div id="dapurAllergyList" class="space-y-3"></div>
                 </div>
+
+                <!-- Tab 4: Catatan Khusus -->
+                <div id="dapurContent-notes" class="hidden p-4 space-y-4 animate-fade-in">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border">
+                        <label for="dapurNoteDate" class="block text-xs font-bold text-gray-500 mb-1">Pilih Tanggal Catatan</label>
+                        <input type="date" id="dapurNoteDate" onchange="renderDapurNotes()" class="w-full border p-2 rounded outline-none">
+                    </div>
+                    <div id="dapurNotesList" class="space-y-3">
+                        <div class="text-center py-10 text-gray-400">Pilih tanggal untuk melihat catatan.</div>
+                    </div>
+                </div>
+
+                <!-- Tab 5: Santri Lama -->
+                <div id="dapurContent-santriLama" class="hidden p-4 space-y-4 animate-fade-in">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border">
+                        <label for="dapurSantriLamaDate" class="block text-xs font-bold text-gray-500 mb-1">Pilih Tanggal Pesanan</label>
+                        <input type="date" id="dapurSantriLamaDate" onchange="renderDapurSantriLama()" class="w-full border p-2 rounded outline-none">
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
+                        <i class="fas fa-info-circle mr-1"></i> Menampilkan daftar <strong>Santri Lama</strong> yang memesan pada tanggal yang dipilih.
+                    </div>
+                    <div id="dapurSantriLamaList" class="space-y-3">
+                        <div class="text-center py-10 text-gray-400">Pilih tanggal untuk melihat daftar.</div>
+                    </div>
+                </div>
             </div>
 
             <!-- Bottom Nav Dapur -->
@@ -308,6 +371,12 @@
                 </button>
                 <button onclick="switchDapurTab('allergy')" id="dapur-tab-allergy" class="mobile-tab flex flex-col items-center justify-center w-full h-full text-gray-400 hover:bg-gray-50 transition">
                     <i class="fas fa-exclamation-triangle text-xl mb-1 transition-transform"></i><span class="text-[10px] font-medium">Alergi</span>
+                </button>
+                <button onclick="switchDapurTab('notes')" id="dapur-tab-notes" class="mobile-tab flex flex-col items-center justify-center w-full h-full text-gray-400 hover:bg-gray-50 transition">
+                    <i class="fas fa-sticky-note text-xl mb-1 transition-transform"></i><span class="text-[10px] font-medium">Catatan</span>
+                </button>
+                <button onclick="switchDapurTab('santriLama')" id="dapur-tab-santriLama" class="mobile-tab flex flex-col items-center justify-center w-full h-full text-gray-400 hover:bg-gray-50 transition">
+                    <i class="fas fa-user-check text-xl mb-1 transition-transform"></i><span class="text-[10px] font-medium">Santri Lama</span>
                 </button>
             </div>
         </div>
@@ -325,6 +394,8 @@
                 
                 <!-- Field Kelas & Kategori (Murid) -->
                 <div id="fieldClass" class="hidden"><label class="block text-xs font-bold text-gray-500 mb-1">Kelas</label><input type="text" id="inputUserClass" class="w-full border p-2 rounded outline-none" placeholder="Contoh: 10 IPA 1"></div>
+                <div id="fieldJenjang" class="hidden"><label class="block text-xs font-bold text-gray-500 mb-1">Jenjang</label><select id="inputUserJenjang" class="w-full border p-2 rounded bg-white"><option value="Kuttab Awal">Kuttab Awal</option><option value="Qonuni">Qonuni</option></select></div>
+                <div id="fieldStatus" class="hidden"><label class="block text-xs font-bold text-gray-500 mb-1">Status</label><select id="inputUserStatus" class="w-full border p-2 rounded bg-white"><option value="Santri Baru">Santri Baru</option><option value="Santri Lama">Santri Lama</option><option value="Non Aktif">Non Aktif</option></select></div>
                 <div id="fieldCategory" class="hidden"><label class="block text-xs font-bold text-gray-500 mb-1">Kategori</label><select id="inputUserCategory" class="w-full border p-2 rounded bg-white"><option value="Reguler">Reguler</option><option value="Beasiswa">Beasiswa</option><option value="Anak Guru">Anak Guru</option></select></div>
                 
                 <!-- Field Alergi (New for Murid) -->
@@ -362,7 +433,8 @@
             <div class="grid grid-cols-1 gap-2">
                 <button onclick="setRekapStatus('paid')" class="w-full p-3 bg-green-100 text-green-800 rounded hover:bg-green-200 font-bold text-sm text-left"><i class="fas fa-check-circle mr-2"></i> Set Lunas / Dibayar</button>
                 <button onclick="setRekapStatus('refund')" class="w-full p-3 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 font-bold text-sm text-left"><i class="fas fa-undo mr-2"></i> Set Refund (Ganti Hari)</button>
-                <button onclick="setRekapStatus('unpaid')" class="w-full p-3 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 font-bold text-sm text-left"><i class="fas fa-times-circle mr-2"></i> Set Belum Bayar</button>
+                <button onclick="setRekapStatus('not_ordered')" class="w-full p-3 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 font-bold text-sm text-left"><i class="fas fa-ban mr-2"></i> Set Tidak Pesan</button>
+                <button onclick="setRekapStatus('unpaid')" class="w-full p-3 bg-white border text-gray-800 rounded hover:bg-gray-100 font-bold text-sm text-left"><i class="fas fa-times-circle mr-2"></i> Set Belum Bayar / Kosong</button>
             </div>
             <div class="mt-4 text-right">
                 <button onclick="document.getElementById('modalRekapStatus').classList.add('hidden')" class="text-gray-400 text-sm hover:text-gray-600">Batal</button>
@@ -377,6 +449,40 @@
                 <i class="fas fa-times"></i>
             </button>
             <img id="proofImageDisplay" src="" alt="Bukti Transfer" class="w-full h-auto rounded-lg shadow-2xl bg-white">
+        </div>
+    </div>
+
+    <!-- Modal Add Note (NEW) -->
+    <div id="modalNote" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-sm p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-lg">Tambah Catatan</h3><button onclick="closeModalNote()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button></div>
+            <div class="space-y-4 mb-6">
+                <input type="hidden" id="noteIdInput">
+                <div><label class="block text-xs font-bold text-gray-500 mb-1">Tanggal</label><input type="date" id="noteDateInput" class="w-full border p-2 rounded outline-none"></div>
+                <div><label class="block text-xs font-bold text-gray-500 mb-1">Isi Catatan</label><textarea id="noteContentInput" rows="4" class="w-full border p-2 rounded outline-none" placeholder="Contoh: Tolong hari ini jangan pedas..."></textarea></div>
+            </div>
+            <div class="flex gap-2 justify-end pt-2 border-t"><button onclick="closeModalNote()" class="px-4 py-2 text-gray-600 text-sm hover:bg-gray-100 rounded">Batal</button><button onclick="saveNote()" id="btnSaveNote" class="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 shadow">Simpan</button></div>
+        </div>
+    </div>
+
+    <!-- Modal Upload Excel (NEW) -->
+    <div id="modalUpload" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg">Upload Data Santri (Excel)</h3>
+                <button onclick="closeModalUpload()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="space-y-4 mb-6">
+                <div class="bg-blue-50 border border-blue-200 text-blue-800 text-xs p-3 rounded-lg">
+                    <p class="font-bold mb-1"><i class="fas fa-info-circle mr-1"></i> Pastikan format Excel sesuai:</p>
+                    <p>Kolom: <strong>Nama, Email, Kelas, Jenjang, Status, Kategori, Alergi</strong></p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Pilih File Excel (.xlsx, .xls)</label>
+                    <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+            </div>
+            <div class="flex gap-2 justify-end pt-4 border-t"><button onclick="closeModalUpload()" class="px-4 py-2 text-gray-600 text-sm hover:bg-gray-100 rounded">Batal</button><button onclick="handleExcelUpload()" id="btnUploadExcel" class="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 shadow">Upload dan Proses</button></div>
         </div>
     </div>
 
@@ -419,11 +525,12 @@
         let allStudents = [];
         let allOrders = []; 
         let allRefunds = {};
+        let allNotOrdered = {};
         
         // Dapur State
         let dapurDate = new Date();
 
-        // --- INIT ---
+        // --- INIT & SESSION ---
         async function loadPricing() {
             try {
                 const docSnap = await getDoc(doc(db, "settings", "prices"));
@@ -431,45 +538,84 @@
                 else await setDoc(doc(db, "settings", "prices"), PRICING);
             } catch (e) { console.error(e); }
         }
-        loadPricing();
+
+        async function showDashboardForUser(user) {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('navUser').classList.remove('hidden');
+            document.getElementById('userGreeting').innerText = user.name;
+            document.getElementById('userRoleBadge').innerText = user.role;
+
+            if (user.role === "Murid") {
+                document.getElementById('mobileUserPrice').innerText = `Rp ${user.price.toLocaleString()}`;
+                document.getElementById('mobileStudentInfo').innerText = `${user.name} • ${user.class || '-'}`;
+                document.getElementById('studentDashboard').classList.remove('hidden');
+                await fetchUserPaidDates();
+                switchMobileTab('menu');
+            } else if (user.role === "Admin Pusat") {
+                showAdminPusat();
+            } else { // Admin Dapur
+                showAdminDapur();
+            }
+        }
+
+        async function checkSession() {
+            await loadPricing(); // Ensure pricing is loaded first
+            const storedUser = localStorage.getItem('kateringUser');
+            if (storedUser) {
+                currentUser = JSON.parse(storedUser);
+                // The price property might be missing from the stored object, let's recalculate
+                if (currentUser.category && currentUser.category !== '-') {
+                    const catKey = currentUser.category.toLowerCase().replace(' ', '_');
+                    currentUser.price = PRICING[catKey] !== undefined ? PRICING[catKey] : 15000;
+                } else {
+                    currentUser.price = 0;
+                }
+                await showDashboardForUser(currentUser);
+            }
+        }
         
+        checkSession(); // Check for existing session on page load
+
         // --- AUTH ---
         window.loginByEmail = async function() {
             const email = document.getElementById('loginEmail').value.trim();
             const btn = document.getElementById('btnLogin');
-            if(!email) return alert("Harap isi email!");
-            btn.innerHTML = '<div class="loader"></div> ...'; btn.disabled = true;
+            if (!email) return alert("Harap isi email!");
+            btn.innerHTML = '<div class="loader"></div> ...';
+            btn.disabled = true;
             try {
                 await loadPricing();
                 const snapshot = await getDocs(query(collection(db, "users"), where("email", "==", email)));
-                if(snapshot.empty) { alert("Email tidak ditemukan!"); btn.innerText = "Masuk Aplikasi"; btn.disabled = false; return; }
+                if (snapshot.empty) {
+                    alert("Email tidak ditemukan!");
+                    btn.innerText = "Masuk Aplikasi";
+                    btn.disabled = false;
+                    return;
+                }
                 currentUser = snapshot.docs[0].data();
-                // Store doc ID into currentUser object for editing later
                 currentUser.id = snapshot.docs[0].id;
 
-                if(currentUser.category && currentUser.category !== '-') {
+                if (currentUser.category && currentUser.category !== '-') {
                     const catKey = currentUser.category.toLowerCase().replace(' ', '_');
                     currentUser.price = PRICING[catKey] !== undefined ? PRICING[catKey] : 15000;
-                } else { currentUser.price = 0; }
-                
-                document.getElementById('loginPage').classList.add('hidden');
-                document.getElementById('navUser').classList.remove('hidden');
-                document.getElementById('userGreeting').innerText = currentUser.name;
-                document.getElementById('userRoleBadge').innerText = currentUser.role;
-
-                if(currentUser.role === "Murid") {
-                    document.getElementById('mobileUserPrice').innerText = `Rp ${currentUser.price.toLocaleString()}`;
-                    // UPDATE STUDENT INFO IN HEADER
-                    document.getElementById('mobileStudentInfo').innerText = `${currentUser.name} • ${currentUser.class || '-'}`;
-                    document.getElementById('studentDashboard').classList.remove('hidden');
-                    await fetchUserPaidDates();
-                    switchMobileTab('menu');
+                } else {
+                    currentUser.price = 0;
                 }
-                else if (currentUser.role === "Admin Pusat") showAdminPusat();
-                else showAdminDapur();
-            } catch(e) { alert("Error: " + e.message); btn.innerText = "Masuk"; btn.disabled = false; }
+                
+                localStorage.setItem('kateringUser', JSON.stringify(currentUser));
+                await showDashboardForUser(currentUser);
+
+            } catch (e) {
+                alert("Error: " + e.message);
+                btn.innerText = "Masuk";
+                btn.disabled = false;
+            }
         }
-        window.logout = function() { location.reload(); }
+
+        window.logout = function() {
+            localStorage.removeItem('kateringUser');
+            location.reload();
+        }
 
         // --- FETCH LOGIC ---
         async function fetchUserPaidDates() {
@@ -511,12 +657,13 @@
             document.getElementById('tabContent-menu').classList.add('hidden');
             document.getElementById('tabContent-order').classList.add('hidden');
             document.getElementById('tabContent-history').classList.add('hidden');
-            document.getElementById('tabContent-profile').classList.add('hidden'); // Reset profile tab
+            document.getElementById('tabContent-profile').classList.add('hidden');
+            document.getElementById('tabContent-notes').classList.add('hidden');
             
             document.getElementById(`tabContent-${tabName}`).classList.remove('hidden');
             
             // Mengubah Redaksi Profil Murid menjadi Profil Santri
-            const titles = { 'menu': 'Menu Katering', 'order': 'Laporan Pesanan', 'history': 'Riwayat', 'profile': 'Profil Santri' };
+            const titles = { 'menu': 'Menu Katering', 'order': 'Laporan Pesanan', 'history': 'Riwayat', 'profile': 'Profil Santri', 'notes': 'Catatan Khusus' };
             document.getElementById('pageTitle').innerText = titles[tabName];
             
             if(tabName === 'menu') renderMobileMenuList();
@@ -528,6 +675,188 @@
                 document.getElementById('profName').innerText = currentUser.name;
                 document.getElementById('profClass').innerText = currentUser.class || '-';
                 document.getElementById('profAllergy').innerText = currentUser.allergy || 'Tidak ada';
+            }
+            if(tabName === 'notes') renderNotes();
+        }
+
+        // --- NOTES LOGIC (NEW & UPDATED) ---
+        window.openModalNote = function(noteId = null, noteData = null) {
+            const modal = document.getElementById('modalNote');
+            const title = modal.querySelector('h3');
+            const noteIdInput = document.getElementById('noteIdInput');
+            const dateInput = document.getElementById('noteDateInput');
+            const contentInput = document.getElementById('noteContentInput');
+
+            if (noteId && noteData) {
+                // Edit Mode
+                title.innerText = "Edit Catatan";
+                noteIdInput.value = noteId;
+                dateInput.value = noteData.noteDate;
+                contentInput.value = noteData.noteContent;
+            } else {
+                // Add Mode
+                title.innerText = "Tambah Catatan";
+                noteIdInput.value = "";
+                dateInput.valueAsDate = new Date();
+                contentInput.value = "";
+            }
+            modal.classList.remove('hidden');
+        }
+
+        window.closeModalNote = function() {
+            document.getElementById('modalNote').classList.add('hidden');
+        }
+
+        window.deleteNote = async function(noteId) {
+            if (!confirm("Anda yakin ingin menghapus catatan ini?")) return;
+
+            try {
+                await deleteDoc(doc(db, "notes", noteId));
+                renderNotes();
+            } catch (e) {
+                alert("Gagal menghapus: " + e.message);
+                console.error("Error deleting note: ", e);
+            }
+        }
+
+        window.saveNote = async function() {
+            const btn = document.getElementById('btnSaveNote');
+            const noteId = document.getElementById('noteIdInput').value;
+            const date = document.getElementById('noteDateInput').value;
+            const content = document.getElementById('noteContentInput').value;
+
+            if (!date || !content) return alert("Mohon lengkapi tanggal dan isi catatan!");
+
+            btn.disabled = true;
+            btn.innerText = "Menyimpan...";
+
+            const payload = {
+                userId: currentUser.id,
+                userName: currentUser.name,
+                noteDate: date,
+                noteContent: content,
+                updatedAt: new Date()
+            };
+
+            try {
+                if (noteId) {
+                    // Update existing note
+                    await updateDoc(doc(db, "notes", noteId), payload);
+                    alert("Catatan berhasil diperbarui!");
+                } else {
+                    // Create new note
+                    payload.createdAt = new Date();
+                    await addDoc(collection(db, "notes"), payload);
+                    alert("Catatan berhasil disimpan!");
+                }
+                
+                closeModalNote();
+                renderNotes(); // Refresh the list
+
+            } catch (e) {
+                alert("Gagal menyimpan: " + e.message);
+            }
+
+            btn.disabled = false;
+            btn.innerText = "Simpan";
+        }
+
+        window.renderNotes = async function() {
+            const container = document.getElementById('notesListContainer');
+            container.innerHTML = '<div class="text-center py-10 text-gray-400"><div class="loader"></div> Loading catatan...</div>';
+
+            try {
+                const q = query(collection(db, "notes"), where("userId", "==", currentUser.id));
+                const snapshot = await getDocs(q);
+
+                if (snapshot.empty) {
+                    container.innerHTML = '<div class="text-center py-10 text-gray-400 border-2 border-dashed rounded-xl">Belum ada catatan.</div>';
+                    return;
+                }
+
+                const notes = [];
+                snapshot.forEach(doc => {
+                    notes.push({ id: doc.id, ...doc.data() });
+                });
+                notes.sort((a, b) => new Date(b.noteDate) - new Date(a.noteDate));
+
+                container.innerHTML = "";
+                notes.forEach(note => {
+                    const dateParts = note.noteDate.split('-');
+                    const d = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                    const dayName = d.toLocaleDateString('id-ID', { weekday: 'long' });
+                    const noteJson = JSON.stringify(note).replace(/"/g, '&quot;');
+
+                    container.innerHTML += `
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-blue-500">
+                            <div class="flex justify-between items-start mb-2 pb-2 border-b">
+                                <div>
+                                    <div class="font-bold text-gray-800">${d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                                    <div class="text-xs text-gray-400">${dayName}</div>
+                                </div>
+                                <div class="flex gap-2 flex-shrink-0 ml-4">
+                                    <button onclick='openModalNote("${note.id}", ${noteJson})' class="text-blue-600 hover:text-blue-800 text-xs font-semibold">EDIT</button>
+                                    <button onclick='deleteNote("${note.id}")' class="text-red-500 hover:text-red-700 text-xs font-semibold">HAPUS</button>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 text-sm whitespace-pre-wrap">${note.noteContent}</p>
+                        </div>
+                    `;
+                });
+
+            } catch (e) {
+                console.error("Error fetching notes: ", e);
+                container.innerHTML = '<div class="text-center py-10 text-red-500">Gagal memuat catatan.</div>';
+            }
+        }
+
+        // --- NEW: ADMIN NOTES ---
+        window.renderAdminNotes = async function() {
+            const container = document.getElementById('adminNotesListContainer');
+            container.innerHTML = '<div class="text-center py-10 text-gray-400"><div class="loader"></div> Loading catatan...</div>';
+
+            try {
+                const q = query(collection(db, "notes"), orderBy("noteDate", "desc"));
+                const snapshot = await getDocs(q);
+
+                if (snapshot.empty) {
+                    container.innerHTML = '<div class="text-center py-10 text-gray-400 border-2 border-dashed rounded-xl">Belum ada catatan.</div>';
+                    return;
+                }
+
+                const notes = [];
+                snapshot.forEach(doc => {
+                    notes.push({ id: doc.id, ...doc.data() });
+                });
+
+                container.innerHTML = "";
+                notes.forEach(note => {
+                    const dateParts = note.noteDate.split('-');
+                    const d = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                    const dayName = d.toLocaleDateString('id-ID', { weekday: 'long' });
+                    const noteJson = JSON.stringify(note).replace(/"/g, '&quot;');
+                    const isByAdmin = note.userId === currentUser.id;
+
+                    container.innerHTML += `
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 ${isByAdmin ? 'border-l-purple-500' : 'border-l-blue-500'}">
+                            <div class="flex justify-between items-start mb-2 pb-2 border-b">
+                                <div>
+                                    <div class="font-bold text-gray-800">${d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                                    <div class="text-xs text-gray-400">Oleh: <strong>${note.userName}</strong> (${dayName})</div>
+                                </div>
+                                <div class="flex gap-2 flex-shrink-0 ml-4">
+                                    <button onclick='openModalNote("${note.id}", ${noteJson})' class="text-blue-600 hover:text-blue-800 text-xs font-semibold">EDIT</button>
+                                    <button onclick='deleteNote("${note.id}")' class="text-red-500 hover:text-red-700 text-xs font-semibold">HAPUS</button>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 text-sm whitespace-pre-wrap">${note.noteContent}</p>
+                        </div>
+                    `;
+                });
+
+            } catch (e) {
+                console.error("Error fetching admin notes: ", e);
+                container.innerHTML = '<div class="text-center py-10 text-red-500">Gagal memuat catatan.</div>';
             }
         }
 
@@ -542,6 +871,7 @@
             if(tab === 'finance') fetchOrders();
             if(tab === 'rekap') fetchRekapData();
             if(tab === 'allergies') fetchAllergies(); 
+            if(tab === 'notes') renderAdminNotes();
         }
 
         // --- STUDENT UI LOGIC ---
@@ -555,7 +885,8 @@
             upcoming.forEach(dateStr => {
                 const item = dbMenus[dateStr];
                 if(item.isHoliday) return; 
-                const d = new Date(dateStr);
+                const dateParts = dateStr.split('-');
+                const d = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
                 const dayName = d.toLocaleDateString('id-ID', { weekday: 'long' });
                 container.innerHTML += `<div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-start gap-4"><div class="bg-blue-50 text-blue-600 rounded-lg p-3 text-center min-w-[60px]"><div class="text-[10px] font-bold uppercase">${d.toLocaleDateString('id-ID', { month: 'short' })}</div><div class="text-xl font-bold leading-none">${d.getDate()}</div></div><div><div class="text-xs text-gray-400 font-bold uppercase mb-1">${dayName}</div><h4 class="font-semibold text-gray-800 leading-tight">${item.name}</h4></div></div>`;
             });
@@ -707,28 +1038,33 @@
             document.getElementById('rekapTbody').innerHTML = '<tr><td class="p-4 text-center"><div class="loader"></div></td></tr>';
             try {
                 // 1. Get All Students
+                // This is the only part that needs to be re-fetched frequently
                 const userSnap = await getDocs(query(collection(db, "users"), where("role", "==", "Murid")));
                 allStudents = [];
-                userSnap.forEach(doc => allStudents.push(doc.data()));
-                allStudents.sort((a,b) => a.name.localeCompare(b.name));
+                userSnap.forEach(doc => allStudents.push({ id: doc.id, ...doc.data() }));
+                // Urutkan berdasarkan kelas, lalu nama
+                allStudents.sort((a, b) => (a.class || "").localeCompare(b.class || "") || a.name.localeCompare(b.name));
 
-                // 2. Get All Orders
-                const orderSnap = await getDocs(collection(db, "orders"));
-                allOrders = [];
-                orderSnap.forEach(doc => {
-                    const d = doc.data();
-                    if(d.dates && Array.isArray(d.dates)) {
-                        allOrders.push({ userName: d.userName, dates: d.dates, id: doc.id });
-                    }
-                });
+                // 2. Get All Orders (Only if not already fetched)
+                if (allOrders.length === 0) {
+                    const orderSnap = await getDocs(collection(db, "orders"));
+                    orderSnap.forEach(doc => {
+                        const d = doc.data();
+                        if(d.dates && Array.isArray(d.dates)) {
+                            allOrders.push({ userName: d.userName, dates: d.dates, id: doc.id });
+                        }
+                    });
+                }
 
-                // 3. Get Refunds
-                const refundSnap = await getDocs(collection(db, "refunds"));
-                allRefunds = {};
-                refundSnap.forEach(doc => {
-                    const d = doc.data();
-                    allRefunds[`${d.userName}_${d.date}`] = true;
-                });
+                // 3. Get Refunds & Not Ordered (Only if not already fetched)
+                if (Object.keys(allRefunds).length === 0) {
+                    const refundSnap = await getDocs(collection(db, "refunds"));
+                    refundSnap.forEach(doc => { allRefunds[`${doc.data().userName}_${doc.data().date}`] = true; });
+                }
+                if (Object.keys(allNotOrdered).length === 0) {
+                    const notOrderedSnap = await getDocs(collection(db, "not_ordered"));
+                    notOrderedSnap.forEach(doc => { allNotOrdered[`${doc.data().userName}_${doc.data().date}`] = true; });
+                }
 
                 renderRekapTable();
             } catch(e) { console.error(e); }
@@ -747,7 +1083,7 @@
 
             // GENERATE HEADER
             // Redaksi Nama Murid diubah menjadi Nama Santri
-            let headHtml = `<tr><th class="p-2 border bg-gray-50 text-left min-w-[30px]">No</th><th class="p-2 border bg-gray-50 text-left min-w-[150px]">Nama Santri</th>`;
+            let headHtml = `<tr><th class="p-2 border bg-gray-50 text-left min-w-[30px]">No</th><th class="p-2 border bg-gray-50 text-left min-w-[150px]">Nama Santri</th><th class="p-2 border bg-gray-50 text-left min-w-[100px]">Kelas</th><th class="p-2 border bg-gray-50 text-left min-w-[100px]">Status</th>`;
             let validDays = [];
             
             for(let d=1; d<=daysInMonth; d++) {
@@ -764,7 +1100,7 @@
             // GENERATE ROWS
             let bodyHtml = "";
             allStudents.forEach((student, index) => {
-                bodyHtml += `<tr><td class="p-2 border text-center text-xs">${index+1}</td><td class="p-2 border text-xs font-medium whitespace-nowrap">${student.name}</td>`;
+                bodyHtml += `<tr><td class="p-2 border text-center text-xs">${index+1}</td><td class="p-2 border text-xs font-medium whitespace-nowrap">${student.name}</td><td class="p-2 border text-xs whitespace-nowrap">${student.class || '-'}</td><td class="p-2 border text-xs whitespace-nowrap">${student.status || '-'}</td>`;
                 
                 validDays.forEach(day => {
                     const mStr = (month + 1).toString().padStart(2, '0');
@@ -774,6 +1110,7 @@
                     // CHECK STATUS
                     const isRefund = allRefunds[`${student.name}_${dateStr}`];
                     const isPaid = allOrders.some(o => o.userName === student.name && o.dates.includes(dateStr));
+                    const isNotOrdered = allNotOrdered[`${student.name}_${dateStr}`];
                     const menuItem = dbMenus[dateStr];
                     const isHoliday = menuItem ? menuItem.isHoliday : false;
 
@@ -785,6 +1122,8 @@
                         cellClass += " cell-refund"; content = "R"; currentStatus = "refund";
                     } else if (isPaid) {
                         cellClass += " cell-paid"; content = "L"; currentStatus = "paid";
+                    } else if (isNotOrdered) {
+                        cellClass += " cell-not-ordered"; content = "X"; currentStatus = "not_ordered";
                     } else if (isHoliday) {
                         cellClass += " cell-holiday"; content = "-"; currentStatus = "holiday";
                     } else {
@@ -818,11 +1157,19 @@
                 // Handle Refunds
                 const refundQuery = query(collection(db, "refunds"), where("userName", "==", userName), where("date", "==", dateStr));
                 const refundSnap = await getDocs(refundQuery);
-                
-                if(newStatus === 'refund') {
-                    if(refundSnap.empty) await addDoc(collection(db, "refunds"), { userName: userName, date: dateStr, createdAt: new Date() });
+                if (newStatus === 'refund') {
+                    if (refundSnap.empty) await addDoc(collection(db, "refunds"), { userName: userName, date: dateStr, createdAt: new Date() });
                 } else {
                     refundSnap.forEach(async (d) => await deleteDoc(doc(db, "refunds", d.id)));
+                }
+
+                // Handle Not Ordered
+                const notOrderedQuery = query(collection(db, "not_ordered"), where("userName", "==", userName), where("date", "==", dateStr));
+                const notOrderedSnap = await getDocs(notOrderedQuery);
+                if (newStatus === 'not_ordered') {
+                    if (notOrderedSnap.empty) await addDoc(collection(db, "not_ordered"), { userName: userName, date: dateStr, createdAt: new Date() });
+                } else {
+                    notOrderedSnap.forEach(async (d) => await deleteDoc(doc(db, "not_ordered", d.id)));
                 }
 
                 // Handle Orders
@@ -830,13 +1177,13 @@
                 let targetOrders = [];
                 orderSnapshot.forEach(doc => {
                     const d = doc.data();
-                    if(d.userName === userName) targetOrders.push({id: doc.id, dates: d.dates});
+                    if (d.userName === userName) targetOrders.push({id: doc.id, dates: d.dates});
                 });
 
-                if(newStatus === 'paid') {
+                if (newStatus === 'paid') {
                     const exists = targetOrders.some(o => o.dates && o.dates.includes(dateStr));
-                    if(!exists) {
-                        if(targetOrders.length > 0) {
+                    if (!exists) {
+                        if (targetOrders.length > 0) {
                             const orderId = targetOrders[0].id;
                             const newDates = [...(targetOrders[0].dates || []), dateStr].sort();
                             await updateDoc(doc(db, "orders", orderId), { dates: newDates });
@@ -844,12 +1191,11 @@
                             await addDoc(collection(db, "orders"), { userName: userName, dates: [dateStr], totalPrice: 0, status: 'manual_admin', createdAt: new Date() });
                         }
                     }
-                } else {
-                    for(let order of targetOrders) {
-                        if(order.dates && order.dates.includes(dateStr)) {
+                } else { // For 'refund', 'not_ordered', and 'unpaid', we ensure the date is removed from orders.
+                    for (let order of targetOrders) {
+                        if (order.dates && order.dates.includes(dateStr)) {
                             const newDates = order.dates.filter(d => d !== dateStr);
-                            if(newDates.length === 0) await updateDoc(doc(db, "orders", order.id), { dates: [] });
-                            else await updateDoc(doc(db, "orders", order.id), { dates: newDates });
+                            await updateDoc(doc(db, "orders", order.id), { dates: newDates });
                         }
                     }
                 }
@@ -949,6 +1295,17 @@
                 allRefunds = {};
                 refundSnap.forEach(doc => { const d = doc.data(); allRefunds[`${d.userName}_${d.date}`] = true; });
 
+                // 2.5. All Not Ordered
+                const notOrderedSnap = await getDocs(collection(db, "not_ordered"));
+                allNotOrdered = {};
+                notOrderedSnap.forEach(doc => { const d = doc.data(); allNotOrdered[`${d.userName}_${d.date}`] = true; });
+
+
+                // 3. Get All Students for status/jenjang info
+                const userSnap = await getDocs(query(collection(db, "users"), where("role", "==", "Murid")));
+                allStudents = []; // Re-use global allStudents
+                userSnap.forEach(doc => allStudents.push(doc.data()));
+
                 renderDapurOrders();
             } catch(e) { console.error(e); }
         }
@@ -981,21 +1338,52 @@
                 const dStr = day.toString().padStart(2, '0');
                 const dateStr = `${year}-${mStr}-${dStr}`;
                 
-                // Calculate Count
-                let count = 0;
-                allOrders.forEach(order => {
-                    if(order.dates.includes(dateStr)) {
-                        // Check if refunded
-                        if(!allRefunds[`${order.userName}_${dateStr}`]) {
-                            count++;
+                let totalCount = 0;
+                let baruCount = 0;
+                let lamaCount = 0;
+                let qonuniCount = 0;
+
+                const studentMap = Object.fromEntries(allStudents.map(s => [s.name, s]));
+                const ordersForDate = new Set(allOrders.filter(o => o.dates.includes(dateStr)).map(o => o.userName));
+
+                allStudents.forEach(student => {
+                    const isRefund = allRefunds[`${student.name}_${dateStr}`];
+                    const isNotOrdered = allNotOrdered[`${student.name}_${dateStr}`];
+                    const isPaid = ordersForDate.has(student.name);
+
+                    let shouldCount = false;
+
+                    if (student.status === 'Santri Baru') {
+                        // Untuk Santri Baru, hitung porsi KECUALI statusnya 'Refund' atau 'Tidak Pesan'.
+                        // Status 'Kosong' (belum bayar) tetap dihitung.
+                        if (!isRefund && !isNotOrdered) {
+                            shouldCount = true;
+                        }
+                    } else { // Untuk Santri Lama (dan status lainnya)
+                        // Logika lama: hitung porsi HANYA JIKA 'Lunas' dan tidak 'Refund'.
+                        if (isPaid && !isRefund) {
+                            shouldCount = true;
+                        }
+                    }
+
+                    if (shouldCount) {
+                        totalCount++;
+                        if (student.status === 'Santri Baru') baruCount++;
+                        if (student.status === 'Santri Lama') lamaCount++;
+                        if (student.jenjang === 'Qonuni') {
+                            qonuniCount++;
                         }
                     }
                 });
 
                 // Check menu
                 const item = dbMenus[dateStr];
-                const menuName = item ? (item.isHoliday ? "LIBUR" : item.name) : "Belum ada menu";
                 const isHoliday = item ? item.isHoliday : false;
+
+                let detailHtml = `<div class="text-xs text-gray-500">Baru: <b>${baruCount}</b>, Lama: <b>${lamaCount}</b></div>`;
+                if (qonuniCount > 0) {
+                    detailHtml += `<div class="text-xs text-blue-600 font-semibold">Qonuni: <b>${qonuniCount}</b></div>`;
+                }
 
                 let cardClass = "bg-white border-gray-100";
                 let textClass = "text-gray-800";
@@ -1014,11 +1402,11 @@
                             </div>
                             <div>
                                 <div class="text-xs font-bold uppercase text-gray-400 mb-1">${dateObj.toLocaleDateString('id-ID', { weekday: 'long' })}</div>
-                                <div class="font-semibold text-sm ${textClass}">${menuName}</div>
+                                ${isHoliday ? `<div class="font-semibold text-sm ${textClass}">LIBUR</div>` : detailHtml}
                             </div>
                         </div>
                         <div class="text-right">
-                            <div class="text-2xl font-bold text-slate-800">${isHoliday ? '-' : count}</div>
+                            <div class="text-2xl font-bold text-slate-800">${isHoliday ? '-' : totalCount}</div>
                             <div class="text-[10px] text-gray-400">Porsi</div>
                         </div>
                     </div>
@@ -1033,6 +1421,8 @@
             document.getElementById('dapurContent-orders').classList.add('hidden');
             document.getElementById('dapurContent-menu').classList.add('hidden');
             document.getElementById('dapurContent-allergy').classList.add('hidden');
+            document.getElementById('dapurContent-notes').classList.add('hidden');
+            document.getElementById('dapurContent-santriLama').classList.add('hidden');
             
             if(tabName === 'orders') {
                 document.getElementById('dapurContent-orders').classList.remove('hidden');
@@ -1043,6 +1433,14 @@
             } else if (tabName === 'allergy') {
                 document.getElementById('dapurContent-allergy').classList.remove('hidden');
                 renderDapurAllergy();
+            } else if (tabName === 'notes') {
+                document.getElementById('dapurContent-notes').classList.remove('hidden');
+                document.getElementById('dapurNoteDate').valueAsDate = new Date();
+                renderDapurNotes();
+            } else if (tabName === 'santriLama') {
+                document.getElementById('dapurContent-santriLama').classList.remove('hidden');
+                document.getElementById('dapurSantriLamaDate').valueAsDate = new Date();
+                renderDapurSantriLama();
             }
         }
 
@@ -1065,7 +1463,8 @@
 
             monthMenus.forEach(dateStr => {
                 const item = dbMenus[dateStr];
-                const d = new Date(dateStr);
+                const dateParts = dateStr.split('-');
+                const d = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
                 const dayName = d.toLocaleDateString('id-ID', { weekday: 'long' });
                 
                 let bg = "bg-white";
@@ -1124,33 +1523,132 @@
             } catch(e) { console.error(e); }
         }
 
+        // --- NEW: DAPUR NOTES ---
+        window.renderDapurNotes = async function() {
+            const container = document.getElementById('dapurNotesList');
+            const dateInput = document.getElementById('dapurNoteDate').value;
+            if (!dateInput) {
+                container.innerHTML = '<div class="text-center py-10 text-gray-400">Pilih tanggal untuk melihat catatan.</div>';
+                return;
+            }
+            container.innerHTML = '<div class="text-center py-4"><div class="loader"></div></div>';
+
+            try {
+                // Pastikan data student sudah ter-fetch untuk mendapatkan info kelas
+                if (allStudents.length === 0) await fetchDapurData();
+                const studentMap = Object.fromEntries(allStudents.map(s => [s.name, s]));
+
+                const q = query(collection(db, "notes"), where("noteDate", "==", dateInput));
+                const snapshot = await getDocs(q);
+                container.innerHTML = "";
+                let count = 0;
+
+                snapshot.forEach(docSnap => {
+                    const note = docSnap.data();
+                    count++;
+                    const student = studentMap[note.userName];
+                    const studentClass = student ? student.class || '-' : '-';
+
+                    container.innerHTML += `
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-yellow-500">
+                            <div class="font-bold text-gray-800 mb-1">${note.userName} <span class="text-xs text-gray-500 font-medium ml-1">(${studentClass})</span></div>
+                            <p class="text-gray-600 text-sm whitespace-pre-wrap">${note.noteContent}</p>
+                        </div>
+                    `;
+                });
+
+                if (count === 0) {
+                    container.innerHTML = `<div class="text-center py-10 text-gray-400 border-2 border-dashed rounded-xl">Tidak ada catatan pada tanggal ini.</div>`;
+                }
+
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = `<div class="text-center py-10 text-red-500">Gagal memuat catatan.</div>`;
+            }
+        }
+
+        // --- NEW: DAPUR SANTRI LAMA ---
+        window.renderDapurSantriLama = async function() {
+            const container = document.getElementById('dapurSantriLamaList');
+            const dateInput = document.getElementById('dapurSantriLamaDate').value; // BUG: This was not being used
+            if (!dateInput) {
+                container.innerHTML = '<div class="text-center py-10 text-gray-400">Pilih tanggal untuk melihat daftar.</div>';
+                return;
+            }
+            container.innerHTML = '<div class="text-center py-4"><div class="loader"></div></div>';
+
+            try {
+                // Pastikan data student, order, refund sudah ter-fetch
+                if (allStudents.length === 0) await fetchDapurData();
+
+                const santriLamaOrders = [];
+                const studentMap = Object.fromEntries(allStudents.map(s => [s.name, s])); // BUG: This was not being used
+
+                allOrders.forEach(order => {
+                    const student = studentMap[order.userName];
+                    // Cek jika santri lama, memesan di tanggal yg dipilih, dan tidak refund
+                    if (student && student.status === 'Santri Lama' && order.dates.includes(dateInput) && !allRefunds[`${order.userName}_${dateInput}`]) {
+                        santriLamaOrders.push(student);
+                    }
+                });
+
+                container.innerHTML = "";
+                if (santriLamaOrders.length === 0) {
+                    container.innerHTML = `<div class="text-center py-10 text-gray-400 border-2 border-dashed rounded-xl">Tidak ada pesanan dari Santri Lama pada tanggal ini.</div>`;
+                    return;
+                }
+
+                santriLamaOrders.sort((a, b) => a.name.localeCompare(b.name)).forEach(student => {
+                    container.innerHTML += `
+                        <div class="bg-white p-4 rounded-xl shadow-sm border flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-gray-800">${student.name}</div>
+                                <div class="text-xs text-gray-500">${student.class || '-'}</div>
+                            </div>
+                            <input type="checkbox" class="h-6 w-6 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = `<div class="text-center py-10 text-red-500">Gagal memuat daftar.</div>`;
+            }
+        }
+
         window.filterStudents = function() { const filter = document.getElementById('searchStudentInput').value.toLowerCase(); const tr = document.getElementById('studentTableBody').getElementsByTagName('tr'); for (let i = 0; i < tr.length; i++) { const td = tr[i].getElementsByTagName('td')[0]; if (td) { tr[i].style.display = td.textContent.toLowerCase().indexOf(filter) > -1 ? "" : "none"; } } }
         
         // --- UPDATED: FETCH USERS WITH CLASS & ALLERGY ---
         window.fetchUsersByRole = async function(type) { 
             const tbody = document.getElementById(type === 'Murid' ? 'studentTableBody' : 'adminTableBody'); 
             tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center"><div class="loader"></div></td></tr>'; 
-            try { 
+            try {
                 const snapshot = await getDocs(collection(db, "users")); 
-                tbody.innerHTML = ""; 
-                let count = 0; 
-                snapshot.forEach(docSnap => { 
+                let users = [];
+                snapshot.forEach(docSnap => {
                     const u = docSnap.data(); 
-                    u.id = docSnap.id; 
-                    let isMatch = (type === 'Murid' && u.role === 'Murid') || (type === 'Admin' && u.role !== 'Murid'); 
-                    if(isMatch) { 
-                        count++; 
-                        const col3 = type === 'Murid' ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">${u.category}</span>` : `<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs">${u.role}</span>`; 
-                        const dataString = JSON.stringify(u).replace(/"/g, '&quot;'); 
-                        
-                        if (type === 'Murid') {
-                            tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-4 font-medium">${u.name}</td><td class="p-4 text-gray-600">${u.class || '-'}</td><td class="p-4 text-gray-600">${u.email}</td><td class="p-4">${col3}</td><td class="p-4 text-center"><button onclick="prepareEditUser('${dataString}')" class="text-blue-600 mx-1"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteUser('${u.id}', '${type}')" class="text-red-500 mx-1"><i class="fas fa-trash"></i></button></td></tr>`;
-                        } else {
-                            tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-4 font-medium">${u.name}</td><td class="p-4 text-gray-600">${u.email}</td><td class="p-4">${col3}</td><td class="p-4 text-center"><button onclick="prepareEditUser('${dataString}')" class="text-blue-600 mx-1"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteUser('${u.id}', '${type}')" class="text-red-500 mx-1"><i class="fas fa-trash"></i></button></td></tr>`;
-                        }
-                    } 
-                }); 
-                if(type === 'Murid') document.getElementById('studentCount').innerText = `(${count})`; 
+                    u.id = docSnap.id;
+                    users.push(u);
+                });
+ 
+                // Filter and Sort
+                const filteredUsers = users.filter(u => (type === 'Murid' && u.role === 'Murid') || (type === 'Admin' && u.role !== 'Murid'));
+                if (type === 'Murid') {
+                    filteredUsers.sort((a, b) => (a.class || "").localeCompare(b.class || "") || a.name.localeCompare(b.name));
+                }
+ 
+                tbody.innerHTML = "";
+                filteredUsers.forEach(u => {
+                    const dataString = JSON.stringify(u).replace(/"/g, '&quot;');
+                    if (type === 'Murid') {
+                        const col3 = `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">${u.category}</span>`;
+                        tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-4 font-medium">${u.name}</td><td class="p-4 text-gray-600">${u.class || '-'}</td><td class="p-4 text-gray-600">${u.jenjang || '-'}</td><td class="p-4 text-gray-600">${u.status || '-'}</td><td class="p-4 text-gray-600">${u.email}</td><td class="p-4">${col3}</td><td class="p-4 text-center"><button onclick="prepareEditUser('${dataString}')" class="text-blue-600 mx-1"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteUser('${u.id}', '${type}')" class="text-red-500 mx-1"><i class="fas fa-trash"></i></button></td></tr>`;
+                    } else {
+                        const col3 = `<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs">${u.role}</span>`;
+                        tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-4 font-medium">${u.name}</td><td class="p-4 text-gray-600">${u.email}</td><td class="p-4">${col3}</td><td class="p-4 text-center"><button onclick="prepareEditUser('${dataString}')" class="text-blue-600 mx-1"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteUser('${u.id}', '${type}')" class="text-red-500 mx-1"><i class="fas fa-trash"></i></button></td></tr>`;
+                    }
+                });
+ 
+                if(type === 'Murid') document.getElementById('studentCount').innerText = `(${filteredUsers.length})`; 
                 if(tbody.innerHTML === "") tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400">Tidak ada data.</td></tr>'; 
             } catch (e) { console.error(e); } 
         }
@@ -1169,6 +1667,8 @@
             if(type === 'murid') { 
                 document.getElementById('fieldCategory').classList.remove('hidden'); 
                 document.getElementById('fieldClass').classList.remove('hidden');
+                document.getElementById('fieldJenjang').classList.remove('hidden');
+                document.getElementById('fieldStatus').classList.remove('hidden');
                 document.getElementById('fieldAllergy').classList.remove('hidden'); // SHOW ALLERGY
                 document.getElementById('fieldRole').classList.add('hidden'); 
                 document.getElementById('inputUserClass').value = ""; 
@@ -1176,6 +1676,8 @@
             } else { 
                 document.getElementById('fieldCategory').classList.add('hidden'); 
                 document.getElementById('fieldClass').classList.add('hidden');
+                document.getElementById('fieldJenjang').classList.add('hidden');
+                document.getElementById('fieldStatus').classList.add('hidden');
                 document.getElementById('fieldAllergy').classList.add('hidden'); // HIDE ALLERGY
                 document.getElementById('fieldRole').classList.remove('hidden'); 
             } 
@@ -1198,6 +1700,8 @@
             if(type === 'murid') { 
                 document.getElementById('inputUserCategory').value = user.category; 
                 document.getElementById('inputUserClass').value = user.class || ""; 
+                document.getElementById('inputUserJenjang').value = user.jenjang || "Kuttab Awal";
+                document.getElementById('inputUserStatus').value = user.status || "Santri Lama";
                 document.getElementById('inputUserAllergy').value = user.allergy || ""; // LOAD ALLERGY
             } else { 
                 document.getElementById('inputUserRoleAdmin').value = user.role; 
@@ -1212,7 +1716,7 @@
             const name = document.getElementById('inputUserName').value; 
             const email = document.getElementById('inputUserEmail').value; 
             const className = document.getElementById('inputUserClass').value; 
-            const allergy = document.getElementById('inputUserAllergy').value; // GET ALLERGY
+            const allergy = document.getElementById('inputUserAllergy').value;
 
             if(!name || !email) return alert("Mohon lengkapi data!"); 
             
@@ -1225,6 +1729,8 @@
                 role: type === 'murid' ? 'Murid' : document.getElementById('inputUserRoleAdmin').value, 
                 category: type === 'murid' ? document.getElementById('inputUserCategory').value : '-', 
                 class: type === 'murid' ? className : '-', 
+                jenjang: type === 'murid' ? document.getElementById('inputUserJenjang').value : '-',
+                status: type === 'murid' ? document.getElementById('inputUserStatus').value : '-', // BUG: This was not being used
                 allergy: type === 'murid' ? allergy : '-', // SAVE ALLERGY
                 updatedAt: new Date() 
             }; 
@@ -1245,6 +1751,74 @@
                 alert("Gagal: " + e.message); 
             } 
             btn.disabled = false; 
+        }
+
+        // --- NEW: EXCEL UPLOAD ---
+        window.openModalUpload = function() {
+            document.getElementById('modalUpload').classList.remove('hidden');
+            document.getElementById('excelFileInput').value = ''; // Reset file input
+        }
+
+        window.closeModalUpload = function() {
+            document.getElementById('modalUpload').classList.add('hidden');
+        }
+
+        window.handleExcelUpload = function() {
+            const fileInput = document.getElementById('excelFileInput');
+            const btn = document.getElementById('btnUploadExcel');
+            if (fileInput.files.length === 0) {
+                alert("Silakan pilih file Excel terlebih dahulu.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loader"></div> Memproses...';
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async function(event) {
+                try {
+                    const data = new Uint8Array(event.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet);
+
+                    if (json.length === 0) {
+                        throw new Error("File Excel kosong atau format tidak sesuai.");
+                    }
+
+                    let successCount = 0;
+                    for (const row of json) {
+                        const payload = {
+                            name: row.Nama || '',
+                            email: row.Email || '',
+                            class: row.Kelas || '-',
+                            jenjang: row.Jenjang || 'Kuttab Awal',
+                            status: row.Status || 'Santri Baru',
+                            category: row.Kategori || 'Reguler',
+                            allergy: row.Alergi || '-',
+                            role: 'Murid',
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        };
+                        if (payload.name && payload.email) {
+                            await addDoc(collection(db, "users"), payload);
+                            successCount++;
+                        }
+                    }
+                    alert(`${successCount} dari ${json.length} data santri berhasil di-upload.`);
+                    closeModalUpload();
+                    fetchUsersByRole('Murid'); // Refresh table
+                } catch (e) {
+                    alert("Gagal memproses file: " + e.message);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = 'Upload dan Proses';
+                }
+            };
+            reader.readAsArrayBuffer(file);
         }
 
         window.deleteUser = async function(id, type) { if(confirm("Hapus user ini?")) { try { await deleteDoc(doc(db, "users", id)); fetchUsersByRole(type); } catch(e) { alert("Gagal menghapus: " + e.message); } } }
@@ -1413,11 +1987,18 @@
                 // Refresh Admin Views
                 if(!document.getElementById('section-food').classList.contains('hidden')) renderAdminCalendar();
                 if(!document.getElementById('section-rekap').classList.contains('hidden')) fetchRekapData();
+                // Refresh Admin Notes if visible
+                if(currentUser.role === 'Admin Pusat' && !document.getElementById('section-notes').classList.contains('hidden')) {
+                    renderAdminNotes();
+                }
+
                 
                 // Refresh Dapur Views
                 if(!document.getElementById('adminDapurDashboard').classList.contains('hidden')) {
                     if(document.getElementById('dapur-tab-orders').classList.contains('active')) renderDapurOrders();
                     if(document.getElementById('dapur-tab-menu').classList.contains('active')) renderDapurMenu();
+                    if(document.getElementById('dapur-tab-notes').classList.contains('active')) renderDapurNotes();
+                    if(document.getElementById('dapur-tab-santriLama').classList.contains('active')) renderDapurSantriLama();
                 }
             });
         }
