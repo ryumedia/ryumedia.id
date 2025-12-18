@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Kehadiran QR & Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        .loader { border-top-color: #3498db; animation: spinner 1.5s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #reader { width: 100% !important; border: none !important; }
+        #reader video { border-radius: 1.5rem; object-fit: cover; }
+        .animate-scale-up { animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .custom-checkbox:checked { background-color: #3b82f6; border-color: #3b82f6; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-900 min-h-screen custom-scrollbar">
+
+    <div id="app" class="w-full min-h-screen flex flex-col">
+        <!-- Navigation Header -->
+        <header class="bg-blue-700 text-white p-5 shadow-lg sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white p-2 rounded-xl text-blue-700 shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                    </div>
+                    <h1 class="font-black text-xl tracking-tight hidden sm:block" id="header-title">Presensi QR</h1>
+                </div>
+                <nav class="flex gap-1 sm:gap-4">
+                    <button onclick="window.router.navigate('home')" class="px-4 py-2 hover:bg-blue-600 rounded-xl transition-all flex items-center gap-2 font-bold">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a11 11 0 003 3h10a11 11 0 003-3V10M9 21h6" /></svg>
+                        <span class="text-sm">Home</span>
+                    </button>
+                    <button onclick="window.router.navigate('admin')" class="px-4 py-2 hover:bg-blue-600 rounded-xl transition-all flex items-center gap-2 font-bold">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /></svg>
+                        <span class="text-sm">Admin</span>
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content Viewport -->
+        <main id="main-content" class="flex-grow w-full max-w-7xl mx-auto p-4 sm:p-8">
+            <div id="loading" class="flex flex-col items-center justify-center h-[60vh]">
+                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-14 w-14 mb-4"></div>
+                <p class="text-slate-500 font-medium">Sinkronisasi Database...</p>
+            </div>
+        </main>
+
+        <!-- Dynamic Modals Container -->
+        <div id="modal-container" class="fixed inset-0 bg-slate-900/80 hidden z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl w-11/12 md:w-4/5 max-w-4xl overflow-hidden shadow-2xl animate-scale-up">
+                <div id="modal-body"></div>
+            </div>
+        </div>
+
+        <!-- Success/Attendance Popup -->
+        <div id="success-popup" class="fixed inset-0 bg-slate-900/90 hidden z-[110] items-center justify-center p-4 backdrop-blur-md animate-scale-up">
+            <!-- Content injected on success -->
+        </div>
+
+        <!-- Notification Toast -->
+        <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-slate-800 text-white px-8 py-4 rounded-2xl shadow-2xl opacity-0 transition-all pointer-events-none transform translate-y-4 font-bold">
+            Pesan Notifikasi
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, addDoc, onSnapshot, updateDoc, deleteDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        // Global State Management
+        const state = {
+            user: null,
+            activities: [],
+            attendees: [],
+            currentActivity: null,
+            currentActivityLogs: [],
+            scanner: null,
+            error: null,
+            lastScannedId: null,
+            lastScanTime: null
+        };
+
+        // Firebase Configuration (Ganti dengan config Anda sendiri jika perlu)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAh1AC_VBYlvkcxOk4_TevkWaKaI5QmQws",
+            authDomain: "kehadiran-6345f.firebaseapp.com",
+            projectId: "kehadiran-6345f",
+            storageBucket: "kehadiran-6345f.firebasestorage.app",
+            messagingSenderId: "946645109282",
+            appId: "1:946645109282:web:053862174360e8317e987b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'presensi-app-001';
+
+        // --- Authentication ---
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    try {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } catch (e) {
+                        await signInAnonymously(auth);
+                    }
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Auth Fail:", err);
+                state.error = "Autentikasi Gagal. Pastikan 'Anonymous Login' aktif di Firebase Console.";
+                router.render();
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            state.user = user;
+            if (user) {
+                state.error = null;
+                router.navigate('home');
+                startListeners();
+            }
+        });
+
+        let activityLogsUnsubscribe = null;
+
+        // --- Firestore Listeners ---
+        function startListeners() {
+            if (!state.user) return;
+
+            // Listener Daftar Kegiatan
+            const actQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'activities'), orderBy("createdAt", "desc"));
+            onSnapshot(actQuery, (snapshot) => {
+                state.activities = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (['home', 'admin_activities'].includes(router.currentView)) router.render();
+            }, (err) => {
+                state.error = "Gagal mengambil data kegiatan. Periksa Firestore Rules.";
+                router.render();
+            });
+
+            // Listener Database Peserta
+            const attCol = collection(db, 'artifacts', appId, 'public', 'data', 'attendees');
+            onSnapshot(attCol, (snapshot) => {
+                state.attendees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                                    .sort((a, b) => (a.participantNo || '').localeCompare(b.participantNo || ''));
+                if (router.currentView === 'admin_users') router.render();
+            }, (err) => {
+                state.error = "Gagal mengambil data peserta.";
+                router.render();
+            });
+        }
+
+        // --- UI Logic & Helpers ---
+        const playBeep = () => {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); 
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.15);
+            } catch (e) {
+                console.error("Web Audio API is not supported.", e);
+            }
+        };
+
+        const showToast = (message) => {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.remove('opacity-0', 'translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 3000);
+        };
+
+        let successPopupTimeout;
+        const showSuccessPopup = (user) => {
+            playBeep(); 
+            const popup = document.getElementById('success-popup');
+            if (!popup) return;
+
+            clearTimeout(successPopupTimeout);
+
+            popup.innerHTML = `
+                <div class="bg-white rounded-[3rem] w-full max-w-sm overflow-hidden shadow-2xl text-center p-12 flex flex-col items-center gap-6 border-4 border-white">
+                    <div class="relative">
+                        <div class="h-36 w-36 rounded-full bg-slate-100 overflow-hidden border-4 border-blue-500 shadow-xl">
+                            ${user.photo ? `<img src="${user.photo}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-slate-400 font-black text-6xl">${user.name ? user.name[0] : '?'}</div>`}
+                        </div>
+                        <div class="absolute -bottom-2 -right-2 bg-green-500 text-white h-12 w-12 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="font-black text-3xl text-slate-800 leading-tight">${user.name}</h3>
+                        <p class="font-mono text-blue-600 font-bold tracking-widest">${user.wa}</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-black bg-slate-800 text-white px-5 py-2 rounded-full uppercase tracking-tighter">${user.participantNo || '---'}</span>
+                        <span class="text-xs font-bold text-green-600 uppercase tracking-widest">Berhasil Hadir</span>
+                    </div>
+                </div>`;
+            
+            popup.classList.remove('hidden');
+            popup.classList.add('flex');
+
+            successPopupTimeout = setTimeout(() => {
+                popup.classList.add('hidden');
+                popup.classList.remove('flex');
+            }, 4000);
+        };
+
+        const openModal = (html) => {
+            const container = document.getElementById('modal-container');
+            const body = document.getElementById('modal-body');
+            body.innerHTML = html;
+            container.classList.remove('hidden');
+        };
+
+        const closeModal = () => {
+            document.getElementById('modal-container').classList.add('hidden');
+            if (state.scanner) {
+                state.scanner.stop().then(() => {
+                    state.scanner.clear();
+                    state.scanner = null;
+                }).catch(() => {
+                    state.scanner.clear();
+                    state.scanner = null;
+                });
+            }
+        };
+
+        const fileToBase64 = (file) => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+
+        // Logika Mencari Nomor Urut yang Terlewat (Gap Filling)
+        const getNextAvailableNo = () => {
+            if (state.attendees.length === 0) return "001";
+            
+            const existingNos = state.attendees
+                .map(u => parseInt(u.participantNo))
+                .filter(n => !isNaN(n))
+                .sort((a, b) => a - b);
+            
+            let next = 1;
+            for (let i = 0; i < existingNos.length; i++) {
+                if (existingNos[i] === next) {
+                    next++;
+                } else if (existingNos[i] > next) {
+                    break; 
+                }
+            }
+            return next.toString().padStart(3, '0');
+        };
+
+        // --- Core Attendance ---
+        async function recordAttendance(identifier) {
+            // Debounce to prevent rapid re-scans of the same code
+            if (state.lastScannedId === identifier && (new Date() - state.lastScanTime < 4000)) {
+                return; 
+            }
+            
+            if (!state.currentActivity || !state.user) return;
+            
+            const userMatch = state.attendees.find(u => u.wa === identifier || u.id === identifier || u.participantNo === identifier);
+            
+            if (!userMatch) {
+                showToast("Data peserta tidak ditemukan!");
+                return;
+            }
+
+            try {
+                const attendId = `${state.currentActivity.id}_${userMatch.id}`;
+                const attendRef = doc(db, 'artifacts', appId, 'public', 'data', 'logs', attendId);
+                
+                await setDoc(attendRef, {
+                    activityId: state.currentActivity.id,
+                    userId: userMatch.id,
+                    userName: userMatch.name,
+                    participantNo: userMatch.participantNo,
+                    timestamp: new Date().toISOString()
+                });
+
+                showSuccessPopup(userMatch);
+                // Update state for debounce
+                state.lastScannedId = identifier;
+                state.lastScanTime = new Date();
+            } catch (error) {
+                showToast("Error simpan presensi.");
+            }
+        }
+
+        // --- Router System ---
+        const router = {
+            currentView: 'loading',
+            history: [],
+            navigate(view) {
+                if (this.currentView !== view && this.currentView !== 'loading') {
+                    this.history.push(this.currentView);
+                }
+                this.currentView = view;
+                this.render();
+                window.scrollTo(0, 0);
+            },
+            back() {
+                const previousView = this.history.pop();
+                if (previousView) {
+                    this.currentView = previousView;
+                    this.render();
+                } else {
+                    this.navigate('home');
+                }
+            },
+            render() {
+                const main = document.getElementById('main-content');
+                const headerTitle = document.getElementById('header-title');
+
+                if (state.error && this.currentView !== 'loading') {
+                    main.innerHTML = `
+                        <div class="bg-red-50 border-2 border-red-100 text-red-700 p-10 rounded-3xl text-center max-w-2xl mx-auto mt-10">
+                            <h3 class="font-black text-2xl mb-2">Terjadi Kesalahan</h3>
+                            <p class="font-medium opacity-70">${state.error}</p>
+                            <button onclick="location.reload()" class="mt-8 bg-red-600 text-white px-10 py-4 rounded-2xl font-bold hover:bg-red-700 transition-all shadow-xl shadow-red-200">Segarkan Halaman</button>
+                        </div>`;
+                    return;
+                }
+
+                const btnBack = (this.currentView !== 'home' && this.currentView !== 'loading') ? `
+                    <button onclick="window.router.back()" class="mb-6 flex items-center gap-2 text-slate-400 font-bold hover:text-blue-600 transition-colors uppercase text-xs tracking-widest">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                        Kembali
+                    </button>` : '';
+
+                switch (this.currentView) {
+                    case 'home':
+                        headerTitle.textContent = "Pilih Kegiatan";
+                        main.innerHTML = this.views.home();
+                        break;
+                    case 'activity_detail':
+                        headerTitle.textContent = state.currentActivity?.name || "Presensi";
+                        main.innerHTML = btnBack + this.views.activityDetail();
+                        break;
+                    case 'admin':
+                        headerTitle.textContent = "Panel Admin";
+                        main.innerHTML = btnBack + this.views.adminMenu();
+                        break;
+                    case 'admin_users':
+                        headerTitle.textContent = "Data Peserta";
+                        main.innerHTML = btnBack + this.views.adminUsers();
+                        break;
+                    case 'admin_activities':
+                        headerTitle.textContent = "Kelola Agenda";
+                        main.innerHTML = btnBack + this.views.adminActivities();
+                        break;
+                    case 'admin_activity_detail':
+                        headerTitle.textContent = `Laporan Kehadiran`;
+                        main.innerHTML = btnBack + this.views.adminActivityDetail();
+                        break;
+                }
+            },
+            views: {
+                home() {
+                    if (state.activities.length === 0) {
+                        return `<div class="flex flex-col items-center justify-center h-96 text-slate-400">
+                            <p class="text-xl font-medium mb-2">Belum ada agenda tersedia</p>
+                            <p class="text-sm">Silakan buat agenda baru di menu Admin.</p>
+                        </div>`;
+                    }
+                    return `
+                        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            ${state.activities.map(act => `
+                                <button onclick="window.setActivity('${act.id}')" 
+                                    class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col items-start gap-5 hover:shadow-2xl hover:-translate-y-1 hover:border-blue-200 transition-all group text-left h-full">
+                                    <div class="bg-blue-50 p-4 rounded-2xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <h3 class="font-black text-xl text-slate-800 leading-tight">${act.name}</h3>
+                                        <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Buka Presensi</p>
+                                    </div>
+                                </button>
+                            `).join('')}
+                        </div>`;
+                },
+                activityDetail() {
+                    return `
+                        <div class="max-w-2xl mx-auto flex flex-col items-center py-10">
+                            <div class="bg-white w-full p-12 rounded-[3.5rem] shadow-2xl border border-slate-50 flex flex-col items-center gap-10">
+                                <div class="text-center">
+                                    <h2 class="text-4xl font-black text-slate-800 mb-2">${state.currentActivity?.name}</h2>
+                                    <p class="text-slate-400 font-bold uppercase tracking-[0.2em] text-xs">Pilih Metode Kehadiran</p>
+                                </div>
+                                <button onclick="window.openQRScanner()" class="w-full bg-blue-600 text-white p-10 rounded-[2.5rem] shadow-xl shadow-blue-100 flex flex-col items-center gap-4 hover:bg-blue-700 active:scale-95 transition-all group">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
+                                    <span class="font-black text-2xl uppercase tracking-tighter">PINDAI KARTU QR</span>
+                                </button>
+                                <div class="flex items-center gap-6 w-full px-4 text-slate-200">
+                                    <div class="h-px bg-slate-100 flex-grow"></div>
+                                    <span class="font-black text-xs text-slate-400 tracking-widest">ATAU KETIK MANUAL</span>
+                                    <div class="h-px bg-slate-100 flex-grow"></div>
+                                </div>
+                                <div class="w-full space-y-3">
+                                    <label class="block text-xs font-black text-slate-500 uppercase ml-2 tracking-widest">WhatsApp / No. Peserta</label>
+                                    <div class="flex gap-4">
+                                        <input type="tel" id="wa-input" placeholder="Contoh: 001 atau 0812..." class="flex-grow p-6 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] outline-none focus:border-blue-500 transition-all text-xl font-bold">
+                                        <button onclick="window.manualSubmit()" class="bg-slate-900 text-white px-10 rounded-[1.5rem] font-black hover:bg-black active:scale-95 transition-all text-lg">KIRIM</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                },
+                adminMenu() {
+                    return `
+                        <div class="grid gap-10 sm:grid-cols-2 pt-10">
+                            <button onclick="window.router.navigate('admin_users')" class="bg-white p-16 rounded-[3.5rem] border border-slate-100 shadow-sm flex flex-col items-center gap-8 hover:shadow-2xl transition-all group">
+                                <div class="bg-indigo-50 p-10 rounded-[2.5rem] text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all scale-110 shadow-inner">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                </div>
+                                <span class="font-black text-3xl text-slate-800 tracking-tighter">Kelola Peserta</span>
+                            </button>
+                            <button onclick="window.router.navigate('admin_activities')" class="bg-white p-16 rounded-[3.5rem] border border-slate-100 shadow-sm flex flex-col items-center gap-8 hover:shadow-2xl transition-all group">
+                                <div class="bg-orange-50 p-10 rounded-[2.5rem] text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-all scale-110 shadow-inner">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                                </div>
+                                <span class="font-black text-3xl text-slate-800 tracking-tighter">Data Agenda</span>
+                            </button>
+                        </div>`;
+                },
+                adminUsers() {
+                    return `
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4">
+                            <h2 class="font-black text-4xl text-slate-800 tracking-tighter">Database Peserta</h2>
+                            <button onclick="window.showAddUserModal()" class="bg-indigo-600 text-white px-10 py-5 rounded-2xl font-black flex items-center gap-3 hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                                TAMBAH BARU
+                            </button>
+                        </div>
+                        <div class="grid gap-5 lg:grid-cols-2">
+                            ${state.attendees.map(user => `
+                                <div class="bg-white p-6 rounded-3xl border border-slate-100 flex items-center gap-6 shadow-sm hover:shadow-lg transition-all relative">
+                                    <div class="h-20 w-20 rounded-[1.5rem] bg-slate-50 overflow-hidden flex-shrink-0 border-4 border-white shadow-inner">
+                                        ${user.photo ? `<img src="${user.photo}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-slate-200 font-black text-3xl">${user.name ? user.name[0] : '?'}</div>`}
+                                    </div>
+                                    <div class="flex-grow min-w-0">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-[10px] font-black bg-slate-900 text-white px-2.5 py-1 rounded-lg">${user.participantNo || '---'}</span>
+                                            <h4 class="font-black text-xl text-slate-800 truncate leading-tight">${user.name}</h4>
+                                        </div>
+                                        <p class="text-sm text-blue-500 font-bold font-mono mt-1">${user.wa}</p>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex flex-col items-center mr-1">
+                                            <label class="text-[9px] font-black text-slate-400 uppercase mb-1">Cetak</label>
+                                            <input type="checkbox" ${user.isPrinted ? 'checked' : ''} onchange="window.togglePrintedStatus('${user.id}', this.checked)" class="w-6 h-6 rounded-lg border-2 border-slate-100 text-blue-600 cursor-pointer shadow-sm">
+                                        </div>
+                                        <button onclick="window.showUserQR('${user.id}', '${user.name.replace(/'/g, "\\'")}', '${user.wa}')" class="p-3.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-2xl transition-all shadow-sm">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
+                                        </button>
+                                        <button onclick="window.showEditUserModal('${user.id}')" class="p-3.5 bg-slate-50 text-slate-500 hover:bg-slate-800 hover:text-white rounded-2xl transition-all shadow-sm">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                        </button>
+                                        <button onclick="window.deleteUser('${user.id}')" class="p-3.5 bg-red-50 text-red-400 hover:bg-red-600 hover:text-white rounded-2xl transition-all shadow-sm">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                },
+                adminActivities() {
+                    return `
+                        <div class="flex justify-between items-center mb-10">
+                            <h2 class="font-black text-4xl text-slate-800 tracking-tighter">Daftar Agenda</h2>
+                            <button onclick="window.showAddActivityModal()" class="bg-orange-600 text-white px-10 py-5 rounded-2xl font-black hover:bg-orange-700 transition-all shadow-xl shadow-orange-100">AGENDA BARU</button>
+                        </div>
+                        <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                            ${state.activities.map(act => `
+                                <button onclick="window.viewActivityReport('${act.id}')" class="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col justify-between h-48 text-left hover:shadow-2xl hover:-translate-y-1 transition-all group relative">
+                                    <div>
+                                        <h4 class="font-black text-2xl text-slate-800 leading-tight group-hover:text-orange-600 transition-colors">${act.name}</h4>
+                                        <p class="text-xs font-bold text-slate-400 mt-3 tracking-widest uppercase">Klik untuk Laporan</p>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">ID: ${act.id.slice(-6)}</span>
+                                        <div onclick="event.stopPropagation(); window.deleteActivity('${act.id}')" class="p-2.5 rounded-xl text-red-200 hover:bg-red-100 hover:text-red-500 transition-all">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        </div>
+                                    </div>
+                                </button>
+                            `).join('')}
+                        </div>`;
+                },
+                adminActivityDetail() {
+                    const total = state.attendees.length;
+                    const present = state.currentActivityLogs.length;
+                    const presentIds = new Set(state.currentActivityLogs.map(l => l.userId));
+
+                    return `
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-6">
+                            <div>
+                                <h2 class="font-black text-4xl text-slate-800 tracking-tighter">${state.currentActivity?.name}</h2>
+                                <p class="text-slate-500 font-bold mt-2 uppercase tracking-widest text-xs">
+                                    Kehadiran: <span class="text-blue-600">${present}</span> / ${total} Peserta
+                                </p>
+                            </div>
+                            <div class="flex gap-4">
+                                <button onclick="window.showAllPhotos()" class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-sm shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+                                    GALERI
+                                </button>
+                                <button onclick="window.downloadExcelReport()" class="bg-green-600 text-white px-8 py-4 rounded-2xl font-black text-sm shadow-xl shadow-green-100 hover:bg-green-700 transition-all flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    CSV REPORT
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
+                            <div class="space-y-4">
+                                ${state.attendees.map(u => {
+                                    const isP = presentIds.has(u.id);
+                                    const log = isP ? state.currentActivityLogs.find(l => l.userId === u.id) : null;
+                                    const time = log ? new Date(log.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '';
+                                    return `
+                                    <div class="p-6 rounded-[1.5rem] flex items-center gap-6 ${isP ? 'bg-blue-50 border-2 border-blue-100' : 'bg-slate-50 border-2 border-transparent'}">
+                                        <div class="flex-grow min-w-0">
+                                            <div class="flex items-center gap-3">
+                                                <span class="text-[10px] font-black bg-slate-800 text-white px-2 py-0.5 rounded-md">${u.participantNo || '---'}</span>
+                                                <h4 class="font-black text-xl text-slate-800 truncate leading-tight">${u.name}</h4>
+                                            </div>
+                                            <p class="text-xs text-slate-400 font-bold mt-1 tracking-tight">${u.wa}</p>
+                                        </div>
+                                        ${isP ? `
+                                            <div class="text-right flex-shrink-0">
+                                                <div class="font-black text-xs text-green-600 flex items-center gap-1.5 justify-end">
+                                                    <div class="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+                                                    HADIR
+                                                </div>
+                                                <p class="text-[10px] font-black text-slate-400 mt-1 uppercase tracking-tighter">${time} WIB</p>
+                                            </div>
+                                        ` : `
+                                            <div class="font-black text-xs text-slate-300 tracking-widest uppercase">Absen</div>
+                                        `}
+                                    </div>`;
+                                }).join('')}
+                            </div>
+                        </div>`;
+                }
+            }
+        };
+
+        // --- Event Actions ---
+        window.closeModal = closeModal;
+        window.router = router;
+        
+        window.setActivity = (id) => {
+            state.currentActivity = state.activities.find(a => a.id === id);
+            router.navigate('activity_detail');
+        };
+
+        window.manualSubmit = () => {
+            const val = document.getElementById('wa-input').value.trim();
+            if (val) recordAttendance(val);
+        };
+
+        window.openQRScanner = () => {
+            openModal(`
+                <div class="p-10 flex flex-col gap-8">
+                    <h3 class="font-black text-2xl text-center tracking-tighter">PINDAI QR PESERTA</h3>
+                    <div id="reader" class="rounded-[2rem] overflow-hidden bg-slate-100 shadow-inner"></div>
+                    <button onclick="window.closeModal()" class="w-full p-6 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl">Batal</button>
+                </div>`);
+            state.scanner = new Html5Qrcode("reader");
+            const qrboxSize = Math.floor(window.innerWidth * 0.8);
+            state.scanner.start(
+                { facingMode: "environment" }, 
+                { fps: 10, qrbox: { width: qrboxSize, height: qrboxSize } }, 
+                (txt) => recordAttendance(txt)
+            ).catch(() => {
+                console.error("QR Scanner failed to start.");
+                window.closeModal()
+            });
+        };
+
+        // --- CRUD Peserta ---
+        window.showAddUserModal = () => {
+            const nextNo = getNextAvailableNo();
+            openModal(`
+                <div class="p-10 space-y-6">
+                    <h3 class="font-black text-2xl text-center uppercase tracking-tighter">Peserta Baru</h3>
+                    <div class="space-y-4">
+                        <div class="bg-slate-100 p-5 rounded-2xl flex justify-between items-center border border-slate-200">
+                            <span class="text-xs font-black text-slate-400 uppercase tracking-widest">ID Peserta</span>
+                            <span class="font-mono font-black text-2xl text-blue-600">${nextNo}</span>
+                        </div>
+                        <input type="text" id="new-name" placeholder="Nama Lengkap" class="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 font-bold transition-all">
+                        <input type="tel" id="new-wa" placeholder="Nomor WA (Mulai 08...)" class="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 font-mono transition-all">
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Upload Foto (Opsional)</label>
+                            <input type="file" id="new-photo" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:bg-indigo-50 file:text-indigo-600 file:font-black">
+                        </div>
+                    </div>
+                    <div class="flex gap-4 pt-4">
+                        <button onclick="window.closeModal()" class="flex-grow p-5 bg-slate-100 rounded-2xl font-bold">Batal</button>
+                        <button onclick="window.saveUser('${nextNo}')" id="save-user-btn" class="flex-grow p-5 bg-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-indigo-100">SIMPAN</button>
+                    </div>
+                </div>`);
+        };
+
+        window.saveUser = async (no) => {
+            const n = document.getElementById('new-name').value.trim();
+            const w = document.getElementById('new-wa').value.trim();
+            const p = document.getElementById('new-photo');
+            if (!n || !w || !state.user) return showToast("Nama dan WA wajib diisi!");
+            
+            const btn = document.getElementById('save-user-btn');
+            btn.disabled = true;
+            btn.innerHTML = "PROSES...";
+
+            let img = "";
+            if (p.files[0]) img = await fileToBase64(p.files[0]);
+
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'attendees'), {
+                    name: n, wa: w, photo: img, participantNo: no, isPrinted: false, createdAt: new Date().toISOString()
+                });
+                showToast(`Peserta ${no} ditambahkan.`);
+                window.closeModal();
+            } catch (e) { showToast("Gagal menyimpan."); btn.disabled = false; }
+        };
+
+        window.showEditUserModal = (id) => {
+            const u = state.attendees.find(x => x.id === id);
+            if (!u) return;
+            openModal(`
+                <div class="p-10 space-y-6">
+                    <h3 class="font-black text-2xl text-center uppercase tracking-tighter">Edit Data</h3>
+                    <div class="space-y-4">
+                        <input type="text" id="edit-name" value="${u.name}" class="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-bold">
+                        <input type="tel" id="edit-wa" value="${u.wa}" class="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-mono">
+                    </div>
+                    <div class="flex gap-4 pt-4">
+                        <button onclick="window.closeModal()" class="flex-grow p-5 bg-slate-100 rounded-2xl font-bold">Batal</button>
+                        <button onclick="window.updateUser('${id}')" id="update-user-btn" class="flex-grow p-5 bg-slate-900 text-white rounded-2xl font-black">UPDATE</button>
+                    </div>
+                </div>`);
+        };
+
+        window.updateUser = async (id) => {
+            const n = document.getElementById('edit-name').value.trim();
+            const w = document.getElementById('edit-wa').value.trim();
+            if (!n || !w) return;
+            try {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'attendees', id), { name: n, wa: w });
+                showToast("Data diperbarui.");
+                window.closeModal();
+            } catch (e) { showToast("Gagal."); }
+        };
+
+        window.deleteUser = async (id) => {
+            if (confirm("Hapus peserta ini secara permanen?")) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'attendees', id));
+                    showToast("Peserta dihapus.");
+                } catch (e) { showToast("Gagal."); }
+            }
+        };
+
+        window.togglePrintedStatus = async (id, s) => {
+            try {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'attendees', id), { isPrinted: s });
+                showToast(s ? "Tanda Cetak: AKTIF" : "Tanda Cetak: MATI");
+            } catch (e) { console.error(e); }
+        };
+
+        // --- CRUD Kegiatan ---
+        window.showAddActivityModal = () => {
+            openModal(`
+                <div class="p-10 space-y-6">
+                    <h3 class="font-black text-2xl text-center tracking-tighter">BUAT AGENDA</h3>
+                    <input type="text" id="act-name" class="w-full p-6 border-2 border-slate-100 rounded-2xl font-bold outline-none focus:border-orange-500" placeholder="Nama Pertemuan/Kegiatan">
+                    <div class="flex gap-4">
+                        <button onclick="window.closeModal()" class="flex-grow p-5 bg-slate-100 rounded-2xl font-bold">Batal</button>
+                        <button onclick="window.saveActivity()" class="flex-grow p-5 bg-orange-600 text-white rounded-2xl font-black shadow-xl shadow-orange-100 tracking-widest">BUAT</button>
+                    </div>
+                </div>`);
+        };
+
+        window.saveActivity = async () => {
+            const n = document.getElementById('act-name').value.trim();
+            if (!n) return;
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'activities'), {
+                    name: n, createdAt: new Date().toISOString()
+                });
+                showToast("Agenda berhasil dibuat.");
+                window.closeModal();
+            } catch (e) { showToast("Gagal."); }
+        };
+
+        window.deleteActivity = async (id) => {
+            if (confirm("Hapus agenda ini? Log kehadiran akan ikut hilang.")) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', id));
+                    showToast("Agenda dihapus.");
+                } catch (e) { showToast("Gagal."); }
+            }
+        };
+
+        // --- Laporan & Galeri ---
+        window.viewActivityReport = (id) => {
+            state.currentActivity = state.activities.find(a => a.id === id);
+            if (!state.currentActivity) return;
+            
+            if (activityLogsUnsubscribe) activityLogsUnsubscribe();
+            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'logs'), where("activityId", "==", id));
+            activityLogsUnsubscribe = onSnapshot(q, (sn) => {
+                state.currentActivityLogs = sn.docs.map(d => ({ id: d.id, ...d.data() }));
+                if (router.currentView === 'admin_activity_detail') router.render();
+            });
+            router.navigate('admin_activity_detail');
+        };
+
+        let photoWin = null;
+        let pInterval = null;
+        window.showAllPhotos = () => {
+            if (photoWin && !photoWin.closed) { photoWin.focus(); return; }
+            photoWin = window.open('', '_blank');
+            if (!photoWin) { alert('Izinkan pop-up!'); return; }
+            
+            const html = `<html><head><script src="https://cdn.tailwindcss.com"><\/script><title>Live Gallery<\/title><\/head><body class="bg-slate-100 p-2">
+                <p class="text-lg font-black mb-2 text-slate-800 tracking-tighter">Kehadiran: ${state.currentActivity.name}<\/p>
+                <div id="grid" class="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-10 gap-4"><\/div>
+            <\/body><\/html>`;
+            photoWin.document.write(html);
+            photoWin.document.close();
+
+            const update = () => {
+                if (!photoWin || photoWin.closed) { clearInterval(pInterval); return; }
+                const presentIds = new Set(state.currentActivityLogs.map(l => l.userId));
+                const container = photoWin.document.getElementById('grid');
+                if (!container) return;
+                container.innerHTML = state.attendees.map(u => `
+                    <div class="relative group">
+                        <img src="${u.photo || 'https://ui-avatars.com/api/?name='+u.name+'&background=random'}" 
+                             class="w-full aspect-square object-cover rounded-xl shadow-md transition-all ${!presentIds.has(u.id) ? 'grayscale opacity-30' : 'border-2 border-blue-500 scale-105'}">
+                        ${presentIds.has(u.id) ? '<div class="absolute top-1 right-1 h-3 w-3 bg-green-500 rounded-full border border-white"></div>' : ''}
+                    </div>`).join('');
+            };
+
+            setTimeout(update, 200);
+            pInterval = setInterval(update, 5000);
+        };
+
+        window.downloadExcelReport = () => {
+            if (!state.currentActivity) return;
+            const pIds = new Set(state.currentActivityLogs.map(l => l.userId));
+            const logsMap = new Map(state.currentActivityLogs.map(l => [l.userId, l]));
+            
+            let csv = "No Peserta,Nama,WhatsApp,Status,Waktu Hadir\r\n";
+            state.attendees.forEach(u => {
+                const hadir = pIds.has(u.id);
+                const waktu = hadir ? new Date(logsMap.get(u.id).timestamp).toLocaleString('id-ID') : '-';
+                csv += `${u.participantNo || '-'},"${u.name}",${u.wa},${hadir ? 'Hadir' : 'Absen'},"${waktu}"\r\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Laporan_${state.currentActivity.name}.csv`;
+            a.click();
+        };
+
+        window.showUserQR = (id, n, wa) => {
+            openModal(`
+                <div class="p-12 flex flex-col items-center gap-8">
+                    <div class="text-center">
+                        <h3 class="font-black text-3xl text-slate-800 leading-tight">${n}</h3>
+                        <p class="font-mono text-blue-600 font-bold mt-2 tracking-widest">${wa}</p>
+                    </div>
+                    <div id="qr-c" class="bg-white p-6 rounded-[2.5rem] shadow-2xl border border-slate-50"></div>
+                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em]">Kartu Presensi Peserta</p>
+                    <button onclick="window.closeModal()" class="w-full p-6 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl">TUTUP</button>
+                </div>`);
+            setTimeout(() => { 
+                const el = document.getElementById("qr-c");
+                if (el) new QRCode(el, { text: wa, width: 240, height: 240, colorDark: "#1e293b" }); 
+            }, 150);
+        };
+
+        window.onload = async () => { await initAuth(); };
+    </script>
+</body>
+</html>
