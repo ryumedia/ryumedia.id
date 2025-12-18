@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyDAF - Hidangan Berkah</title>
+    
+    <!-- Menggunakan Tailwind CSS untuk styling cepat -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Menggunakan Font Awesome untuk ikon (opsional) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+    <!-- Menambahkan Swiper.js untuk slider logo -->
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+
+    <style>
+        /* Anda bisa menambahkan CSS kustom tambahan di sini jika perlu */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- NAVIGASI / HEADER -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <!-- Logo / Nama Brand -->
+            <!-- FIX: Mengubah href="#" menjadi "#home" agar valid -->
+            <a href="#home" class="text-xl font-bold text-[#311105] flex items-center gap-2">
+                <img src="https://i.imghippo.com/files/IVCI5617ps.png" alt="MyDAF Logo" class="h-10"> MyDAF
+            </a>
+            
+            <!-- Menu Navigasi (Desktop) -->
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="#home" class="hover:text-[#edc938] transition">Beranda</a>
+                <a href="#menu" class="hover:text-[#edc938] transition">Menu Paket</a>
+                <a href="#testimoni" class="hover:text-[#edc938] transition">Testimoni</a>
+                <a href="#mitra" class="hover:text-[#edc938] transition">Mitra Kami</a>
+                <a href="#kontak" class="bg-[#311105] text-white px-4 py-2 rounded-full hover:bg-[#edc938] hover:text-[#311105] transition">Pesan Sekarang</a>
+            </div>
+
+            <!-- Tombol Menu Mobile -->
+            <button id="mobile-menu-button" class="md:hidden text-gray-600 focus:outline-none">
+                <i id="menu-icon" class="fas fa-bars text-2xl"></i>
+            </button>
+        </div>
+
+        <!-- Menu Navigasi (Mobile) -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200">
+            <a href="#home" class="block px-4 py-3 text-gray-700 hover:bg-gray-100">Beranda</a>
+            <a href="#menu" class="block px-4 py-3 text-gray-700 hover:bg-gray-100">Menu Paket</a>
+            <a href="#testimoni" class="block px-4 py-3 text-gray-700 hover:bg-gray-100">Testimoni</a>
+            <a href="#mitra" class="block px-4 py-3 text-gray-700 hover:bg-gray-100">Mitra Kami</a>
+            <a href="#kontak" class="block px-4 py-3 text-gray-700 hover:bg-gray-100">Pesan Sekarang</a>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION (Banner Utama Promosi) -->
+    <section id="home" class="relative bg-[#fef9e6] py-20 lg:py-32">
+        <div class="container mx-auto px-4 flex flex-col-reverse md:flex-row items-center">
+            
+            <!-- Teks Promosi -->
+            <div class="w-full md:w-1/2 text-center md:text-left space-y-6">
+                <h1 class="text-4xl md:text-6xl font-bold leading-tight text-[#765826]">
+                    Rasa Lezat, <br>
+                    <span class="text-[#311105]">Harga Hemat</span>
+                </h1>
+                <p class="text-lg text-gray-600">
+                    Solusi katering terbaik untuk acara spesial, kantor, atau harian. Nikmati masakan rumahan dengan kualitas restoran bintang lima.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                    <a href="#menu" class="bg-[#311105] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#edc938] hover:text-[#311105] transition text-center shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                        Lihat Menu
+                    </a>
+                    <a href="#kontak" class="border-2 border-[#311105] text-[#311105] px-8 py-3 rounded-lg font-semibold hover:bg-[#edc938] hover:border-[#edc938] transition text-center">
+                        Hubungi Kami
+                    </a>
+                </div>
+                <!-- Info Tambahan -->
+                <div class="pt-4 flex items-center justify-center md:justify-start gap-4 text-sm text-gray-500">
+                    <span class="flex items-center gap-1"><i class="fas fa-check-circle text-green-500"></i> Halal 100%</span>
+                    <span class="flex items-center gap-1"><i class="fas fa-check-circle text-green-500"></i> Bahan Segar</span>
+                    <span class="flex items-center gap-1"><i class="fas fa-check-circle text-green-500"></i> Higienis</span>
+                </div>
+            </div>
+
+            <!-- Gambar Hero (Placeholder) -->
+            <div class="w-full md:w-1/2 mb-10 md:mb-0 flex justify-center">
+                <div class="relative">
+                    <div class="absolute inset-0 bg-[#edc938] rounded-full filter blur-3xl opacity-30 animate-pulse"></div>
+                    <img src="https://i.imghippo.com/files/lyT1405bcc.png" alt="Makanan Lezat" class="relative rounded-2xl shadow-2xl transform rotate-2 hover:rotate-0 transition duration-500">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION MENU TERLARIS -->
+    <section id="menu" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Pilihan Paket Favorit</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Kami menyediakan berbagai pilihan paket yang cocok untuk kebutuhan acara maupun makan siang kantor Anda.</p>
+            </div>
+
+            <!-- Grid Kartu Menu -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Kartu Menu 1 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition duration-300">
+                    <img src="https://i.imghippo.com/files/YiX3070rHM.png" alt="Paket A" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-bold">Nasi Box Premium</h3>
+                            <span class="bg-[#fef9e6] text-[#311105] text-xs font-bold px-2 py-1 rounded">Best Seller</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">Nasi, Ayam Bakar Madu, Capcay Seafood, Tempe Mendoan, Sambal, Kerupuk, Buah.</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-lg font-bold text-[#311105]">Rp 35.000</span>
+                            <a href="#kontak" class="text-[#311105] hover:text-[#edc938] font-semibold text-sm">Pesan Sekarang</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kartu Menu 2 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition duration-300">
+                    <img src="https://i.imghippo.com/files/EJL3760xyI.png" alt="Paket B" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-bold">Prasmanan Kantor</h3>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">Menu lengkap prasmanan untuk acara rapat atau makan siang karyawan. Minimal 20 porsi.</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-lg font-bold text-[#311105]">Rp 50.000<span class="text-xs text-gray-500 font-normal">/pax</span></span>
+                            <a href="#kontak" class="text-[#311105] hover:text-[#edc938] font-semibold text-sm">Pesan Sekarang</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kartu Menu 3 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition duration-300">
+                    <img src="https://i.imghippo.com/files/ioI6506CE.png" alt="Paket C" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-bold">Tumpeng Mini</h3>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">Tumpeng nasi kuning cantik dengan 5 macam lauk pauk. Cocok untuk syukuran.</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-lg font-bold text-[#311105]">Rp 40.000</span>
+                            <a href="#kontak" class="text-[#311105] hover:text-[#edc938] font-semibold text-sm">Pesan Sekarang</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FIX: MENAMBAHKAN SECTION TESTIMONI (Sebelumnya tidak ada, menyebabkan error jika link diklik) -->
+    <section id="testimoni" class="py-16 bg-[#fef9e6]">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Apa Kata Mereka?</h2>
+                <p class="text-gray-600">Kepuasan pelanggan adalah prioritas utama kami.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Testimoni 1 -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="text-[#edc938] mb-2"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                    <p class="text-gray-600 italic mb-4">"Makanannya enak banget, bumbunya meresap. Pengiriman juga tepat waktu. Recommended buat acara kantor!"</p>
+                    <div class="font-bold">- Budi Santoso, HR Manager</div>
+                </div>
+                <!-- Testimoni 2 -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="text-[#edc938] mb-2"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                    <p class="text-gray-600 italic mb-4">"Pesan tumpeng mini buat ulang tahun anak, hiasannya cantik dan rasanya juara. Anak-anak suka!"</p>
+                    <div class="font-bold">- Siti Aminah, Ibu Rumah Tangga</div>
+                </div>
+                 <!-- Testimoni 3 -->
+                 <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="text-[#edc938] mb-2"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                    <p class="text-gray-600 italic mb-4">"Harga sangat terjangkau untuk kualitas rasa seperti ini. Pasti bakal langganan terus."</p>
+                    <div class="font-bold">- Andi Pratama, Event Organizer</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION MITRA KAMI -->
+    <section id="mitra" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Mitra Kami</h2>
+                <p class="text-gray-600">Dipercaya oleh berbagai perusahaan dan instansi.</p>
+            </div>
+
+            <!-- Slider Logo -->
+            <div class="swiper-container logo-slider relative">
+                <div class="swiper-wrapper flex items-center">
+                    <!-- Slide 1-10 (Placeholder) -->
+                    <div class="swiper-slide"><img src="https://i.imghippo.com/files/Zl7977OAI.png" alt="Logo Mitra 1" class="mx-auto h-16 transition duration-300 ease-in-out transform hover:scale-110"></div>
+                    <div class="swiper-slide"><img src="https://i.imghippo.com/files/f7338VI.png" alt="Logo Mitra 2" class="mx-auto h-16 transition duration-300 ease-in-out transform hover:scale-110"></div>
+                    <div class="swiper-slide"><img src="https://i.imghippo.com/files/oz4957Umg.png" alt="Logo Mitra 3" class="mx-auto h-16 transition duration-300 ease-in-out transform hover:scale-110"></div>
+                    <div class="swiper-slide"><img src="https://i.imghippo.com/files/wQK4473b.png" alt="Logo Mitra 4" class="mx-auto h-16 transition duration-300 ease-in-out transform hover:scale-110"></div>
+                    <div class="swiper-slide"><img src="https://i.imghippo.com/files/Ol9342vPo.png" alt="Logo Mitra 5" class="mx-auto h-16 transition duration-300 ease-in-out transform hover:scale-110"></div>
+                    <div class="swiper-slide"><img src="https://i.imghippo.com/files/NUI7296Y.png" alt="Logo Mitra 6" class="mx-auto h-16 transition duration-300 ease-in-out transform hover:scale-110"></div>
+                    <div class="swiper-slide"><img src="https://i.imghippo.com/files/YuOj7116VM.png" alt="Logo Mitra 7" class="mx-auto h-16 transition duration-300 ease-in-out transform hover:scale-110"></div>
+                    <div class="swiper-slide"><img src="https://i.imghippo.com/files/yva5317beQ.png" alt="Logo Mitra 8" class="mx-auto h-16 transition duration-300 ease-in-out transform hover:scale-110"></div>
+                    <div class="swiper-slide"><img src="https://i.imghippo.com/files/ByRZ8703QSU.png" alt="Logo Mitra 9" class="mx-auto h-16 transition duration-300 ease-in-out transform hover:scale-110"></div>
+                    <div class="swiper-slide"><img src="https://i.imghippo.com/files/JTLS3166t.png" alt="Logo Mitra 10" class="mx-auto h-16 transition duration-300 ease-in-out transform hover:scale-110"></div>
+                </div>
+                
+                <!-- Tombol Navigasi Slider -->
+                <div class="swiper-button-next text-[#311105] after:text-2xl"></div>
+                <div class="swiper-button-prev text-[#311105] after:text-2xl"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION CALL TO ACTION (CTA) -->
+    <section id="kontak" class="bg-gray-900 text-white py-16">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">Siap Memesan Untuk Acara Anda?</h2>
+            <p class="text-gray-400 mb-8 max-w-2xl mx-auto">Konsultasikan kebutuhan katering Anda sekarang. Dapatkan penawaran spesial untuk pemesanan pertama.</p>
+            
+            <div class="flex flex-col md:flex-row justify-center items-center gap-4">
+                <button class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-bold text-lg transition flex items-center gap-2">
+                    <i class="fab fa-whatsapp text-2xl"></i> Chat WhatsApp
+                </button>
+                <button class="bg-transparent border border-white hover:bg-white hover:text-gray-900 text-white px-8 py-3 rounded-lg font-bold text-lg transition">
+                    Lihat Katalog Lengkap
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-950 text-gray-400 py-10">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <!-- Kolom 1 -->
+                <div class="md:col-span-2">
+                    <h3 class="text-xl font-bold text-white mb-4">MyDAF</h3>
+                    <p class="mb-4">Melayani katering harian, nasi box, tumpeng, dan prasmanan dengan rasa otentik dan harga terjangkau.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="hover:text-[#edc938]"><i class="fab fa-instagram text-xl"></i></a>
+                        <a href="#" class="hover:text-[#edc938]"><i class="fab fa-facebook text-xl"></i></a>
+                        <a href="#" class="hover:text-[#edc938]"><i class="fab fa-tiktok text-xl"></i></a>
+                    </div>
+                </div>
+                <!-- Kolom 2 -->
+                <div>
+                    <h4 class="text-white font-bold mb-4">Tautan</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#home" class="hover:text-white transition">Beranda</a></li>
+                        <li><a href="#menu" class="hover:text-white transition">Menu</a></li>
+                        <li><a href="#testimoni" class="hover:text-white transition">Testimoni</a></li>
+                        <li><a href="#" class="hover:text-white transition">FAQ</a></li>
+                    </ul>
+                </div>
+                <!-- Kolom 3 -->
+                <div>
+                    <h4 class="text-white font-bold mb-4">Hubungi Kami</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-start gap-2"><i class="fas fa-map-marker-alt mt-1"></i> Jl. Melati Utama No.1, Panyileukan Bandung</li>
+                        <li class="flex items-center gap-2"><i class="fas fa-phone"></i> 0812-3456-7890</li>
+                        <li class="flex items-center gap-2"><i class="fas fa-envelope"></i> info@mydaf.com</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-sm">
+                <p>&copy; 2025 MyDAF. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Menambahkan Swiper.js untuk slider logo -->
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+
+    <!-- Script Javascript Sederhana -->
+    <script>
+        // FIX: Update Script untuk menangani error jika target tidak ditemukan
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                
+                // Jika href hanya "#", jangan lakukan apa-apa (atau scroll ke atas jika diinginkan)
+                if (targetId === '#' || targetId === '') return;
+
+                const targetElement = document.querySelector(targetId);
+
+                // Cek apakah elemen target benar-benar ada sebelum melakukan scroll
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                } else {
+                    console.warn('Elemen tujuan scroll tidak ditemukan:', targetId);
+                }
+            });
+        });
+
+        // Contoh fungsi untuk tombol WhatsApp (Ganti nomornya)
+        const waButton = document.querySelector('.fa-whatsapp').parentElement;
+        if (waButton) { // Safety check untuk tombol WA
+            waButton.addEventListener('click', () => {
+                const phoneNumber = "6281234567890"; // Ganti dengan nomor WA Anda
+                const message = "Halo, saya ingin bertanya tentang paket katering.";
+                window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, '_blank');
+            });
+        }
+
+        // Fungsionalitas untuk menu mobile (toggle)
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuIcon = document.getElementById('menu-icon');
+        const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+
+        function toggleMobileMenu() {
+            mobileMenu.classList.toggle('hidden');
+            if (mobileMenu.classList.contains('hidden')) {
+                menuIcon.classList.remove('fa-times');
+                menuIcon.classList.add('fa-bars');
+            } else {
+                menuIcon.classList.remove('fa-bars');
+                menuIcon.classList.add('fa-times');
+            }
+        }
+
+        mobileMenuButton.addEventListener('click', toggleMobileMenu);
+
+        // Tutup menu mobile saat link di dalamnya diklik
+        mobileMenuLinks.forEach(link => {
+            link.addEventListener('click', toggleMobileMenu);
+        });
+
+        // Inisialisasi Swiper.js untuk slider logo
+        var swiper = new Swiper('.logo-slider', {
+            loop: true,
+            autoplay: {
+                delay: 2500,
+                disableOnInteraction: false,
+            },
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
+            // Konfigurasi responsif
+            breakpoints: {
+                // ketika lebar window >= 320px
+                320: {
+                    slidesPerView: 2,
+                    spaceBetween: 20
+                },
+                // ketika lebar window >= 768px
+                768: {
+                    slidesPerView: 5,
+                    spaceBetween: 30
+                }
+            }
+        });
+    </script>
+</body>
+</html>
