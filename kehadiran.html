@@ -600,30 +600,32 @@
 
             Html5Qrcode.getCameras().then(cameras => {
                 const cameraOptionsContainer = document.getElementById('camera-options');
-                if (cameras && cameras.length) {
-                    state.scanner = new Html5Qrcode("reader");
-
-                    const startScanner = (deviceId) => {
-                        const qrboxSize = Math.floor(window.innerWidth * 0.8);
-                        state.scanner.start(
-                            deviceId, 
-                            { fps: 10, qrbox: { width: qrboxSize, height: qrboxSize } }, 
-                            (txt) => recordAttendance(txt)
-                        ).catch(err => console.error("Gagal memulai scanner:", err));
-                    };
-
-                    if (cameras.length > 1) {
-                        cameraOptionsContainer.innerHTML = cameras.map((camera, index) =>
-                            `<button onclick="state.scanner.stop().then(() => { const startScanner = (deviceId) => { const qrboxSize = Math.floor(window.innerWidth * 0.8); state.scanner.start( deviceId, { fps: 10, qrbox: { width: qrboxSize, height: qrboxSize } }, (txt) => recordAttendance(txt) ).catch(err => console.error('Gagal memulai scanner:', err)); }; startScanner('${camera.id}'); })" class="text-xs font-bold bg-slate-200 text-slate-600 px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
-                                Kamera ${index + 1} ${camera.label && camera.label.toLowerCase().includes('front') ? '(Depan)' : ''}
-                            </button>`
-                        ).join('');
-                    }
-                    
-                    // Start with the last camera by default (usually the back camera)
-                    startScanner(cameras[cameras.length - 1].id);
-                    // window.openQRScanner.startScanner = startScanner; // This is no longer needed
+                if (!cameras || !cameras.length) {
+                    showToast("Tidak ada kamera yang ditemukan.");
+                    return;
                 }
+
+                const startScanner = (deviceId) => {
+                    if (state.scanner) {
+                        state.scanner.stop().catch(() => {}); // Hentikan scanner lama jika ada
+                    }
+                    state.scanner = new Html5Qrcode("reader");
+                    const qrboxSize = Math.floor(window.innerWidth * 0.8);
+                    state.scanner.start(
+                        deviceId, 
+                        { fps: 10, qrbox: { width: qrboxSize, height: qrboxSize } }, 
+                        (txt) => recordAttendance(txt)
+                    ).catch(err => console.error("Gagal memulai scanner:", err));
+                };
+
+                if (cameras.length > 1) {
+                    cameraOptionsContainer.innerHTML = cameras.map((camera, index) =>
+                        `<button onclick="window.startScanner('${camera.id}')" class="text-xs font-bold bg-slate-200 text-slate-600 px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all">Kamera ${index + 1} ${camera.label && camera.label.toLowerCase().includes('front') ? '(Depan)' : ''}</button>`
+                    ).join('');
+                }
+                
+                window.startScanner = startScanner;
+                startScanner(cameras[cameras.length - 1].id); // Mulai dengan kamera belakang
             }).catch(err => showToast("Tidak dapat mengakses kamera."));
         };
 
