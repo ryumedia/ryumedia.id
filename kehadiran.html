@@ -613,16 +613,16 @@
                     };
 
                     if (cameras.length > 1) {
-                        cameraOptionsContainer.innerHTML = cameras.map((camera, index) => 
-                            `<button onclick="state.scanner.stop().then(() => window.openQRScanner.startScanner('${camera.id}'))" class="text-xs font-bold bg-slate-200 text-slate-600 px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
-                                Kamera ${index + 1} ${camera.label.toLowerCase().includes('front') ? '(Depan)' : ''}
+                        cameraOptionsContainer.innerHTML = cameras.map((camera, index) =>
+                            `<button onclick="state.scanner.stop().then(() => { const startScanner = (deviceId) => { const qrboxSize = Math.floor(window.innerWidth * 0.8); state.scanner.start( deviceId, { fps: 10, qrbox: { width: qrboxSize, height: qrboxSize } }, (txt) => recordAttendance(txt) ).catch(err => console.error('Gagal memulai scanner:', err)); }; startScanner('${camera.id}'); })" class="text-xs font-bold bg-slate-200 text-slate-600 px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
+                                Kamera ${index + 1} ${camera.label && camera.label.toLowerCase().includes('front') ? '(Depan)' : ''}
                             </button>`
                         ).join('');
                     }
                     
                     // Start with the last camera by default (usually the back camera)
                     startScanner(cameras[cameras.length - 1].id);
-                    window.openQRScanner.startScanner = startScanner; // Expose for button clicks
+                    // window.openQRScanner.startScanner = startScanner; // This is no longer needed
                 }
             }).catch(err => showToast("Tidak dapat mengakses kamera."));
         };
