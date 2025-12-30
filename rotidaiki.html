@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roti Daiki | Premium Quality</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #FFF9F0;
+        }
+        
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .bread-bg {
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                        url('https://images.unsplash.com/photo-1509440159596-0249088772ff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1472&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .product-card {
+            transition: all 0.3s ease;
+            background-color: #FFF;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background-color: #C87941;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #A65F2B;
+        }
+        
+        .btn-secondary {
+            background-color: #F8E2CF;
+            color: #C87941;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #F0D4B9;
+        }
+        
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: #F8E2CF;
+            color: #C87941;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .quantity-btn:hover {
+            background-color: #C87941;
+            color: white;
+        }
+        
+        .input-style {
+            border: 2px solid #F0D4B9;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .input-style:focus {
+            border-color: #C87941;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(200, 121, 65, 0.2);
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            object-position: center;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sales Page -->
+    <div id="sales-page" class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bread-bg text-white py-16 px-4">
+            <div class="container mx-auto text-center">
+                <div class="flex justify-center mb-6">
+                    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiPWTOigXHC4s2Jq1aJTWEPS-nTLyKot0alhBN4VtQCl-tmV7F29iXZuDoPXxX-mxVXBrzTa36G5xXzg4ZarWWegUAuN7QkfEBnEeJjl-IrE93CPvs5dAljCocRHbYhBZP4lcHSzyPEdRM6J3GXbTfl8a3SGNHm-vzYjZznVjzuZHAL0j7spYcvTrCO2Vg/s500/Roti%20Daiki%20Kotak%20(500%20x%20500%20px)%20(3).png" alt="Logo Roti Daiki" class="h-24 w-24 rounded-full bg-white p-1">
+                </div>
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">Roti Daiki</h1>
+                <p class="text-xl opacity-90">Kelezatan dalam Setiap Gigitan</p>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl">
+            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 mb-8 animate-fade-in">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6 text-center">Pesan Roti Favorit Anda</h2>
+                
+                <!-- Products -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Pilih Produk</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Product 1 -->
+                        <div class="product-card">
+                            <div class="h-48 overflow-hidden">
+                                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhwV-5S501c6CUOuCaS-uiCZxpjzrjCiJZY-tQ2gOStjdXHMbDexUgJhpCOQ1uMLQkLbkw9In8n95Yi_wOGyCQ2jOlHbtb8oslRv_xWxMxK7wdL1kqwfyKnALSfMQLjs8Iv6y6_b7GydQ14HZvktQ6Hj59wAhuu0TSEZotlRzI1uqR2o39u0vPFYsp-t20/s600/Gambar%20produk.png" alt="Paket Happiness" class="product-image">
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-semibold text-lg mb-1">Paket Happiness</h4>
+                                <p class="text-gray-500 text-sm mb-3">Paket spesial dengan berbagai varian roti</p>
+                                <div class="flex justify-between items-center">
+                                    <p class="font-bold text-gray-800">Rp 28.000</p>
+                                    <div class="flex items-center">
+                                        <span class="quantity-btn minus" data-product="paket-happiness">-</span>
+                                        <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="paket-happiness" data-price="28000">
+                                        <span class="quantity-btn plus" data-product="paket-happiness">+</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product 2 -->
+                        <div class="product-card">
+                            <div class="h-48 overflow-hidden">
+                                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhBj_iDCJDtI14sEnNU9d7nIfixwyCqplkBrl6zCf2Bv20uyFMoTgXHNZ8Hpf_7iTDhWk7Jo2XusKrGxRiQSd_YWaziOzDI9FU8RrNyHqJtZ-wTsYHg5mlptVwU5pbXip0PTJdCCpU7-EpNFI_UnXZZpBbOiFsmZQ05k_ApO4dXwCZuhmDv1WELt082BUE/s320/Gambar%20WhatsApp%202025-06-26%20pukul%2011.30.25_c28fe79f.jpg" alt="Cranberry Cheese" class="product-image">
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-semibold text-lg mb-1">Cranberry Cheese</h4>
+                                <p class="text-gray-500 text-sm mb-3">Roti lembut dengan keju dan cranberry</p>
+                                <div class="flex justify-between items-center">
+                                    <p class="font-bold text-gray-800">Rp 18.000</p>
+                                    <div class="flex items-center">
+                                        <span class="quantity-btn minus" data-product="cranberry-cheese">-</span>
+                                        <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="cranberry-cheese" data-price="18000">
+                                        <span class="quantity-btn plus" data-product="cranberry-cheese">+</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product 2 -->
+                        <div class="product-card">
+                            <div class="h-48 overflow-hidden">
+                                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj7BHCClOA0F-p6yhD5Hhp8Orn7vso2FN0vM6hWOXY7mOnOf7zycEEyEVkBP7a7JX5RACrsEX0UE_XAU-dWvrPWATM79rc_lRz6AK_xnQCpIw9x2tVZHxA_hDErgAEbSiSQKMVenfDvGq-RBpxlAAUVPYWCIzkHLujR3AmleGOEA9f9DAJEehsYelZu0R4/s320/Gambar%20WhatsApp%202025-06-26%20pukul%2011.30.25_1ccb6dd3.jpg" alt="Double Choco" class="product-image">
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-semibold text-lg mb-1">Double Choco</h4>
+                                <p class="text-gray-500 text-sm mb-3">Roti dengan double cokelat yang lezat</p>
+                                <div class="flex justify-between items-center">
+                                    <p class="font-bold text-gray-800">Rp 20.000</p>
+                                    <div class="flex items-center">
+                                        <span class="quantity-btn minus" data-product="double-choco">-</span>
+                                        <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="double-choco" data-price="20000">
+                                        <span class="quantity-btn plus" data-product="double-choco">+</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product 3 -->
+                        <div class="product-card">
+                            <div class="h-48 overflow-hidden">
+                                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEil3QJ8yrStTgJ8iw9MZls6XRBnWEA2v549Pnd5hgKf3VZPagrL0tVX06ZP23aM1EWp97cltACWHeC17tc3unc-GxY2bND_PZqVDul3CjUmCjg2iuj1AfE0a-jPad2HNIBG2Qh1K3hQzUiZovJke6Yg_JQZeU3zVV3cy3_HhWCl5Uq0RRfln0z2HUlAOrk/s320/Gambar%20WhatsApp%202025-05-18%20pukul%2016.12.27_628ca8c2.jpg" alt="Mini Cranberry" class="product-image">
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-semibold text-lg mb-1">Mini Cranberry</h4>
+                                <p class="text-gray-500 text-sm mb-3">10 pcs roti mini dengan cranberry</p>
+                                <div class="flex justify-between items-center">
+                                    <p class="font-bold text-gray-800">Rp 55.000</p>
+                                    <div class="flex items-center">
+                                        <span class="quantity-btn minus" data-product="mini-cranberry">-</span>
+                                        <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="mini-cranberry" data-price="55000">
+                                        <span class="quantity-btn plus" data-product="mini-cranberry">+</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product 4 -->
+                        <div class="product-card">
+                            <div class="h-48 overflow-hidden">
+                                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhHSyr0lSisX1jrFkEAo4rNCBqH0_WG3Ltj1UAK48zeCXcuQXwsHQZ87WpzjIK8z71km3xWB40la3cRfmCEYKnctJ7KfV_h3IN-CT9nJzwFZbPryG3T1_irBlRgSGI4prRImtN_wPiLGMafOat7yZD6_vJRP64NDrDus4brT2Hrg_EQCOSQITVwmBRzTwI/s320/Gambar%20WhatsApp%202025-05-18%20pukul%2016.12.26_f15a5ac9.jpg" alt="Mini Double Choco" class="product-image">
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-semibold text-lg mb-1">Mini Double Choco</h4>
+                                <p class="text-gray-500 text-sm mb-3">10 pcs roti mini dengan double cokelat</p>
+                                <div class="flex justify-between items-center">
+                                    <p class="font-bold text-gray-800">Rp 60.000</p>
+                                    <div class="flex items-center">
+                                        <span class="quantity-btn minus" data-product="mini-double-choco">-</span>
+                                        <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="mini-double-choco" data-price="60000">
+                                        <span class="quantity-btn plus" data-product="mini-double-choco">+</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product 5 -->
+                        <div class="product-card">
+                            <div class="h-48 overflow-hidden">
+                                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi3LonZ85JjVMxDtQM6OOTXnB_tAKtfPPhinRv0vcv02djyIHy7aBKEwTP8fSrqte-tQxTrGHYfUOrcKQDS9d-kJfJoveXgu1DRxUzad3s14xaiSEYwT5Xg8L-ALOrVo34lIaz_nLHDGf7lcEwybahVA1WyitQ3VFEaEHcDQLTjMEWjiAtpqofGOwOJSoY/s320/Gambar%20WhatsApp%202025-05-18%20pukul%2016.12.26_14926ae4.jpg" alt="Mini Mix" class="product-image">
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-semibold text-lg mb-1">Mini Mix</h4>
+                                <p class="text-gray-500 text-sm mb-3">10 pcs roti mini campuran varian</p>
+                                <div class="flex justify-between items-center">
+                                    <p class="font-bold text-gray-800">Rp 65.000</p>
+                                    <div class="flex items-center">
+                                        <span class="quantity-btn minus" data-product="mini-mix">-</span>
+                                        <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="mini-mix" data-price="65000">
+                                        <span class="quantity-btn plus" data-product="mini-mix">+</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product 6 - NEW -->
+                        <div class="product-card">
+                            <div class="h-48 overflow-hidden">
+                                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgQaskIlcx2gAPz3w_8kX0BX0r9OjPAoOVemcYuOXS_ejLKay0o2Ny_Pu3a3DycIjYe1-s6uvoM6QHm34V64r-mzEXN6oN3XP9d5x0Q8u57ntbJxuvAgHKkmY7h3f1xi-Fpmmy7ZTmiBja24stpF0fL_ZVU_pIU-cXqoL0oUawNnP1OzjcGfLxXCoL-Ha4/s942/Banana%20Cream%20cheese.jpg" alt="Banana Cream Cheese" class="product-image">
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-semibold text-lg mb-1">Banana Cream Cheese</h4>
+                                <p class="text-gray-500 text-sm mb-3">Roti lembut dengan isi pisang dicampur krim keju</p>
+                                
+                                <!-- Reguler Variant -->
+                                <div class="mb-3 pb-3 border-b border-gray-200">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-700">Reguler</span>
+                                            <span class="text-sm font-bold text-gray-800 ml-2">Rp 8.000</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <span class="quantity-btn minus" data-product="banana-cream-cheese-small">-</span>
+                                            <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="banana-cream-cheese-small" data-price="8000">
+                                            <span class="quantity-btn plus" data-product="banana-cream-cheese-small">+</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Jumbo Variant -->
+                                <div class="mb-3">
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-700">Jumbo</span>
+                                            <span class="text-sm font-bold text-gray-800 ml-2">Rp 20.000</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <span class="quantity-btn minus" data-product="banana-cream-cheese-jumbo">-</span>
+                                            <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="banana-cream-cheese-jumbo" data-price="20000">
+                                            <span class="quantity-btn plus" data-product="banana-cream-cheese-jumbo">+</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product 7 - NEW -->
+                        <div class="product-card">
+                            <div class="h-48 overflow-hidden">
+                                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjflJLkUYjjIYF0WrPeLP_vCbGSQdfkOSAHextDm1J1jaBMPx7FcaDouZy9Q5LPXemTEFnJ5QGLlXTgl40sZ0KOICsmXD9t1rxc2iVZm5BadYaspPATLyE_ohZ2V1t6pKlV5w1ThlrNWhkxAPO65b-N05lLVQ5j_dBdiHlott67qNeMG1QzAecvAipt458/s600/sosis%20keju.png" alt="Roti Sosis Keju" class="product-image">
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-semibold text-lg mb-1">Roti Sosis Keju</h4>
+                                <p class="text-gray-500 text-sm mb-3">Roti lembut dengan toping Keju dan Sosis Premium</p>
+                                
+                                <!-- Reguler Variant -->
+                                <div class="mb-3 pb-3 border-b border-gray-200">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-700">Reguler</span>
+                                            <span class="text-sm font-bold text-gray-800 ml-2">Rp 10.000</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <span class="quantity-btn minus" data-product="roti-sosis-keju-small">-</span>
+                                            <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="roti-sosis-keju-small" data-price="10000">
+                                            <span class="quantity-btn plus" data-product="roti-sosis-keju-small">+</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Jumbo Variant -->
+                                <div class="mb-3">
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-700">Jumbo</span>
+                                            <span class="text-sm font-bold text-gray-800 ml-2">Rp 22.000</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <span class="quantity-btn minus" data-product="roti-sosis-keju-jumbo">-</span>
+                                            <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="roti-sosis-keju-jumbo" data-price="22000">
+                                            <span class="quantity-btn plus" data-product="roti-sosis-keju-jumbo">+</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product 8 - NEW -->
+                        <div class="product-card">
+                            <div class="h-48 overflow-hidden">
+                                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj2fO_kiU3i1QCvwUyFpe1FXM1LgVa6cZF-agjn_-knVlQmfqINtlaNKdtNDmo7Ri8Ows3UwxH8rh9xVk4WFTAue2KVClHDRDNiA3ZHXY5oEsSvfcVjrhqO5a7aLSNboqJUpi3o1oyLTZRlGrHuDUcnR3GlVBsisuiK6rW18Cn7ovp2PiJJlX_XE2GZu54/s600/roti%20tawar%20gandum.png" alt="Roti Tawar Gandum" class="product-image">
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-semibold text-lg mb-1">Roti Tawar Gandum</h4>
+                                <p class="text-gray-500 text-sm mb-3">Roti tawar kaya akan gandum, dan bahan-bahan premium dicampur dengan Madu sebagai pemanis alami</p>
+                                <div class="flex justify-between items-center">
+                                    <p class="font-bold text-gray-800">Rp 50.000</p>
+                                    <div class="flex items-center">
+                                        <span class="quantity-btn minus" data-product="roti-tawar-gandum">-</span>
+                                        <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="roti-tawar-gandum" data-price="50000">
+                                        <span class="quantity-btn plus" data-product="roti-tawar-gandum">+</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Customer Info - MOVED HERE -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Informasi Pemesan</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="customer-name" class="block text-gray-600 mb-2">Nama</label>
+                            <input type="text" id="customer-name" class="w-full input-style" placeholder="Masukkan nama Anda">
+                        </div>
+                        <div>
+                            <label for="customer-whatsapp" class="block text-gray-600 mb-2">Nomor WhatsApp</label>
+                            <input type="tel" id="customer-whatsapp" class="w-full input-style" placeholder="Contoh: 08123456789">
+                        </div>
+                    </div>
+                    
+                    <!-- Promo Code Section -->
+                    <div id="promo-section" class="bg-green-50 rounded-lg p-4 border border-green-200">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="text-lg font-semibold text-green-800">🎉 Kode Promo</h4>
+                            <div class="text-right">
+                                <div class="text-xs text-green-600">Promo berakhir dalam:</div>
+                                <div id="countdown-promo" class="font-bold text-sm text-green-800">--:--:--</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="flex-1">
+                                <input type="text" id="promo-code" class="w-full input-style" placeholder="Masukkan kode promo (opsional)" style="border-color: #10B981;">
+                                <p class="text-xs text-green-600 mt-1">*Pembelian minimal Rp 50.000</p>
+                            </div>
+                            <button id="apply-promo" class="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-300">
+                                Terapkan
+                            </button>
+                        </div>
+                        <div id="promo-message" class="mt-2 text-sm hidden"></div>
+                    </div>
+                </div>
+                
+                <!-- Order Summary -->
+                <div class="bg-yellow-50 rounded-xl p-6 mb-6">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Ringkasan Pesanan</h3>
+                    
+                    <div id="order-items" class="space-y-3 mb-4">
+                        <p class="text-gray-500 italic text-center">Belum ada item yang dipilih</p>
+                    </div>
+                    
+                    <div class="border-t border-gray-200 pt-4 mt-4">
+                        <div id="discount-section" class="hidden mb-3">
+                            <div class="flex justify-between items-center text-green-600">
+                                <span class="font-medium">Diskon (10%)</span>
+                                <span id="discount-amount" class="font-semibold">- Rp 0</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold text-gray-700">Total</span>
+                            <span id="total-price" class="font-bold text-xl text-gray-800">Rp 0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Method -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Metode Pembayaran</h3>
+                    <div class="mb-4">
+                        <select id="payment-method" class="w-full input-style">
+                            <option value="">Pilih metode pembayaran</option>
+                            <option value="cash">CASH / COD</option>
+                            <option value="transfer">Transfer Rekening</option>
+                            <option value="qris">QRIS</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Bank Transfer Details -->
+                    <div id="transfer-details" class="hidden bg-blue-50 rounded-lg p-4 border border-blue-200">
+                        <h4 class="text-lg font-semibold text-blue-800 mb-3">💳 Detail Transfer</h4>
+                        <div class="bg-white rounded-lg p-4 border border-blue-100">
+                            <p class="text-gray-700 mb-2"><strong>Transfer ke:</strong></p>
+                            <p class="text-gray-700 mb-1"><strong>Bank Permata Syariah</strong></p>
+                            <p class="text-gray-700 mb-1">No.Rek: <strong>9925684055</strong></p>
+                            <p class="text-gray-700">a.n <strong>Achmad Ghozali</strong></p>
+                        </div>
+                        <p class="text-xs text-blue-600 mt-2">*Mohon kirim bukti transfer setelah pembayaran</p>
+                    </div>
+                    
+                    <!-- QRIS Details -->
+                    <div id="qris-details" class="hidden bg-purple-50 rounded-lg p-4 border border-purple-200">
+                        <h4 class="text-lg font-semibold text-purple-800 mb-3">📱 Scan QRIS</h4>
+                        <div class="flex justify-center">
+                            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEghe9PP0_GXWOdEPWYs6rTc3vFvpvZT1vznK5kRWbAUWgWga4vF9u_aRxDrAch9m74_6Ha_smwKuiwfRTORM1fty-dCFJ8I654SSbWIidpSroENprWhYD_i0YhP3GbsWgIiDOvzp31iV6usQdzMGzkEUUkwZVonraBwMkUl2Kkp2rtU1El3khN9mTUVjZA/s1280/QRIS%20Gopay.jpg" 
+                                 alt="QRIS Roti Daiki" 
+                                 class="w-64 h-64 object-contain rounded-lg border border-purple-200 bg-white p-2"
+                                 onerror="this.src=''; this.alt='QRIS gagal dimuat'; this.style.display='none';">
+                        </div>
+                        <p class="text-xs text-purple-600 mt-2 text-center">*Scan kode QR di atas untuk pembayaran</p>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="text-center">
+                    <button id="order-button" class="btn-primary py-3 px-8 rounded-full text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        Pesan Sekarang
+                    </button>
+                </div>
+            </div>
+            
+            <!-- About Section -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 animate-fade-in" style="animation-delay: 0.2s;">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4">Tentang Roti Daiki</h2>
+                        <p class="text-gray-600 mb-4">Roti Daiki adalah toko roti premium yang menyajikan berbagai varian roti dengan bahan-bahan berkualitas tinggi. Setiap roti dibuat dengan cinta dan keahlian untuk memberikan pengalaman rasa yang tak terlupakan.</p>
+                        <p class="text-gray-600">Kami berkomitmen untuk menggunakan bahan-bahan segar dan berkualitas terbaik. Nikmati kelezatan roti kami yang lembut dan menggugah selera!</p>
+                    </div>
+                    <div class="flex justify-center">
+                        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiPWTOigXHC4s2Jq1aJTWEPS-nTLyKot0alhBN4VtQCl-tmV7F29iXZuDoPXxX-mxVXBrzTa36G5xXzg4ZarWWegUAuN7QkfEBnEeJjl-IrE93CPvs5dAljCocRHbYhBZP4lcHSzyPEdRM6J3GXbTfl8a3SGNHm-vzYjZznVjzuZHAL0j7spYcvTrCO2Vg/s500/Roti%20Daiki%20Kotak%20(500%20x%20500%20px)%20(3).png" alt="Logo Roti Daiki" class="w-48 h-48 rounded-lg">
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white py-8 px-4 mt-12">
+            <div class="container mx-auto">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="mb-6 md:mb-0 flex items-center">
+                        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiPWTOigXHC4s2Jq1aJTWEPS-nTLyKot0alhBN4VtQCl-tmV7F29iXZuDoPXxX-mxVXBrzTa36G5xXzg4ZarWWegUAuN7QkfEBnEeJjl-IrE93CPvs5dAljCocRHbYhBZP4lcHSzyPEdRM6J3GXbTfl8a3SGNHm-vzYjZznVjzuZHAL0j7spYcvTrCO2Vg/s500/Roti%20Daiki%20Kotak%20(500%20x%20500%20px)%20(3).png" alt="Logo Roti Daiki" class="h-10 w-10 mr-3 rounded-full bg-white p-1">
+                        <div>
+                            <h3 class="text-xl font-bold">Roti Daiki</h3>
+                            <p class="text-gray-400">Kelezatan dalam Setiap Gigitan</p>
+                        </div>
+                    </div>
+                    <div class="flex space-x-4 items-center">
+                        <a href="#" class="text-white hover:text-yellow-300 transition-colors">
+                            <i class="fab fa-instagram text-xl"></i>
+                        </a>
+                        <a href="#" class="text-white hover:text-yellow-300 transition-colors">
+                            <i class="fab fa-facebook text-xl"></i>
+                        </a>
+                        <a href="#" class="text-white hover:text-yellow-300 transition-colors">
+                            <i class="fab fa-whatsapp text-xl"></i>
+                        </a>
+                        <button id="admin-btn" class="text-gray-400 hover:text-yellow-300 transition-colors ml-4" title="Admin">
+                            <i class="fas fa-cog text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="border-t border-gray-700 mt-6 pt-6 text-center text-gray-400 text-sm">
+                    &copy; 2023 Roti Daiki. Hak Cipta Dilindungi.
+                </div>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Admin Panel Page -->
+    <div id="admin-page" class="min-h-screen bg-gray-100 hidden">
+        <!-- Admin Header -->
+        <header class="bg-gray-800 text-white py-6 px-4">
+            <div class="container mx-auto">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiPWTOigXHC4s2Jq1aJTWEPS-nTLyKot0alhBN4VtQCl-tmV7F29iXZuDoPXxX-mxVXBrzTa36G5xXzg4ZarWWegUAuN7QkfEBnEeJjl-IrE93CPvs5dAljCocRHbYhBZP4lcHSzyPEdRM6J3GXbTfl8a3SGNHm-vzYjZznVjzuZHAL0j7spYcvTrCO2Vg/s500/Roti%20Daiki%20Kotak%20(500%20x%20500%20px)%20(3).png" alt="Logo Roti Daiki" class="h-12 w-12 rounded-full bg-white p-1 mr-4">
+                        <div>
+                            <h1 class="text-2xl font-bold">Admin Panel</h1>
+                            <p class="text-gray-300">Pengaturan Promo</p>
+                        </div>
+                    </div>
+                    <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-semibold transition duration-300">
+                        Keluar
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Admin Content -->
+        <main class="container mx-auto px-4 py-8 max-w-4xl">
+            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Pengaturan Masa Promo</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Tanggal Mulai -->
+                    <div>
+                        <label for="promo-start-date" class="block text-gray-600 mb-2 font-semibold">Tanggal Mulai Promo</label>
+                        <input type="date" id="promo-start-date" class="w-full input-style">
+                    </div>
+                    
+                    <!-- Jam Mulai -->
+                    <div>
+                        <label for="promo-start-time" class="block text-gray-600 mb-2 font-semibold">Jam Mulai</label>
+                        <input type="time" id="promo-start-time" class="w-full input-style">
+                    </div>
+                    
+                    <!-- Tanggal Berakhir -->
+                    <div>
+                        <label for="promo-end-date" class="block text-gray-600 mb-2 font-semibold">Tanggal Berakhir Promo</label>
+                        <input type="date" id="promo-end-date" class="w-full input-style">
+                    </div>
+                    
+                    <!-- Jam Berakhir -->
+                    <div>
+                        <label for="promo-end-time" class="block text-gray-600 mb-2 font-semibold">Jam Berakhir</label>
+                        <input type="time" id="promo-end-time" class="w-full input-style">
+                    </div>
+                </div>
+                
+                <!-- Current Promo Info -->
+                <div class="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
+                    <h3 class="text-lg font-semibold text-blue-800 mb-3">Status Promo Saat Ini</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-blue-600 font-medium">Mulai:</span>
+                            <span id="current-start" class="text-blue-800">-</span>
+                        </div>
+                        <div>
+                            <span class="text-blue-600 font-medium">Berakhir:</span>
+                            <span id="current-end" class="text-blue-800">-</span>
+                        </div>
+                        <div>
+                            <span class="text-blue-600 font-medium">Status:</span>
+                            <span id="current-status" class="text-blue-800 font-semibold">-</span>
+                        </div>
+                        <div>
+                            <span class="text-blue-600 font-medium">Sisa Waktu:</span>
+                            <span id="current-remaining" class="text-blue-800 font-semibold">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Connection Status -->
+                <div id="connection-status" class="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
+                    <div class="text-center">
+                        <h4 class="text-sm font-semibold text-blue-800 mb-2">📋 Informasi Sistem</h4>
+                        <div class="text-xs text-blue-700 space-y-1">
+                            <p><strong>Load Data:</strong> ✅ Dari Google Sheets (otomatis)</p>
+                            <p><strong>Save Data:</strong> 💾 Lokal saja (keterbatasan Canva)</p>
+                            <p><strong>Sync:</strong> Manual update Google Sheets diperlukan</p>
+                        </div>
+                        <div class="mt-3 p-2 bg-yellow-50 rounded border border-yellow-200">
+                            <p class="text-xs text-yellow-700">
+                                <strong>Catatan:</strong> Pengaturan disimpan lokal. Untuk sync ke perangkat lain, update manual Google Sheets diperlukan.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Save Button -->
+                <div class="text-center">
+                    <button id="save-promo-btn" class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
+                        Simpan Pengaturan
+                    </button>
+                </div>
+                
+                <!-- Success Message -->
+                <div id="save-success" class="hidden mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                    <p class="text-sm text-green-600 text-center font-medium">✅ Pengaturan promo berhasil disimpan!</p>
+                </div>
+                
+                <!-- Error Message -->
+                <div id="save-error" class="hidden mt-4 p-3 bg-red-50 rounded-lg border border-red-200">
+                    <p class="text-sm text-red-600 text-center font-medium">❌ Gagal menyimpan ke Google Sheets. Data tersimpan secara lokal.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Konfirmasi Pesanan</h3>
+            <p class="text-gray-600 mb-4">Apakah Anda yakin ingin memesan produk berikut?</p>
+            
+            <div id="modal-order-items" class="bg-gray-50 rounded-lg p-4 mb-4 max-h-60 overflow-y-auto">
+                <!-- Order items will be inserted here -->
+            </div>
+            
+            <div class="flex justify-between items-center mb-6">
+                <span class="font-semibold text-gray-700">Total</span>
+                <span id="modal-total-price" class="font-bold text-xl text-gray-800">Rp 0</span>
+            </div>
+            
+            <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p class="text-sm text-blue-700 text-center">
+                    📝 Pesanan akan dilanjutkan ke Google Form, harap pastikan Anda menekan tombol kirim
+                </p>
+            </div>
+            
+            <div class="flex flex-col space-y-3">
+                <button id="fill-gform" class="w-full py-3 px-6 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300">
+                    Lanjutkan Pemesanan
+                </button>
+                <button id="cancel-order" class="w-full py-3 px-6 bg-gray-200 text-gray-800 font-bold rounded-lg hover:bg-gray-300 transition duration-300">
+                    Batal
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Admin Login Modal -->
+    <div id="admin-login-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Admin Login</h3>
+            
+            <div class="mb-4">
+                <label for="admin-code" class="block text-gray-600 mb-2">Kode Admin</label>
+                <input type="password" id="admin-code" class="w-full input-style" placeholder="Masukkan kode admin">
+            </div>
+            
+            <div id="admin-error" class="hidden mb-4 p-3 bg-red-50 rounded-lg border border-red-200">
+                <p class="text-sm text-red-600 text-center">Kode admin salah!</p>
+            </div>
+            
+            <div class="flex flex-col space-y-3">
+                <button id="admin-login-btn" class="w-full py-3 px-6 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300">
+                    Masuk
+                </button>
+                <button id="cancel-admin-login" class="w-full py-3 px-6 bg-gray-200 text-gray-800 font-bold rounded-lg hover:bg-gray-300 transition duration-300">
+                    Batal
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Google Sheets API URL
+            const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyy8Fg-GYA8KlRpXsT45B7RkQNQjBciKkxAiJ4216zuCuHE_LjLTLhyMh8irGKM150/exec';
+            
+            // Elements
+            const quantityInputs = document.querySelectorAll('.product-quantity');
+            const plusButtons = document.querySelectorAll('.plus');
+            const minusButtons = document.querySelectorAll('.minus');
+            const orderItems = document.getElementById('order-items');
+            const totalPrice = document.getElementById('total-price');
+            const orderButton = document.getElementById('order-button');
+            const customerName = document.getElementById('customer-name');
+            const customerWhatsapp = document.getElementById('customer-whatsapp');
+            const paymentMethod = document.getElementById('payment-method');
+            const transferDetails = document.getElementById('transfer-details');
+            const qrisDetails = document.getElementById('qris-details');
+            
+            const confirmationModal = document.getElementById('confirmation-modal');
+            const modalOrderItems = document.getElementById('modal-order-items');
+            const modalTotalPrice = document.getElementById('modal-total-price');
+            const fillGformBtn = document.getElementById('fill-gform');
+            const cancelOrderBtn = document.getElementById('cancel-order');
+            
+            // Admin elements
+            const adminBtn = document.getElementById('admin-btn');
+            const adminLoginModal = document.getElementById('admin-login-modal');
+            const adminCodeInput = document.getElementById('admin-code');
+            const adminLoginBtn = document.getElementById('admin-login-btn');
+            const cancelAdminLoginBtn = document.getElementById('cancel-admin-login');
+            const adminError = document.getElementById('admin-error');
+            const salesPage = document.getElementById('sales-page');
+            const adminPage = document.getElementById('admin-page');
+            const logoutBtn = document.getElementById('logout-btn');
+            
+            // Admin form elements
+            const promoStartDate = document.getElementById('promo-start-date');
+            const promoStartTime = document.getElementById('promo-start-time');
+            const promoEndDate = document.getElementById('promo-end-date');
+            const promoEndTime = document.getElementById('promo-end-time');
+            const savePromoBtn = document.getElementById('save-promo-btn');
+            const saveSuccess = document.getElementById('save-success');
+            const saveError = document.getElementById('save-error');
+            const currentStart = document.getElementById('current-start');
+            const currentEnd = document.getElementById('current-end');
+            const currentStatus = document.getElementById('current-status');
+            const currentRemaining = document.getElementById('current-remaining');
+            const connectionIndicator = document.getElementById('connection-indicator');
+            const testConnectionBtn = document.getElementById('test-connection-btn');
+            
+            // Promo code elements
+            let promoCodeInput = document.getElementById('promo-code');
+            let applyPromoBtn = document.getElementById('apply-promo');
+            const promoMessage = document.getElementById('promo-message');
+            const discountSection = document.getElementById('discount-section');
+            const discountAmount = document.getElementById('discount-amount');
+            
+            // Admin constants
+            const ADMIN_CODE = '020202';
+            
+            // Promo code state
+            let isPromoApplied = false;
+            const validPromoCode = 'BAROKALLAH';
+            const discountPercentage = 10;
+            
+            // Promo dates - will be loaded from Google Sheets
+            let promoStartDateTime = new Date('2025-01-01T00:00:00');
+            let promoEndDateTime = new Date('2025-08-18T23:59:59');
+            let isPromoExpired = false;
+            let isLoadingPromoSettings = false;
+            
+            // Load promo settings from Google Sheets (read-only, Canva limitation)
+            async function loadPromoSettings(retryCount = 0) {
+                if (isLoadingPromoSettings) return;
+                isLoadingPromoSettings = true;
+                
+                const maxRetries = 2;
+                const retryDelay = 1500; // 1.5 seconds
+                
+                try {
+                    console.log(`Loading promo settings from Google Sheets... (attempt ${retryCount + 1})`);
+                    updateConnectionStatus('connecting');
+                    
+                    // Add action parameter to specify we want to load data
+                    const loadUrl = `${GOOGLE_SHEETS_URL}?action=load&t=${Date.now()}`;
+                    
+                    const response = await fetch(loadUrl, {
+                        method: 'GET',
+                        mode: 'cors',
+                        cache: 'no-cache'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log('Received data from Google Sheets:', data);
+                    
+                    // Handle different response formats
+                    let startDate = data.promo_start || data.start || data.promoStart;
+                    let endDate = data.promo_end || data.end || data.promoEnd;
+                    
+                    if (startDate) {
+                        promoStartDateTime = new Date(startDate);
+                        console.log('Loaded start date:', promoStartDateTime);
+                        // Save to localStorage as backup
+                        localStorage.setItem('promoStartDateTime', promoStartDateTime.toISOString());
+                    }
+                    if (endDate) {
+                        promoEndDateTime = new Date(endDate);
+                        console.log('Loaded end date:', promoEndDateTime);
+                        // Save to localStorage as backup
+                        localStorage.setItem('promoEndDateTime', promoEndDateTime.toISOString());
+                    }
+                    
+                    updateConnectionStatus('connected');
+                    
+                    // Update countdown immediately after loading
+                    updateCountdown();
+                    updateAdminStatus();
+                    
+                } catch (error) {
+                    console.error(`Error loading promo settings (attempt ${retryCount + 1}):`, error);
+                    
+                    // Retry if we haven't exceeded max retries
+                    if (retryCount < maxRetries) {
+                        console.log(`Retrying load in ${retryDelay}ms...`);
+                        isLoadingPromoSettings = false; // Reset flag for retry
+                        await new Promise(resolve => setTimeout(resolve, retryDelay));
+                        return loadPromoSettings(retryCount + 1);
+                    }
+                    
+                    // All retries failed, use localStorage
+                    updateConnectionStatus('error');
+                    console.log('All load attempts failed. Using localStorage data.');
+                    loadPromoSettingsFromLocalStorage();
+                } finally {
+                    isLoadingPromoSettings = false;
+                }
+            }
+            
+            // Update connection status indicator - simplified for Canva limitations
+            function updateConnectionStatus(status) {
+                // Since Canva can only read from Google Sheets, we don't need complex status updates
+                console.log(`Connection status: ${status}`);
+            }
+            
+            // Fallback: Load from localStorage
+            function loadPromoSettingsFromLocalStorage() {
+                const savedStart = localStorage.getItem('promoStartDateTime');
+                const savedEnd = localStorage.getItem('promoEndDateTime');
+                
+                if (savedStart) {
+                    promoStartDateTime = new Date(savedStart);
+                }
+                if (savedEnd) {
+                    promoEndDateTime = new Date(savedEnd);
+                }
+            }
+            
+            // Save promo settings - Canva can't send to Google Sheets, so we use localStorage only
+            async function savePromoSettings() {
+                try {
+                    console.log('Saving promo settings to localStorage...');
+                    
+                    // Save to localStorage
+                    localStorage.setItem('promoStartDateTime', promoStartDateTime.toISOString());
+                    localStorage.setItem('promoEndDateTime', promoEndDateTime.toISOString());
+                    
+                    console.log('Promo settings saved successfully to localStorage');
+                    return true;
+                } catch (error) {
+                    console.error('Error saving promo settings:', error);
+                    throw new Error(`Failed to save promo settings: ${error.message}`);
+                }
+            }
+            
+            // Format date for display
+            function formatDateTime(date) {
+                return date.toLocaleString('id-ID', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+            
+            // Update admin panel current status
+            function updateAdminStatus() {
+                const now = new Date();
+                
+                currentStart.textContent = formatDateTime(promoStartDateTime);
+                currentEnd.textContent = formatDateTime(promoEndDateTime);
+                
+                if (now < promoStartDateTime) {
+                    currentStatus.textContent = 'Belum Dimulai';
+                    currentStatus.className = 'text-yellow-600 font-semibold';
+                    const timeToStart = promoStartDateTime - now;
+                    currentRemaining.textContent = formatTimeRemaining(timeToStart);
+                } else if (now >= promoStartDateTime && now <= promoEndDateTime) {
+                    currentStatus.textContent = 'Aktif';
+                    currentStatus.className = 'text-green-600 font-semibold';
+                    const timeLeft = promoEndDateTime - now;
+                    currentRemaining.textContent = formatTimeRemaining(timeLeft);
+                } else {
+                    currentStatus.textContent = 'Berakhir';
+                    currentStatus.className = 'text-red-600 font-semibold';
+                    currentRemaining.textContent = 'Promo telah berakhir';
+                }
+            }
+            
+            // Format time remaining
+            function formatTimeRemaining(timeMs) {
+                if (timeMs <= 0) return 'Berakhir';
+                
+                const days = Math.floor(timeMs / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeMs % (1000 * 60 * 60)) / (1000 * 60));
+                
+                if (days > 0) {
+                    return `${days} hari ${hours} jam`;
+                } else if (hours > 0) {
+                    return `${hours} jam ${minutes} menit`;
+                } else {
+                    return `${minutes} menit`;
+                }
+            }
+            
+            // Product names mapping - UPDATED with new products
+            const productNames = {
+                'paket-happiness': 'Paket Happiness',
+                'cranberry-cheese': 'Cranberry Cheese',
+                'double-choco': 'Double Choco',
+                'mini-cranberry': 'Mini Cranberry (isi 10)',
+                'mini-double-choco': 'Mini Double Choco (isi 10)',
+                'mini-mix': 'Mini Mix (isi 10)',
+                'banana-cream-cheese-small': 'Banana Cream Cheese (Reguler)',
+                'banana-cream-cheese-jumbo': 'Banana Cream Cheese (Jumbo)',
+                'roti-sosis-keju-small': 'Roti Sosis Keju (Reguler)',
+                'roti-sosis-keju-jumbo': 'Roti Sosis Keju (Jumbo)',
+                'roti-tawar-gandum': 'Roti Tawar Gandum'
+            };
+            
+            // Format currency
+            function formatCurrency(amount) {
+                return 'Rp ' + amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            }
+            
+            // Update countdown timer and promo section
+            function updateCountdown() {
+                const now = new Date();
+                const promoSection = document.getElementById('promo-section');
+                const countdownElement = document.getElementById('countdown-promo');
+                
+                // Check if promo hasn't started yet
+                if (now < promoStartDateTime) {
+                    isPromoExpired = true; // Treat as expired if not started
+                    
+                    // Show "not started" state
+                    promoSection.className = 'bg-yellow-50 rounded-lg p-4 border border-yellow-200';
+                    promoSection.innerHTML = `
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="text-lg font-semibold text-yellow-800">🎉 Kode Promo</h4>
+                            <div class="text-right">
+                                <div class="text-xs text-yellow-600">Promo dimulai dalam:</div>
+                                <div id="countdown-promo" class="font-bold text-sm text-yellow-800">--:--:--</div>
+                            </div>
+                        </div>
+                        <div class="text-center py-4">
+                            <p class="text-yellow-700 font-medium">Promo Belum Dimulai</p>
+                            <p class="text-xs text-yellow-600 mt-1">Tunggu hingga waktu promo dimulai</p>
+                        </div>
+                    `;
+                    
+                    // Calculate time until start
+                    const timeToStart = promoStartDateTime - now;
+                    const days = Math.floor(timeToStart / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((timeToStart % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeToStart % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeToStart % (1000 * 60)) / 1000);
+                    
+                    let countdownText = '';
+                    if (days > 0) {
+                        countdownText = `${days}h ${hours}j ${minutes}m`;
+                    } else if (hours > 0) {
+                        countdownText = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    } else {
+                        countdownText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    }
+                    
+                    document.getElementById('countdown-promo').textContent = countdownText;
+                    
+                    // Remove promo if applied
+                    if (isPromoApplied) {
+                        isPromoApplied = false;
+                        updateOrderSummary();
+                    }
+                    
+                    return;
+                }
+                
+                const timeLeft = promoEndDateTime - now;
+                
+                if (timeLeft <= 0) {
+                    // Promo expired
+                    isPromoExpired = true;
+                    
+                    // Show "expired" state
+                    promoSection.className = 'bg-gray-100 rounded-lg p-4 border border-gray-300';
+                    promoSection.innerHTML = `
+                        <div class="text-center py-4">
+                            <h4 class="text-lg font-semibold text-gray-600 mb-2">🎉 Kode Promo</h4>
+                            <p class="text-gray-500 font-medium">Promo Telah Berakhir</p>
+                            <p class="text-xs text-gray-400 mt-1">Tunggu promo berikutnya</p>
+                        </div>
+                    `;
+                    
+                    // Remove promo if applied
+                    if (isPromoApplied) {
+                        isPromoApplied = false;
+                        updateOrderSummary();
+                    }
+                    
+                    return;
+                }
+                
+                // Promo is active - restore full promo section
+                isPromoExpired = false;
+                
+                // Only restore if section is not in active state
+                if (!promoSection.innerHTML.includes('Masukkan kode promo')) {
+                    promoSection.className = 'bg-green-50 rounded-lg p-4 border border-green-200';
+                    promoSection.innerHTML = `
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="text-lg font-semibold text-green-800">🎉 Kode Promo</h4>
+                            <div class="text-right">
+                                <div class="text-xs text-green-600">Promo berakhir dalam:</div>
+                                <div id="countdown-promo" class="font-bold text-sm text-green-800">--:--:--</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="flex-1">
+                                <input type="text" id="promo-code" class="w-full input-style" placeholder="Masukkan kode promo (opsional)" style="border-color: #10B981;" value="${promoCodeInput ? promoCodeInput.value : ''}">
+                                <p class="text-xs text-green-600 mt-1">*Pembelian minimal Rp 50.000</p>
+                            </div>
+                            <button id="apply-promo" class="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-300 ${isPromoApplied ? 'opacity-50 cursor-not-allowed' : ''}" ${isPromoApplied ? 'disabled' : ''}>
+                                ${isPromoApplied ? 'Diterapkan' : 'Terapkan'}
+                            </button>
+                        </div>
+                        <div id="promo-message" class="mt-2 text-sm hidden"></div>
+                    `;
+                    
+                    // Re-attach event listeners for new elements
+                    attachPromoEventListeners();
+                }
+                
+                // Calculate time components
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                
+                // Format countdown display
+                let countdownText = '';
+                if (days > 0) {
+                    countdownText = `${days}h ${hours}j ${minutes}m`;
+                } else if (hours > 0) {
+                    countdownText = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                } else {
+                    countdownText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+                
+                const currentCountdownElement = document.getElementById('countdown-promo');
+                if (currentCountdownElement) {
+                    currentCountdownElement.textContent = countdownText;
+                }
+            }
+            
+            // Update order summary
+            function updateOrderSummary() {
+                let hasItems = false;
+                let subtotal = 0;
+                let orderHTML = '';
+                
+                quantityInputs.forEach(input => {
+                    const quantity = parseInt(input.value);
+                    if (quantity > 0) {
+                        hasItems = true;
+                        const product = input.dataset.product;
+                        const price = parseInt(input.dataset.price);
+                        const itemSubtotal = price * quantity;
+                        subtotal += itemSubtotal;
+                        
+                        const productDisplayName = productNames[product];
+                        
+                        orderHTML += `
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <span class="font-medium">${productDisplayName}</span>
+                                    <span class="text-gray-500 text-sm"> x ${quantity}</span>
+                                </div>
+                                <span>${formatCurrency(itemSubtotal)}</span>
+                            </div>
+                        `;
+                    }
+                });
+                
+                if (hasItems) {
+                    orderItems.innerHTML = orderHTML;
+                } else {
+                    orderItems.innerHTML = '<p class="text-gray-500 italic text-center">Belum ada item yang dipilih</p>';
+                }
+                
+                // Check if promo should be automatically removed
+                if (isPromoApplied && subtotal < 50000) {
+                    isPromoApplied = false;
+                    const currentApplyPromoBtn = document.getElementById('apply-promo');
+                    const currentPromoCodeInput = document.getElementById('promo-code');
+                    const currentPromoMessage = document.getElementById('promo-message');
+                    
+                    if (currentApplyPromoBtn) {
+                        currentApplyPromoBtn.textContent = 'Terapkan';
+                        currentApplyPromoBtn.disabled = false;
+                        currentApplyPromoBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+                    if (currentPromoCodeInput) {
+                        currentPromoCodeInput.disabled = false;
+                        currentPromoCodeInput.classList.remove('opacity-50');
+                    }
+                    
+                    if (subtotal > 0 && currentPromoMessage) {
+                        const needed = 50000 - subtotal;
+                        currentPromoMessage.textContent = `⚠️ Pembelian minimal Rp 50.000. Tambah ${formatCurrency(needed)} lagi untuk mendapat diskon`;
+                        currentPromoMessage.className = 'mt-2 text-sm text-yellow-600 font-medium';
+                        currentPromoMessage.classList.remove('hidden');
+                    } else if (currentPromoMessage) {
+                        currentPromoMessage.classList.add('hidden');
+                    }
+                }
+                
+                // Calculate discount and final total
+                let discount = 0;
+                let finalTotal = subtotal;
+                
+                if (isPromoApplied && subtotal >= 50000) {
+                    discount = Math.floor(subtotal * discountPercentage / 100);
+                    finalTotal = subtotal - discount;
+                    discountSection.classList.remove('hidden');
+                    discountAmount.textContent = '- ' + formatCurrency(discount);
+                } else {
+                    discountSection.classList.add('hidden');
+                }
+                
+                totalPrice.textContent = formatCurrency(finalTotal);
+                
+                // Enable/disable order button
+                const nameValid = customerName.value.trim() !== '';
+                const whatsappValid = customerWhatsapp.value.trim() !== '' && /^\d+$/.test(customerWhatsapp.value.trim());
+                const paymentValid = paymentMethod.value !== '';
+                
+                orderButton.disabled = !hasItems || !nameValid || !whatsappValid || !paymentValid;
+            }
+
+            // Event listeners for quantity buttons
+            plusButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const product = this.dataset.product;
+                    const input = document.querySelector(`.product-quantity[data-product="${product}"]`);
+                    input.value = parseInt(input.value) + 1;
+                    updateOrderSummary();
+                });
+            });
+            
+            minusButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const product = this.dataset.product;
+                    const input = document.querySelector(`.product-quantity[data-product="${product}"]`);
+                    if (parseInt(input.value) > 0) {
+                        input.value = parseInt(input.value) - 1;
+                        updateOrderSummary();
+                    }
+                });
+            });
+            
+            // Event listeners for quantity inputs
+            quantityInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    if (parseInt(this.value) < 0) {
+                        this.value = 0;
+                    }
+                    updateOrderSummary();
+                });
+            });
+            
+            // Event listeners for customer info
+            customerName.addEventListener('input', updateOrderSummary);
+            customerWhatsapp.addEventListener('input', updateOrderSummary);
+            paymentMethod.addEventListener('change', function() {
+                // Hide all payment details first
+                transferDetails.classList.add('hidden');
+                qrisDetails.classList.add('hidden');
+                
+                // Show relevant payment details
+                if (this.value === 'transfer') {
+                    transferDetails.classList.remove('hidden');
+                } else if (this.value === 'qris') {
+                    qrisDetails.classList.remove('hidden');
+                }
+                
+                updateOrderSummary();
+            });
+            
+            // Function to attach promo event listeners
+            function attachPromoEventListeners() {
+                const newPromoCodeInput = document.getElementById('promo-code');
+                const newApplyPromoBtn = document.getElementById('apply-promo');
+                
+                if (newPromoCodeInput && newApplyPromoBtn) {
+                    // Update global references
+                    promoCodeInput = newPromoCodeInput;
+                    applyPromoBtn = newApplyPromoBtn;
+                    
+                    // Attach event listeners
+                    newApplyPromoBtn.addEventListener('click', applyPromoCode);
+                    newPromoCodeInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            applyPromoCode();
+                        }
+                    });
+                }
+            }
+            
+            // Promo code functionality - FIXED WITH DEBUG LOGGING
+            function applyPromoCode() {
+                console.log('🔍 Apply promo code function called');
+                
+                // Get current promo elements (they might be recreated)
+                const currentPromoCodeInput = document.getElementById('promo-code');
+                const currentApplyPromoBtn = document.getElementById('apply-promo');
+                const currentPromoMessage = document.getElementById('promo-message');
+                
+                console.log('📋 Promo elements found:', {
+                    input: !!currentPromoCodeInput,
+                    button: !!currentApplyPromoBtn,
+                    message: !!currentPromoMessage
+                });
+                
+                if (!currentPromoCodeInput || !currentApplyPromoBtn || !currentPromoMessage) {
+                    console.error('❌ Promo elements not found');
+                    return;
+                }
+                
+                // Check if promo is expired
+                if (isPromoExpired) {
+                    console.log('⏰ Promo is expired');
+                    currentPromoMessage.textContent = '❌ Promo sudah berakhir';
+                    currentPromoMessage.className = 'mt-2 text-sm text-red-600 font-medium';
+                    currentPromoMessage.classList.remove('hidden');
+                    return;
+                }
+                
+                const enteredCode = currentPromoCodeInput.value.trim().toUpperCase();
+                console.log('🔤 Entered code:', enteredCode);
+                console.log('🎯 Valid code:', validPromoCode);
+                
+                // Calculate current subtotal
+                let currentSubtotal = 0;
+                quantityInputs.forEach(input => {
+                    const quantity = parseInt(input.value);
+                    if (quantity > 0) {
+                        const price = parseInt(input.dataset.price);
+                        currentSubtotal += price * quantity;
+                        console.log(`📦 Product: ${input.dataset.product}, Qty: ${quantity}, Price: ${price}`);
+                    }
+                });
+                
+                console.log('💰 Current subtotal:', currentSubtotal);
+                console.log('✅ Minimum required:', 50000);
+                
+                if (enteredCode === validPromoCode) {
+                    console.log('🎉 Promo code matches!');
+                    if (currentSubtotal >= 50000) {
+                        console.log('✅ Subtotal meets minimum requirement');
+                        isPromoApplied = true;
+                        currentPromoMessage.textContent = '✅ Kode promo berhasil diterapkan! Anda mendapat diskon 10%';
+                        currentPromoMessage.className = 'mt-2 text-sm text-green-600 font-medium';
+                        currentPromoMessage.classList.remove('hidden');
+                        currentApplyPromoBtn.textContent = 'Diterapkan';
+                        currentApplyPromoBtn.disabled = true;
+                        currentApplyPromoBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        currentPromoCodeInput.disabled = true;
+                        currentPromoCodeInput.classList.add('opacity-50');
+                    } else {
+                        console.log('⚠️ Subtotal below minimum');
+                        const needed = 50000 - currentSubtotal;
+                        currentPromoMessage.textContent = `⚠️ Pembelian minimal Rp 50.000. Tambah ${formatCurrency(needed)} lagi untuk mendapat diskon`;
+                        currentPromoMessage.className = 'mt-2 text-sm text-yellow-600 font-medium';
+                        currentPromoMessage.classList.remove('hidden');
+                    }
+                } else if (enteredCode === '') {
+                    console.log('⚠️ Empty promo code');
+                    currentPromoMessage.textContent = '⚠️ Silakan masukkan kode promo terlebih dahulu';
+                    currentPromoMessage.className = 'mt-2 text-sm text-yellow-600 font-medium';
+                    currentPromoMessage.classList.remove('hidden');
+                } else {
+                    console.log('❌ Invalid promo code');
+                    currentPromoMessage.textContent = `❌ Kode promo tidak valid. Gunakan kode: ${validPromoCode}`;
+                    currentPromoMessage.className = 'mt-2 text-sm text-red-600 font-medium';
+                    currentPromoMessage.classList.remove('hidden');
+                }
+                
+                updateOrderSummary();
+            }
+            
+            // Initial event listeners for promo code
+            if (applyPromoBtn && promoCodeInput) {
+                applyPromoBtn.addEventListener('click', applyPromoCode);
+                promoCodeInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        applyPromoCode();
+                    }
+                });
+            }
+            
+            // Order button click
+            orderButton.addEventListener('click', function() {
+                // Populate modal
+                modalOrderItems.innerHTML = orderItems.innerHTML;
+                modalTotalPrice.textContent = totalPrice.textContent;
+                confirmationModal.classList.remove('hidden');
+            });
+            
+            // Cancel order
+            cancelOrderBtn.addEventListener('click', function() {
+                confirmationModal.classList.add('hidden');
+            });
+            
+            // Fill Google Form
+            fillGformBtn.addEventListener('click', function() {
+                const name = customerName.value.trim();
+                const whatsapp = customerWhatsapp.value.trim();
+                
+                // Build order details for Google Form
+                let orderDetails = '';
+                let subtotal = 0;
+                
+                quantityInputs.forEach(input => {
+                    const quantity = parseInt(input.value);
+                    if (quantity > 0) {
+                        const product = input.dataset.product;
+                        const price = parseInt(input.dataset.price);
+                        const itemSubtotal = price * quantity;
+                        subtotal += itemSubtotal;
+                        
+                        const productDisplayName = productNames[product];
+                        orderDetails += `${productDisplayName} x ${quantity}: ${formatCurrency(itemSubtotal)}\n`;
+                    }
+                });
+                
+                // Calculate discount and final total
+                let discount = 0;
+                let finalTotal = subtotal;
+                let promoCode = '';
+                
+                if (isPromoApplied && subtotal > 0) {
+                    discount = Math.floor(subtotal * discountPercentage / 100);
+                    finalTotal = subtotal - discount;
+                    promoCode = validPromoCode;
+                    orderDetails += `\nSubtotal: ${formatCurrency(subtotal)}`;
+                    orderDetails += `\nDiskon (${discountPercentage}%): -${formatCurrency(discount)}`;
+                    orderDetails += `\nTotal: ${formatCurrency(finalTotal)}`;
+                } else {
+                    orderDetails += `\nTotal: ${formatCurrency(finalTotal)}`;
+                }
+                
+                // Google Form URL
+                const baseGformURL = 'https://docs.google.com/forms/d/e/1FAIpQLSdma1dCuS_CEuY8jwP0f-Sj6OKIOdrQe0I4oZtcUUAx6HQ5WA/viewform';
+                
+                // Get payment method text - match exactly with Google Form options
+                const selectedPayment = paymentMethod.value;
+                let paymentText = '';
+                if (selectedPayment === 'cash') {
+                    paymentText = 'CASH / COD';
+                } else if (selectedPayment === 'transfer') {
+                    paymentText = 'Transfer Rekening';
+                } else if (selectedPayment === 'qris') {
+                    paymentText = 'QRIS';
+                }
+                
+                // Build URL with pre-filled parameters
+                const gformParams = new URLSearchParams({
+                    'entry.880240482': name,           // Nama
+                    'entry.1628457902': whatsapp,      // Nomor WhatsApp
+                    'entry.450821238': orderDetails,   // Detail pemesanan
+                    'entry.1050174281': formatCurrency(finalTotal), // Total Pembayaran
+                    'entry.1982006760': paymentText    // Metode Pembayaran
+                });
+                
+                const gformURL = `${baseGformURL}?${gformParams.toString()}`;
+                
+                // Open Google Form in new tab
+                window.open(gformURL, '_blank');
+                
+                // Hide modal
+                confirmationModal.classList.add('hidden');
+            });
+            
+            // Admin event listeners
+            adminBtn.addEventListener('click', function() {
+                adminLoginModal.classList.remove('hidden');
+                adminCodeInput.value = '';
+                adminError.classList.add('hidden');
+            });
+            
+            cancelAdminLoginBtn.addEventListener('click', function() {
+                adminLoginModal.classList.add('hidden');
+            });
+            
+            adminLoginBtn.addEventListener('click', function() {
+                const enteredCode = adminCodeInput.value.trim();
+                if (enteredCode === ADMIN_CODE) {
+                    adminLoginModal.classList.add('hidden');
+                    salesPage.classList.add('hidden');
+                    adminPage.classList.remove('hidden');
+                    loadAdminForm();
+                    updateAdminStatus();
+                } else {
+                    adminError.classList.remove('hidden');
+                    adminCodeInput.value = '';
+                }
+            });
+            
+            adminCodeInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    adminLoginBtn.click();
+                }
+            });
+            
+            logoutBtn.addEventListener('click', function() {
+                adminPage.classList.add('hidden');
+                salesPage.classList.remove('hidden');
+            });
+            
+            // Load admin form with current values
+            function loadAdminForm() {
+                // Format dates for input fields
+                const startDate = promoStartDateTime.toISOString().split('T')[0];
+                const startTime = promoStartDateTime.toTimeString().slice(0, 5);
+                const endDate = promoEndDateTime.toISOString().split('T')[0];
+                const endTime = promoEndDateTime.toTimeString().slice(0, 5);
+                
+                promoStartDate.value = startDate;
+                promoStartTime.value = startTime;
+                promoEndDate.value = endDate;
+                promoEndTime.value = endTime;
+            }
+            
+            // Save promo settings
+            savePromoBtn.addEventListener('click', async function() {
+                const startDateValue = promoStartDate.value;
+                const startTimeValue = promoStartTime.value;
+                const endDateValue = promoEndDate.value;
+                const endTimeValue = promoEndTime.value;
+                
+                if (!startDateValue || !startTimeValue || !endDateValue || !endTimeValue) {
+                    alert('Harap isi semua field tanggal dan waktu!');
+                    return;
+                }
+                
+                // Create new datetime objects
+                const newStartDateTime = new Date(`${startDateValue}T${startTimeValue}:00`);
+                const newEndDateTime = new Date(`${endDateValue}T${endTimeValue}:00`);
+                
+                // Validate dates
+                if (newStartDateTime >= newEndDateTime) {
+                    alert('Tanggal mulai harus lebih awal dari tanggal berakhir!');
+                    return;
+                }
+                
+                // Show loading state
+                savePromoBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
+                savePromoBtn.disabled = true;
+                saveSuccess.classList.add('hidden');
+                saveError.classList.add('hidden');
+                
+                try {
+                    // Update global variables
+                    promoStartDateTime = newStartDateTime;
+                    promoEndDateTime = newEndDateTime;
+                    
+                    // Save to Google Sheets with retry
+                    await savePromoSettings();
+                    
+                    // Update admin status display
+                    updateAdminStatus();
+                    
+                    // Show success message
+                    saveSuccess.innerHTML = '<p class="text-sm text-green-600 text-center font-medium">✅ Pengaturan promo berhasil disimpan secara lokal!</p>';
+                    saveSuccess.classList.remove('hidden');
+                    setTimeout(() => {
+                        saveSuccess.classList.add('hidden');
+                    }, 5000);
+                    
+                    // Force immediate update of sales page promo section
+                    updateCountdown();
+                    
+                    // Reset promo applied state if promo becomes inactive
+                    const now = new Date();
+                    if (now < promoStartDateTime || now > promoEndDateTime) {
+                        if (isPromoApplied) {
+                            isPromoApplied = false;
+                            updateOrderSummary();
+                        }
+                    }
+                    
+                } catch (error) {
+                    // Show detailed error message
+                    saveError.innerHTML = `<p class="text-sm text-red-600 text-center font-medium">❌ ${error.message}</p>`;
+                    saveError.classList.remove('hidden');
+                    setTimeout(() => {
+                        saveError.classList.add('hidden');
+                    }, 8000);
+                    console.error('Save error:', error);
+                } finally {
+                    // Reset button state
+                    savePromoBtn.innerHTML = 'Simpan Pengaturan';
+                    savePromoBtn.disabled = false;
+                }
+            });
+            
+            // Test connection button - removed since Canva can't send data to Google Sheets
+            
+            // Initialize
+            loadPromoSettings();
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+            setInterval(updateAdminStatus, 1000); // Update admin status every second
+            
+            // Reload promo settings every 30 seconds to sync with other devices
+            setInterval(loadPromoSettings, 30000);
+            
+            updateOrderSummary();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'979660d5c7a45fd9',t:'MTc1NjkxNDM2OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
