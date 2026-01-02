@@ -1035,8 +1035,8 @@
             renderRekapTable();
         }
 
-        window.fetchRekapData = async function() {
-            document.getElementById('rekapTbody').innerHTML = '<tr><td class="p-4 text-center"><div class="loader"></div></td></tr>';
+        window.fetchRekapData = async function(forceRefresh = false, showLoader = true) {
+            if (showLoader) document.getElementById('rekapTbody').innerHTML = '<tr><td class="p-4 text-center"><div class="loader"></div></td></tr>';
             try {
                 // 1. Get All Students
                 // This is the only part that needs to be re-fetched frequently
@@ -1047,7 +1047,8 @@
                 allStudents.sort((a, b) => (a.class || "").localeCompare(b.class || "") || a.name.localeCompare(b.name));
 
                 // 2. Get All Orders (Only if not already fetched)
-                if (allOrders.length === 0) {
+                if (forceRefresh || allOrders.length === 0) {
+                    allOrders = [];
                     const orderSnap = await getDocs(collection(db, "orders"));
                     orderSnap.forEach(doc => {
                         const d = doc.data();
@@ -1058,11 +1059,13 @@
                 }
 
                 // 3. Get Refunds & Not Ordered (Only if not already fetched)
-                if (Object.keys(allRefunds).length === 0) {
+                if (forceRefresh || Object.keys(allRefunds).length === 0) {
+                    allRefunds = {};
                     const refundSnap = await getDocs(collection(db, "refunds"));
                     refundSnap.forEach(doc => { allRefunds[`${doc.data().userName}_${doc.data().date}`] = true; });
                 }
-                if (Object.keys(allNotOrdered).length === 0) {
+                if (forceRefresh || Object.keys(allNotOrdered).length === 0) {
+                    allNotOrdered = {};
                     const notOrderedSnap = await getDocs(collection(db, "not_ordered"));
                     notOrderedSnap.forEach(doc => { allNotOrdered[`${doc.data().userName}_${doc.data().date}`] = true; });
                 }
@@ -1132,7 +1135,8 @@
                     }
 
                     // Onclick -> Open Modal
-                    let onclick = `onclick="openRekapModal('${student.name}', '${dateStr}', '${currentStatus}')"`;
+                    const safeName = student.name.replace(/'/g, "\\'");
+                    let onclick = `onclick="openRekapModal('${safeName}', '${dateStr}', '${currentStatus}')"`;
                     if(isHoliday) onclick = ""; 
 
                     bodyHtml += `<td class="${cellClass}" ${onclick}>${content}</td>`;
@@ -1200,7 +1204,7 @@
                         }
                     }
                 }
-                await fetchRekapData();
+                await fetchRekapData(true, false);
             } catch(e) { console.error(e); alert("Gagal update status: " + e.message); }
         }
 
