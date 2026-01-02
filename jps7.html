@@ -254,11 +254,6 @@
 
                     // 2. Registrations Listener
                     unsubscribeRegistrations = onSnapshot(collection(db, PARTICIPANTS_COLLECTION_PATH), (snapshot) => {
-                        // Prevent re-render from local cache, wait for server confirmation.
-                        // This stops the UI from breaking during interaction (e.g. select dropdown closing).
-                        if (snapshot.metadata.hasPendingWrites) {
-                            return;
-                        }
                         
                         registrations = snapshot.docs.map(doc => ({
                             id: doc.id,
