@@ -8,6 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Load Ikon Lucide (Pastikan ini dimuat sebelum skrip utama) -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Load jsPDF untuk fitur download PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <style>
         /* Import Font Quicksand */
         @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
@@ -48,7 +51,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         // Perbarui impor Firebase untuk memastikan signInWithEmailAndPassword dihapus jika tidak digunakan,
         // tetapi untuk menjaga fleksibilitas, kita biarkan saja, namun signInWithEmailAndPassword tidak digunakan lagi
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, doc, updateDoc, setDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- KONSTANTA DAN INISIALISASI VARIABEL GLOBAL ---
@@ -95,7 +98,7 @@
 
 
         const BASE_TICKET_PRICE = 150000;
-        const EXTRA_COMPANION_PRICE = 20000;
+        const EXTRA_COMPANION_PRICE = 15000;
         const EXTRA_LUNCH_PRICE = 25000;
         const MAX_FILE_SIZE_KB = 500;
         const SETTINGS_COLLECTION_PATH = `artifacts/${appId}/public/data/settings`;
@@ -117,6 +120,7 @@
         let isFormOpen = true;
         let registrations = [];
         let tempAdminError = null;
+        let attendanceSearchQuery = ''; // State untuk pencarian di halaman kehadiran
 
         // --- PERBAIKAN: FORM DATA DIPINDAH KE GLOBAL STATE ---
         // Ini memastikan data tidak hilang saat re-render terjadi
@@ -278,7 +282,7 @@
                         ageGroupQuotas = newQuotas;
 
                         // Re-render halaman saat ini jika diperlukan (misalnya, untuk update kuota di landing)
-                        if (currentPage === 'admin-dashboard' || currentPage === 'landing' || currentPage === 'register') {
+                        if (currentPage === 'admin-dashboard' || currentPage === 'landing' || currentPage === 'register' || currentPage === 'attendance-check') {
                             renderApp();
                         }
                         
@@ -304,14 +308,153 @@
             if (!isAuthReady) return;
             try {
                 const settingsDocRef = doc(db, SETTINGS_COLLECTION_PATH, FORM_STATUS_DOC_ID);
-                await updateDoc(settingsDocRef, {
+                // Gunakan setDoc dengan merge: true agar dokumen dibuat jika belum ada
+                await setDoc(settingsDocRef, {
                     isOpen: !isFormOpen,
                     lastUpdated: serverTimestamp()
-                });
+                }, { merge: true });
                 setAdminError(null);
             } catch (error) {
-                setAdminError(`Gagal mengubah status formulir. Error: ${error.message}`);
+                console.error("Toggle Error:", error);
+                const msg = error.code === 'permission-denied' 
+                    ? "Izin Ditolak! Cek tab 'Rules' di Firestore Console Anda." 
+                    : `Gagal mengubah status formulir. Error: ${error.message}`;
+                setAdminError(msg);
             }
+        };
+
+        const logoutAdmin = async () => {
+            try {
+                await signOut(auth);
+                navigate('landing');
+            } catch (error) {
+                console.error("Logout error:", error);
+            }
+        };
+
+        const toggleChildAttendance = async (regId, childIndex) => {
+            if (!isFirebaseInitialized) return;
+            
+            const reg = registrations.find(r => r.id === regId);
+            if (!reg) return;
+
+            // Clone array childrenData untuk dimodifikasi
+            const newChildrenData = [...reg.childrenData];
+            // Toggle status isPresent (jika undefined dianggap false)
+            newChildrenData[childIndex] = {
+                ...newChildrenData[childIndex],
+                isPresent: !newChildrenData[childIndex].isPresent
+            };
+
+            try {
+                await updateDoc(doc(db, PARTICIPANTS_COLLECTION_PATH, regId), {
+                    childrenData: newChildrenData
+                });
+                // UI akan otomatis terupdate karena ada onSnapshot
+            } catch (error) {
+                console.error("Error updating attendance:", error);
+                alert("Gagal update kehadiran: " + error.message);
+            }
+        };
+
+        const downloadRecapPDF = () => {
+            if (!window.jspdf) {
+                alert("Library PDF belum siap. Harap tunggu sebentar atau refresh halaman.");
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Data Processing
+            let allChildren = [];
+            let totalPendamping = 0;
+            let totalAnak = 0;
+
+            registrations.forEach(reg => {
+                // Skip cancelled
+                if (reg.status === 'Dibatalkan/Gagal') return;
+
+                // Hitung pendamping: Asumsi 1 tiket anak = 1 pendamping + pendamping tambahan
+                const companionsFromTicket = reg.numChildren; 
+                const extraCompanions = reg.numExtraCompanions || 0;
+                totalPendamping += companionsFromTicket + extraCompanions;
+                
+                totalAnak += reg.numChildren;
+
+                if (reg.childrenData) {
+                    reg.childrenData.forEach(child => {
+                        allChildren.push({
+                            name: child.name,
+                            gender: child.gender === 'Laki-laki' ? 'L' : 'P',
+                            age: child.age,
+                            guardian: reg.guardianName
+                        });
+                    });
+                }
+            });
+
+            const group4to8 = allChildren.filter(c => c.age === '4-8 Tahun');
+            const group9to12 = allChildren.filter(c => c.age === '9-12 Tahun');
+
+            // Header
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            doc.text("Rekap Peserta Jejak Petualang Siroh #7", 14, 20);
+            
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Tanggal Cetak: ${new Date().toLocaleString('id-ID')}`, 14, 26);
+
+            // Summary Box
+            doc.setDrawColor(200, 200, 200);
+            doc.setFillColor(245, 245, 245);
+            doc.rect(14, 32, 182, 20, 'F');
+            
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "bold");
+            doc.text("Ringkasan Total", 18, 40);
+            
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Total Anak: ${totalAnak}`, 18, 47);
+            doc.text(`Total Pendamping: ${totalPendamping}`, 80, 47);
+            doc.text(`(4-8 Th: ${group4to8.length} | 9-12 Th: ${group9to12.length})`, 140, 47);
+
+            let finalY = 60;
+
+            // Helper for Table
+            const drawTable = (title, data, startY, color) => {
+                doc.setFontSize(12);
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(color[0], color[1], color[2]);
+                doc.text(title, 14, startY);
+                
+                doc.autoTable({
+                    startY: startY + 3,
+                    head: [['No', 'Nama Anak', 'L/P', 'Nama Wali']],
+                    body: data.map((c, i) => [i + 1, c.name, c.gender, c.guardian]),
+                    theme: 'grid',
+                    headStyles: { fillColor: color },
+                    styles: { fontSize: 9, cellPadding: 2 },
+                    columnStyles: {
+                        0: { cellWidth: 15, halign: 'center' },
+                        2: { cellWidth: 15, halign: 'center' },
+                    }
+                });
+                return doc.lastAutoTable.finalY + 15;
+            };
+
+            // Table 1
+            if (group4to8.length > 0) {
+                finalY = drawTable("Kelompok Usia 4-8 Tahun", group4to8, finalY, [5, 150, 105]); // Emerald
+            }
+
+            // Table 2
+            if (group9to12.length > 0) {
+                finalY = drawTable("Kelompok Usia 9-12 Tahun", group9to12, finalY, [234, 88, 12]); // Orange
+            }
+
+            doc.save("Rekap_Peserta_JPS7.pdf");
         };
 
         const deleteRegistration = async (id, name) => {
@@ -324,7 +467,11 @@
                 await deleteDoc(doc(db, PARTICIPANTS_COLLECTION_PATH, id));
                 setAdminError(null);
             } catch (error) {
-                setAdminError(`Gagal menghapus data pendaftar ${name}. Error: ${error.message}`);
+                console.error("Delete Error:", error);
+                const msg = error.code === 'permission-denied' 
+                    ? "Izin Ditolak! Cek tab 'Rules' di Firestore Console Anda." 
+                    : `Gagal menghapus data pendaftar ${name}. Error: ${error.message}`;
+                setAdminError(msg);
             }
         };
 
@@ -340,7 +487,11 @@
                 });
                 setAdminError(null);
             } catch (error) {
-                setAdminError(`Gagal mengubah status pendaftar. Error: ${error.message}`);
+                console.error("Update Status Error:", error);
+                const msg = error.code === 'permission-denied' 
+                    ? "Izin Ditolak! Cek tab 'Rules' di Firestore Console Anda." 
+                    : `Gagal mengubah status pendaftar. Error: ${error.message}`;
+                setAdminError(msg);
             }
         };
 
@@ -358,7 +509,7 @@
                     </header>
 
                     <!-- Main Content (Scrollable) -->
-                    <main class="flex-grow p-6 flex flex-col items-center space-y-8 pb-32">
+                    <main class="flex-grow p-6 flex flex-col items-center space-y-8 pb-8">
                         <!-- Peringatan Jika Firebase Tidak Diinisialisasi -->
                         ${!isFirebaseInitialized ? `
                             <div class="w-full bg-red-100 p-4 rounded-xl shadow-inner border border-red-300 space-y-2">
@@ -492,10 +643,10 @@
                     <div class="fixed bottom-0 w-full max-w-[512px] left-1/2 transform -translate-x-1/2 p-4 z-50">
                         <!-- Info Kuota Melayang -->
                         <div class="bg-white/80 backdrop-blur-sm p-3 rounded-xl shadow-lg mb-2 text-center border border-emerald-200">
-                             <p class="text-base font-bold text-emerald-800">(Pendaftaran ditutup jika sudah terpenuhi)</p>
+                            <p class="text-sm font-bold text-emerald-800">Kuota Tersedia:</p>
                             <div class="text-xs font-semibold text-gray-600 space-y-1 mt-1">
-                                <p>Kuota Kelompok 4-8 Tahun: <span class="font-extrabold text-emerald-600">(${ageGroupQuotas['4-8 Tahun'].registered}/${ageGroupQuotas['4-8 Tahun'].max})</span></p>
-                                <p>Kuota Kelompok 9-12 Tahun: <span class="font-extrabold text-emerald-600">(${ageGroupQuotas['9-12 Tahun'].registered}/${ageGroupQuotas['9-12 Tahun'].max})</span></p>
+                                <p>Kelompok 4-8 Tahun: <span class="font-extrabold text-emerald-600">(${ageGroupQuotas['4-8 Tahun'].registered}/${ageGroupQuotas['4-8 Tahun'].max})</span></p>
+                                <p>Kelompok 9-12 Tahun: <span class="font-extrabold text-emerald-600">(${ageGroupQuotas['9-12 Tahun'].registered}/${ageGroupQuotas['9-12 Tahun'].max})</span></p>
                             </div>
                         </div>
                         <div class="flex gap-3">
@@ -857,10 +1008,10 @@
                             
                             <!-- Info Kuota -->
                             <div class="p-3 bg-blue-100 border border-blue-300 text-blue-800 rounded-xl text-sm font-bold text-center">
-                                <p class="text-base font-bold text-emerald-800">(Pendaftaran ditutup jika sudah terpenuhi)</p>
+                                <p class="text-sm font-bold text-blue-800">Kuota Tersedia:</p>
                                 <div class="text-xs font-semibold text-gray-600 space-y-1 mt-1">
-                                    <p>Kuota Kelompok 4-8 Tahun: <span class="font-extrabold text-blue-600">(${ageGroupQuotas['4-8 Tahun'].registered}/${ageGroupQuotas['4-8 Tahun'].max})</span></p>
-                                    <p>Kuota Kelompok 9-12 Tahun: <span class="font-extrabold text-blue-600">(${ageGroupQuotas['9-12 Tahun'].registered}/${ageGroupQuotas['9-12 Tahun'].max})</span></p>
+                                    <p>Kelompok 4-8 Tahun: <span class="font-extrabold text-blue-600">(${ageGroupQuotas['4-8 Tahun'].registered}/${ageGroupQuotas['4-8 Tahun'].max})</span></p>
+                                    <p>Kelompok 9-12 Tahun: <span class="font-extrabold text-blue-600">(${ageGroupQuotas['9-12 Tahun'].registered}/${ageGroupQuotas['9-12 Tahun'].max})</span></p>
                                 </div>
                             </div>
 
@@ -1021,10 +1172,16 @@
                             <h2 class="text-xl font-bold mb-6 text-center text-gray-700">Masuk Panel Admin</h2>
                             <form id="login-form" class="space-y-5">
                                 <div>
+                                    <label class="block text-sm font-bold text-gray-600 mb-2">Email</label>
+                                    <input type="email" id="admin-email"
+                                        class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-0 outline-none transition-colors"
+                                        placeholder="admin@contoh.com" required />
+                                </div>
+                                <div>
                                     <label class="block text-sm font-bold text-gray-600 mb-2">Password</label>
                                     <input type="password" id="admin-password"
                                         class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-0 outline-none transition-colors"
-                                        placeholder="Masukkan password" />
+                                        placeholder="Masukkan password" required />
                                 </div>
                                 <p id="login-error" class="text-red-500 text-sm font-bold text-center bg-red-50 p-2 rounded-lg" style="display: none;"></p>
                                 <button type="submit" class="w-full bg-gray-800 text-white font-bold py-3 rounded-xl hover:bg-gray-700 shadow-lg transform active:scale-95 transition-all">
@@ -1040,15 +1197,21 @@
             `;
             renderIcons();
 
-            // Mengembalikan logika login statis (Anonymous user + Password 123456)
-            document.getElementById('login-form').addEventListener('submit', (e) => {
+            // Logika Login Firebase yang Sebenarnya
+            document.getElementById('login-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
+                const email = document.getElementById('admin-email').value;
                 const password = document.getElementById('admin-password').value;
                 const errorElement = document.getElementById('login-error');
-                if (password === '123456') {
+                
+                errorElement.style.display = 'none';
+                
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
                     navigate('admin-dashboard');
-                } else {
-                    errorElement.textContent = 'Password salah!';
+                } catch (error) {
+                    console.error("Login failed:", error);
+                    errorElement.textContent = 'Login gagal: ' + error.message;
                     errorElement.style.display = 'block';
                 }
             });
@@ -1068,14 +1231,22 @@
                                 <!-- Konten Toggle dimuat di renderAdminDashboardContent -->
                             </div>
 
-                            <button onclick="navigate('landing')" class="text-xs font-bold bg-indigo-800 px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                            <button onclick="logoutAdmin()" class="text-xs font-bold bg-indigo-800 px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
                                 Logout
                             </button>
                         </div>
                     </header>
                     
                     <main class="p-6 flex-grow space-y-8">
-                        <h2 class="text-xl font-bold text-indigo-700 border-b pb-2 mb-4">Statistik Pendaftaran</h2>
+                        <div class="flex justify-between items-center border-b pb-2 mb-4">
+                            <h2 class="text-xl font-bold text-indigo-700">Statistik Pendaftaran</h2>
+                            <button onclick="downloadRecapPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-3 rounded-lg shadow flex items-center gap-2 transition-colors">
+                                ${icon('FileDown', 16)} Download PDF
+                            </button>
+                            <button onclick="navigate('attendance-check')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded-lg shadow flex items-center gap-2 transition-colors ml-2">
+                                ${icon('ClipboardCheck', 16)} Cek Kehadiran
+                            </button>
+                        </div>
                         
                         <!-- Display Temporary Admin Action Error -->
                         <div id="admin-error-display"></div>
@@ -1165,6 +1336,19 @@
                         </div>
                     `).join('');
 
+                    let extrasInfo = '';
+                    if ((reg.numExtraCompanions > 0) || (reg.numExtraLunch > 0)) {
+                        extrasInfo = `
+                            <div class="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200 text-sm">
+                                <p class="font-bold text-yellow-800 mb-1 flex items-center gap-1">${icon('Plus', 16)} Pesanan Tambahan:</p>
+                                <ul class="list-disc list-inside text-gray-700 pl-1">
+                                    ${reg.numExtraCompanions > 0 ? `<li>${reg.numExtraCompanions} Pendamping Tambahan</li>` : ''}
+                                    ${reg.numExtraLunch > 0 ? `<li>${reg.numExtraLunch} Makan Siang Tambahan</li>` : ''}
+                                </ul>
+                            </div>
+                        `;
+                    }
+
                     return `
                         <div class="bg-white p-5 rounded-xl shadow-lg border border-indigo-100 space-y-4">
                             <div class="flex justify-between items-center border-b pb-2 mb-3">
@@ -1187,6 +1371,8 @@
                                 <p class="font-bold text-gray-800">Peserta Anak (${reg.numChildren} Orang):</p>
                                 ${childrenList}
                             </div>
+
+                            ${extrasInfo}
 
                             <div class="text-sm border-t pt-3">
                                 <p class="font-bold text-gray-800">Total Transfer: <span class="text-indigo-600 text-lg font-extrabold">${formatRupiah(reg.totalPayment)}</span></p>
@@ -1244,6 +1430,132 @@
             setAdminError(tempAdminError); 
         };
 
+        // --- HALAMAN CEK KEHADIRAN ---
+
+        const renderAttendancePage = () => {
+            // Filter dan ratakan data anak
+            let allChildren = [];
+            registrations.forEach(reg => {
+                if (reg.status === 'Dibatalkan/Gagal') return;
+                if (reg.childrenData) {
+                    reg.childrenData.forEach((child, index) => {
+                        allChildren.push({
+                            ...child,
+                            regId: reg.id,
+                            childIndex: index,
+                            guardianName: reg.guardianName,
+                            isPresent: !!child.isPresent // Pastikan boolean
+                        });
+                    });
+                }
+            });
+
+            // Filter berdasarkan pencarian
+            if (attendanceSearchQuery) {
+                const q = attendanceSearchQuery.toLowerCase();
+                allChildren = allChildren.filter(c => 
+                    c.name.toLowerCase().includes(q) || c.guardianName.toLowerCase().includes(q)
+                );
+            }
+
+            const group4to8 = allChildren.filter(c => c.age === '4-8 Tahun');
+            const group9to12 = allChildren.filter(c => c.age === '9-12 Tahun');
+
+            const renderList = (title, children, colorClass) => `
+                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 mb-6">
+                    <div class="${colorClass} px-4 py-3 border-b">
+                        <h3 class="font-bold text-white flex justify-between items-center">
+                            ${title}
+                            <span class="bg-white/20 px-2 py-0.5 rounded text-sm">${children.length} Anak</span>
+                        </h3>
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        ${children.length === 0 ? '<p class="p-4 text-center text-gray-500 text-sm">Tidak ada data.</p>' : ''}
+                        ${children.map(c => `
+                            <div class="p-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                                <div>
+                                    <p class="font-bold text-gray-800 text-sm">${c.name}</p>
+                                    <p class="text-xs text-gray-500 flex items-center gap-1">
+                                        ${icon('User', 12)} Wali: ${c.guardianName}
+                                    </p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" 
+                                        ${c.isPresent ? 'checked' : ''} 
+                                        onchange="toggleChildAttendance('${c.regId}', ${c.childIndex})">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                                </label>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            // Generate List HTML
+            const listHTML = `
+                ${renderList('Kelompok 4-8 Tahun', group4to8, 'bg-emerald-600')}
+                ${renderList('Kelompok 9-12 Tahun', group9to12, 'bg-orange-500')}
+            `;
+
+            // Cek apakah struktur halaman sudah ada (agar input search tidak reset/hilang fokus)
+            const existingContainer = document.getElementById('attendance-page-root');
+            
+            if (existingContainer) {
+                // Hanya update daftar peserta, biarkan input search apa adanya
+                document.getElementById('attendance-list-container').innerHTML = listHTML;
+                renderIcons();
+                return;
+            }
+
+            document.getElementById('app-container').innerHTML = `
+                <div id="attendance-page-root" class="flex flex-col min-h-screen bg-gray-100 text-gray-800 relative">
+                    <header class="bg-blue-600 text-white p-4 flex items-center shadow-md sticky top-0 z-20 rounded-b-3xl">
+                        <button onclick="navigate('admin-dashboard')" class="mr-4 hover:bg-blue-700 p-2 rounded-full transition-colors">
+                            ${icon('ArrowLeft', 24)}
+                        </button>
+                        <h1 class="font-bold text-lg flex-grow">Cek Kehadiran</h1>
+                    </header>
+
+                    <main class="p-4 flex-grow max-w-lg mx-auto w-full">
+                        <!-- Search Bar -->
+                        <div class="bg-white p-2 rounded-xl shadow-sm border border-gray-200 mb-6 sticky top-20 z-10">
+                            <div class="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                                ${icon('Search', 20, 'text-gray-400')}
+                                <input type="text" 
+                                    id="attendance-search-input"
+                                    value="${attendanceSearchQuery}"
+                                    oninput="window.updateAttendanceSearch(this.value)"
+                                    placeholder="Cari nama anak atau wali..." 
+                                    class="bg-transparent border-none outline-none w-full text-sm font-medium text-gray-700 placeholder-gray-400"
+                                    autofocus
+                                />
+                            </div>
+                        </div>
+
+                        <div id="attendance-list-container">
+                            ${listHTML}
+                        </div>
+                        
+                        <button onclick="navigate('admin-dashboard')" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-xl shadow-md flex items-center justify-center gap-2 mt-6">
+                            ${icon('ArrowLeft', 20)} Kembali ke Panel Admin
+                        </button>
+                        
+                        <div class="h-10"></div>
+                    </main>
+                </div>
+            `;
+            renderIcons();
+            
+            // Pastikan fokus ada di input saat render pertama
+            const input = document.getElementById('attendance-search-input');
+            if(input) {
+                input.focus();
+                const val = input.value;
+                input.value = '';
+                input.value = val;
+            }
+        };
+
         // --- MODAL (Untuk Tampilan Bukti Transfer) ---
 
         const showProofModal = (dataUrl, fileName) => {
@@ -1298,6 +1610,9 @@
                 case 'admin-dashboard':
                     renderAdminDashboard();
                     break;
+                case 'attendance-check':
+                    renderAttendancePage();
+                    break;
                 default:
                     navigate('landing');
             }
@@ -1306,17 +1621,20 @@
         // Ekspos fungsi ke scope global agar bisa dipanggil dari onclick
         window.navigate = navigate;
         window.toggleFormStatus = toggleFormStatus;
+        window.logoutAdmin = logoutAdmin;
         window.deleteRegistration = deleteRegistration;
         window.updateRegistrationStatus = updateRegistrationStatus;
         window.showProofModal = showProofModal;
+        window.downloadRecapPDF = downloadRecapPDF;
+        window.toggleChildAttendance = toggleChildAttendance;
+        // Helper untuk update search query tanpa kehilangan fokus (secara logika sederhana)
+        window.updateAttendanceSearch = (val) => {
+            attendanceSearchQuery = val;
+            renderAttendancePage(); // Re-render untuk filter
+        };
 
         // Mulai aplikasi
         window.onload = renderApp;
     </script>
 </body>
 </html>
-
-
-
-
-
