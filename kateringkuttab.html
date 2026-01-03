@@ -19,6 +19,7 @@
         .calendar-day.holiday { background-color: #fee2e2; color: #ef4444; border-color: #fca5a5; cursor: not-allowed; }
         .calendar-day.paid-locked { background-color: #dcfce7; color: #15803d; border-color: #86efac; cursor: not-allowed; opacity: 0.9; }
         .calendar-day.refund-locked { background-color: #fef9c3; color: #a16207; border-color: #fde047; cursor: not-allowed; opacity: 0.9; }
+        .calendar-day.not-ordered-locked { background-color: #f3f4f6; color: #9ca3af; border-color: #e5e7eb; cursor: not-allowed; opacity: 0.9; }
         
         /* History Calendar Styles */
         .hist-day { aspect-ratio: 1; border-radius: 0.3rem; font-size: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid #eee; }
@@ -509,6 +510,7 @@
         let userPaidDates = new Set(); 
         let userPaidMap = {}; 
         let userRefundDates = new Set(); 
+        let userNotOrderedDates = new Set();
         let currentUser = null;
         let selectedDates = new Set();
         let PRICING = { 'reguler': 15000, 'anak_guru': 10000, 'beasiswa': 0 };
@@ -645,6 +647,15 @@
                 snapRefund.forEach(doc => {
                     const d = doc.data();
                     if(d.date) userRefundDates.add(d.date);
+                });
+
+                // Fetch Not Ordered
+                const qNotOrdered = query(collection(db, "not_ordered"), where("userName", "==", currentUser.name));
+                const snapNotOrdered = await getDocs(qNotOrdered);
+                userNotOrderedDates = new Set();
+                snapNotOrdered.forEach(doc => {
+                    const d = doc.data();
+                    if(d.date) userNotOrderedDates.add(d.date);
                 });
 
             } catch(e) { console.error("Fetch data error", e); }
@@ -924,6 +935,12 @@
                     onclick = "";
                     content += `<i class="fas fa-undo-alt text-yellow-600 absolute bottom-1 right-1 text-[8px]"></i>`;
                 }
+                else if(userNotOrderedDates.has(dateStr)) {
+                    // NOT ORDERED LOCKED
+                    classes += " not-ordered-locked border-gray-300";
+                    onclick = "";
+                    content += `<i class="fas fa-ban text-gray-400 absolute bottom-1 right-1 text-[8px]"></i>`;
+                }
                 else if(userPaidDates.has(dateStr)) { 
                     // PAID LOCKED
                     classes += " paid-locked border-green-300"; 
@@ -938,7 +955,78 @@
             }
         }
 
+                // Helper to get ALL valid dates (Global) for sequential check
+        function getGlobalValidDates(includeDate = null) {
+            const rawDates = [
+                ...Object.keys(dbMenus),
+                ...userPaidDates,
+                ...userRefundDates,
+                ...userNotOrderedDates,
+                ...selectedDates
+            ];
+            if (includeDate) rawDates.push(includeDate);
+            
+            if (rawDates.length === 0) return [];
+            
+            // Sort to find range
+            rawDates.sort();
+            const minStr = rawDates[0];
+            const maxStr = rawDates[rawDates.length - 1];
+            
+            const dates = [];
+            const sParts = minStr.split('-');
+            const current = new Date(sParts[0], sParts[1] - 1, sParts[2]);
+            const eParts = maxStr.split('-');
+            const end = new Date(eParts[0], eParts[1] - 1, eParts[2]);
+            
+            while (current <= end) {
+                const day = current.getDay();
+                // Skip Fri(5), Sat(6), Sun(0)
+                if (day !== 0 && day !== 6 && day !== 5) {
+                    const y = current.getFullYear();
+                    const m = String(current.getMonth() + 1).padStart(2, '0');
+                    const d = String(current.getDate()).padStart(2, '0');
+                    const dateStr = `${y}-${m}-${d}`;
+                    
+                    const menu = dbMenus[dateStr];
+                    // If menu exists and is holiday, skip. Otherwise (menu exists or not), it's a valid date.
+                    if (!menu || !menu.isHoliday) {
+                        dates.push(dateStr);
+                    }
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            return dates;
+        }
+
         window.toggleDate = function(el, dateStr) {
+            // Logic Check for Sequential Selection (Cross-Month)
+            const validDates = getGlobalValidDates(dateStr);
+
+            const currentIndex = validDates.indexOf(dateStr);
+            const isSelecting = !selectedDates.has(dateStr);
+
+            if (isSelecting) {
+                // Check predecessors
+                for (let i = 0; i < currentIndex; i++) {
+                    const prevDate = validDates[i];
+                    // If prevDate is NOT (Paid OR Refunded OR Selected), then it's a gap.
+                    if (!userPaidDates.has(prevDate) && !userRefundDates.has(prevDate) && !userNotOrderedDates.has(prevDate) && !selectedDates.has(prevDate)) {
+                        alert(`Harap pilih tanggal secara berurutan! Tanggal sebelumnya (${prevDate}) belum dipilih atau dibayar.`);
+                        return;
+                    }
+                }
+            } else {
+                // Check successors
+                for (let i = currentIndex + 1; i < validDates.length; i++) {
+                    const nextDate = validDates[i];
+                    if (selectedDates.has(nextDate)) {
+                        alert(`Harap batalkan pilihan tanggal secara berurutan dari yang terakhir. Tanggal (${nextDate}) masih dipilih.`);
+                        return;
+                    }
+                }
+            }
+
             if (selectedDates.has(dateStr)) { selectedDates.delete(dateStr); el.classList.remove('selected'); } 
             else { selectedDates.add(dateStr); el.classList.add('selected'); }
             updateOrderSummary();
@@ -970,6 +1058,10 @@
                 if(userRefundDates.has(dateStr)) {
                     cardClass = "bg-yellow-50 border-yellow-200";
                     statusBadge = `<div class="text-right"><span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[10px] font-bold">REFUND</span><div class="text-[9px] text-yellow-600 mt-1">Diganti Ke Hari Lain</div></div>`;
+                }
+                else if(userNotOrderedDates.has(dateStr)) {
+                    cardClass = "bg-gray-100 border-gray-200";
+                    statusBadge = `<div class="text-right"><span class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-[10px] font-bold">TIDAK PESAN</span><div class="text-[9px] text-gray-500 mt-1">By Admin</div></div>`;
                 }
                 else if(userPaidDates.has(dateStr)) {
                     cardClass = "bg-green-50 border-green-200";
