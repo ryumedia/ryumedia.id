@@ -210,13 +210,32 @@
                 <!-- Header Data Murid -> Data Santri -->
                 
                 <div id="section-students" class="cms-section">
-                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
                         <h2 class="text-2xl font-bold text-slate-800">Data Santri <span id="studentCount" class="text-gray-400 font-normal text-lg ml-2">(...)</span></h2>
-                        <div class="flex gap-3 w-full md:w-auto">
-                            <div class="relative flex-grow md:flex-grow-0 w-full md:w-64"><i class="fas fa-search absolute left-3 top-3 text-gray-400"></i><input type="text" id="searchStudentInput" onkeyup="filterStudents()" placeholder="Cari nama..." class="pl-10 pr-4 py-2 border rounded-lg outline-none w-full text-sm"></div>
+                        <div class="flex gap-3 w-full md:w-auto justify-end">
                             <button onclick="openModalUpload()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm shadow hover:bg-green-700 flex items-center gap-2 whitespace-nowrap"><i class="fas fa-file-excel"></i> Upload</button>
                             <button onclick="openModalUser('murid')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm shadow hover:bg-blue-700 flex items-center gap-2 whitespace-nowrap"><i class="fas fa-plus"></i> Tambah</button>
                         </div>
+                    </div>
+                    
+                    <!-- Filters -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border mb-4 flex flex-col md:flex-row gap-3">
+                        <div class="relative flex-grow">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            <input type="text" id="searchStudentInput" onkeyup="filterStudents()" placeholder="Cari Nama..." class="pl-10 pr-4 py-2 border rounded-lg outline-none w-full text-sm">
+                        </div>
+                        <input type="text" id="filterClassInput" onkeyup="filterStudents()" placeholder="Filter Kelas..." class="px-4 py-2 border rounded-lg outline-none w-full md:w-40 text-sm">
+                        <select id="filterJenjangInput" onchange="filterStudents()" class="px-4 py-2 border rounded-lg outline-none w-full md:w-40 text-sm bg-white cursor-pointer">
+                            <option value="">Semua Jenjang</option>
+                            <option value="Kuttab Awal">Kuttab Awal</option>
+                            <option value="Qonuni">Qonuni</option>
+                        </select>
+                        <select id="filterStatusInput" onchange="filterStudents()" class="px-4 py-2 border rounded-lg outline-none w-full md:w-40 text-sm bg-white cursor-pointer">
+                            <option value="">Semua Status</option>
+                            <option value="Santri Baru">Santri Baru</option>
+                            <option value="Santri Lama">Santri Lama</option>
+                            <option value="Non Aktif">Non Aktif</option>
+                        </select>
                     </div>
                     <div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 border-b text-gray-600"><tr><th class="p-4">Nama Santri</th><th class="p-4">Kelas</th><th class="p-4">Jenjang</th><th class="p-4">Status</th><th class="p-4">Email</th><th class="p-4">Kategori</th><th class="p-4 text-center">Aksi</th></tr></thead><tbody id="studentTableBody"></tbody></table></div>
                 </div>
@@ -386,9 +405,9 @@
 
     <!-- Modals -->
     <div id="modalUser" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl w-full max-w-sm p-6 shadow-2xl">
+        <div class="bg-white rounded-xl w-full max-w-2xl p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-lg" id="modalTitle">Tambah User</h3><button onclick="closeModalUser()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button></div>
-            <div class="space-y-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <input type="hidden" id="editUserId"><input type="hidden" id="targetType">
                 <div><label class="block text-xs font-bold text-gray-500 mb-1">Nama Lengkap</label><input type="text" id="inputUserName" class="w-full border p-2 rounded outline-none"></div>
                 <div><label class="block text-xs font-bold text-gray-500 mb-1">Email</label><input type="email" id="inputUserEmail" class="w-full border p-2 rounded outline-none"></div>
@@ -1000,29 +1019,30 @@
         }
 
         window.toggleDate = function(el, dateStr) {
-            // Logic Check for Sequential Selection (Cross-Month)
-            const validDates = getGlobalValidDates(dateStr);
+            // Logic Check for Sequential Selection (Cross-Month) - ONLY FOR SANTRI BARU
+            if (currentUser && currentUser.status === 'Santri Baru') {
+                const validDates = getGlobalValidDates(dateStr);
+                const currentIndex = validDates.indexOf(dateStr);
+                const isSelecting = !selectedDates.has(dateStr);
 
-            const currentIndex = validDates.indexOf(dateStr);
-            const isSelecting = !selectedDates.has(dateStr);
-
-            if (isSelecting) {
-                // Check predecessors
-                for (let i = 0; i < currentIndex; i++) {
-                    const prevDate = validDates[i];
-                    // If prevDate is NOT (Paid OR Refunded OR Selected), then it's a gap.
-                    if (!userPaidDates.has(prevDate) && !userRefundDates.has(prevDate) && !userNotOrderedDates.has(prevDate) && !selectedDates.has(prevDate)) {
-                        alert(`Harap pilih tanggal secara berurutan! Tanggal sebelumnya (${prevDate}) belum dipilih atau dibayar.`);
-                        return;
+                if (isSelecting) {
+                    // Check predecessors
+                    for (let i = 0; i < currentIndex; i++) {
+                        const prevDate = validDates[i];
+                        // If prevDate is NOT (Paid OR Refunded OR Selected), then it's a gap.
+                        if (!userPaidDates.has(prevDate) && !userRefundDates.has(prevDate) && !userNotOrderedDates.has(prevDate) && !selectedDates.has(prevDate)) {
+                            alert(`Harap pilih tanggal secara berurutan! Tanggal sebelumnya (${prevDate}) belum dipilih atau dibayar.`);
+                            return;
+                        }
                     }
-                }
-            } else {
-                // Check successors
-                for (let i = currentIndex + 1; i < validDates.length; i++) {
-                    const nextDate = validDates[i];
-                    if (selectedDates.has(nextDate)) {
-                        alert(`Harap batalkan pilihan tanggal secara berurutan dari yang terakhir. Tanggal (${nextDate}) masih dipilih.`);
-                        return;
+                } else {
+                    // Check successors
+                    for (let i = currentIndex + 1; i < validDates.length; i++) {
+                        const nextDate = validDates[i];
+                        if (selectedDates.has(nextDate)) {
+                            alert(`Harap batalkan pilihan tanggal secara berurutan dari yang terakhir. Tanggal (${nextDate}) masih dipilih.`);
+                            return;
+                        }
                     }
                 }
             }
@@ -1196,7 +1216,11 @@
             // GENERATE ROWS
             let bodyHtml = "";
             allStudents.forEach((student, index) => {
-                bodyHtml += `<tr><td class="p-2 border text-center text-xs">${index+1}</td><td class="p-2 border text-xs font-medium whitespace-nowrap">${student.name}</td><td class="p-2 border text-xs whitespace-nowrap">${student.class || '-'}</td><td class="p-2 border text-xs whitespace-nowrap">${student.status || '-'}</td>`;
+                let nameDisplay = student.name;
+                if(student.category === 'Anak Guru') {
+                    nameDisplay += ` <span class="italic text-gray-500 text-[10px]">(Anak Guru)</span>`;
+                }
+                bodyHtml += `<tr><td class="p-2 border text-center text-xs">${index+1}</td><td class="p-2 border text-xs font-medium whitespace-nowrap">${nameDisplay}</td><td class="p-2 border text-xs whitespace-nowrap">${student.class || '-'}</td><td class="p-2 border text-xs whitespace-nowrap">${student.status || '-'}</td>`;
                 
                 validDays.forEach(day => {
                     const mStr = (month + 1).toString().padStart(2, '0');
@@ -1739,7 +1763,39 @@
             }
         }
 
-        window.filterStudents = function() { const filter = document.getElementById('searchStudentInput').value.toLowerCase(); const tr = document.getElementById('studentTableBody').getElementsByTagName('tr'); for (let i = 0; i < tr.length; i++) { const td = tr[i].getElementsByTagName('td')[0]; if (td) { tr[i].style.display = td.textContent.toLowerCase().indexOf(filter) > -1 ? "" : "none"; } } }
+        window.filterStudents = function() { 
+            const filterName = document.getElementById('searchStudentInput').value.toLowerCase(); 
+            const filterClass = document.getElementById('filterClassInput').value.toLowerCase();
+            const filterJenjang = document.getElementById('filterJenjangInput').value.toLowerCase();
+            const filterStatus = document.getElementById('filterStatusInput').value.toLowerCase();
+
+            const tr = document.getElementById('studentTableBody').getElementsByTagName('tr'); 
+            
+            for (let i = 0; i < tr.length; i++) { 
+                const tdName = tr[i].getElementsByTagName('td')[0]; 
+                const tdClass = tr[i].getElementsByTagName('td')[1];
+                const tdJenjang = tr[i].getElementsByTagName('td')[2];
+                const tdStatus = tr[i].getElementsByTagName('td')[3];
+
+                if (tdName && tdClass && tdJenjang && tdStatus) { 
+                    const txtName = tdName.textContent.toLowerCase();
+                    const txtClass = tdClass.textContent.toLowerCase();
+                    const txtJenjang = tdJenjang.textContent.toLowerCase();
+                    const txtStatus = tdStatus.textContent.toLowerCase();
+
+                    const matchName = txtName.indexOf(filterName) > -1;
+                    const matchClass = txtClass.indexOf(filterClass) > -1;
+                    const matchJenjang = filterJenjang === "" || txtJenjang.indexOf(filterJenjang) > -1;
+                    const matchStatus = filterStatus === "" || txtStatus.indexOf(filterStatus) > -1;
+
+                    if (matchName && matchClass && matchJenjang && matchStatus) {
+                        tr[i].style.display = ""; 
+                    } else {
+                        tr[i].style.display = "none"; 
+                    }
+                } 
+            } 
+        }
         
         // --- UPDATED: FETCH USERS WITH CLASS & ALLERGY ---
         window.fetchUsersByRole = async function(type) { 
@@ -1762,9 +1818,12 @@
  
                 tbody.innerHTML = "";
                 filteredUsers.forEach(u => {
-                    const dataString = JSON.stringify(u).replace(/"/g, '&quot;');
+                    const dataString = JSON.stringify(u).replace(/"/g, '&quot;').replace(/'/g, "\\'");
                     if (type === 'Murid') {
-                        const col3 = `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">${u.category}</span>`;
+                        let badgeColor = "bg-blue-100 text-blue-800";
+                        if(u.category === 'Anak Guru') badgeColor = "bg-green-100 text-green-800";
+                        else if(u.category === 'Beasiswa') badgeColor = "bg-yellow-100 text-yellow-800";
+                        const col3 = `<span class="${badgeColor} px-2 py-1 rounded text-xs">${u.category}</span>`;
                         tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-4 font-medium">${u.name}</td><td class="p-4 text-gray-600">${u.class || '-'}</td><td class="p-4 text-gray-600">${u.jenjang || '-'}</td><td class="p-4 text-gray-600">${u.status || '-'}</td><td class="p-4 text-gray-600">${u.email}</td><td class="p-4">${col3}</td><td class="p-4 text-center"><button onclick="prepareEditUser('${dataString}')" class="text-blue-600 mx-1"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteUser('${u.id}', '${type}')" class="text-red-500 mx-1"><i class="fas fa-trash"></i></button></td></tr>`;
                     } else {
                         const col3 = `<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs">${u.role}</span>`;
@@ -1855,6 +1914,7 @@
                 class: type === 'murid' ? className : '-', 
                 jenjang: type === 'murid' ? document.getElementById('inputUserJenjang').value : '-',
                 status: type === 'murid' ? document.getElementById('inputUserStatus').value : '-', // BUG: This was not being used
+                status: type === 'murid' ? document.getElementById('inputUserStatus').value : '-',
                 allergy: type === 'murid' ? allergy : '-', // SAVE ALLERGY
                 updatedAt: new Date() 
             }; 
