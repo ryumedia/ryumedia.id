@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Health Questionnaire - PHQ-4</title>
+    <title>Patient Health Questionnaire (PHQ-4)</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -23,14 +23,25 @@
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col">
 
-    <!-- === HEADER (Muncul setelah login) === -->
-    <header id="app-header" class="hidden-view bg-white shadow-sm border-b border-gray-200 py-4 px-6 flex justify-between items-center sticky top-0 z-10">
-        <div class="flex items-center gap-2">
-            <i data-lucide="activity" class="text-teal-600 w-6 h-6"></i>
-            <span class="font-bold text-gray-800 text-lg">Patient Health Questionnaire - PHQ-4</span>
+    <!-- === HEADER (LAYOUT BARU: KIRI - TENGAH - KANAN) === -->
+    <header id="app-header" class="hidden-view bg-white shadow-sm border-b border-gray-200 py-3 px-6 flex justify-between items-center sticky top-0 z-10 relative min-h-[70px]">
+        
+        <!-- BAGIAN KIRI: Tulisan MediScreen Admin -->
+        <div class="flex items-center z-20">
+            <span class="font-bold text-gray-800 text-lg">Patient Health Questionnaire (PHQ-4)</span>
         </div>
-        <div class="flex items-center gap-4">
-            <span class="text-sm text-gray-500">Petugas: Admin Jaga</span>
+
+        <!-- BAGIAN TENGAH: Logo Sequence (Posisi Absolute Center) -->
+        <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center gap-2">
+            <img src="https://blogger.googleusercontent.com/img/a/AVvXsEiVPrRW50G1tAQgl3M1vcxgct00mLStksZBSVRdUYY-FxTGky7aobCrqUfgpB_zga9vPXb8SV6bEpz_mQ8lKE8h8fR4Q2Nbhr120BL3_7r5iBpCMD0UTOCkCJ8-2lgG-jOdCDCC84OPuHum6rteyyK7bGojzGNG0eb8DK34nkEHYi02Tgk6Hbv8svkEqQM" class="h-10 w-auto object-contain" alt="Logo 1">
+            <img src="https://blogger.googleusercontent.com/img/a/AVvXsEhhMP34kLYPo4MEkUS1IOru3fLz77kswYZJMmJL3MZFt7vdYJlL3XI2lqsrSlNomuQwoY2u5Uv_TGj5GKPHaRK44dKT_-rWafJU-aqISwb89Aggctsh75QDxgron1NGGTVSVvQ3u6pcKlWGzhkCaYLOhPxpxmYrmFqSXjf3Mb54EqClBV8_udlMGdys_HI" class="h-10 w-auto object-contain" alt="Logo 2">
+            <img src="https://blogger.googleusercontent.com/img/a/AVvXsEiW8XW_8g83SaP9LbMe5_w2qS-M3AlNVUX01SkJUApgY_lZSh1H9r3lrb5mzIs19wAaXvSuDQl6j3JK5J7uEO8JqOyx92i3M1Zfgk4VGkvPIi-HK_dugVZatf5DWF0rsv3cvj-CUTOyJfqy3evf4pxTdRUKST5hBmC39tYA0JcRaC9RWQRsk7uNYdUOoPA" class="h-10 w-auto object-contain" alt="Logo 3">
+            <img src="https://blogger.googleusercontent.com/img/a/AVvXsEi3Al93cveTF1mM7dyRViIbV-LPN1Gtl1NTpAZ0jB_51gdzRiqRXphWKMzY_-NT7ci50dPkdLjrqxaFViihVUy8HjDduDW9CRDiCfQz47662bBmojmoCIJYspPpAp1cw08LgZmBX7cWY0E_FgF4KF6pHswzEfRxSn_N5QVYfEF7eUen1zVQ01BAGT4IUGk" class="h-10 w-auto object-contain" alt="Logo 4">
+        </div>
+
+        <!-- BAGIAN KANAN: User & Logout -->
+        <div class="flex items-center gap-4 z-20">
+            <span class="text-sm text-gray-500 hidden md:block">Petugas: Admin Jaga</span>
             <button onclick="logout()" class="text-sm text-red-500 hover:text-red-700 font-medium">Logout</button>
         </div>
     </header>
@@ -39,11 +50,16 @@
     <div id="view-login" class="flex-1 flex items-center justify-center p-4 bg-slate-100 fade-in">
         <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md border-t-4 border-teal-600">
             <div class="text-center mb-8">
-                <div class="bg-teal-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i data-lucide="activity" class="text-teal-600 w-8 h-8"></i>
+                <!-- Logo Sequence Login -->
+                <div class="flex justify-center items-center gap-3 mb-6">
+                    <img src="https://blogger.googleusercontent.com/img/a/AVvXsEiVPrRW50G1tAQgl3M1vcxgct00mLStksZBSVRdUYY-FxTGky7aobCrqUfgpB_zga9vPXb8SV6bEpz_mQ8lKE8h8fR4Q2Nbhr120BL3_7r5iBpCMD0UTOCkCJ8-2lgG-jOdCDCC84OPuHum6rteyyK7bGojzGNG0eb8DK34nkEHYi02Tgk6Hbv8svkEqQM" class="h-12 w-auto object-contain" alt="Logo 1">
+                    <img src="https://blogger.googleusercontent.com/img/a/AVvXsEhhMP34kLYPo4MEkUS1IOru3fLz77kswYZJMmJL3MZFt7vdYJlL3XI2lqsrSlNomuQwoY2u5Uv_TGj5GKPHaRK44dKT_-rWafJU-aqISwb89Aggctsh75QDxgron1NGGTVSVvQ3u6pcKlWGzhkCaYLOhPxpxmYrmFqSXjf3Mb54EqClBV8_udlMGdys_HI" class="h-12 w-auto object-contain" alt="Logo 2">
+                    <img src="https://blogger.googleusercontent.com/img/a/AVvXsEiW8XW_8g83SaP9LbMe5_w2qS-M3AlNVUX01SkJUApgY_lZSh1H9r3lrb5mzIs19wAaXvSuDQl6j3JK5J7uEO8JqOyx92i3M1Zfgk4VGkvPIi-HK_dugVZatf5DWF0rsv3cvj-CUTOyJfqy3evf4pxTdRUKST5hBmC39tYA0JcRaC9RWQRsk7uNYdUOoPA" class="h-12 w-auto object-contain" alt="Logo 3">
+                    <img src="https://blogger.googleusercontent.com/img/a/AVvXsEi3Al93cveTF1mM7dyRViIbV-LPN1Gtl1NTpAZ0jB_51gdzRiqRXphWKMzY_-NT7ci50dPkdLjrqxaFViihVUy8HjDduDW9CRDiCfQz47662bBmojmoCIJYspPpAp1cw08LgZmBX7cWY0E_FgF4KF6pHswzEfRxSn_N5QVYfEF7eUen1zVQ01BAGT4IUGk" class="h-12 w-auto object-contain" alt="Logo 4">
                 </div>
-                <h1 class="text-2xl font-bold text-gray-800">PHQ-4</h1>
-                <p class="text-gray-500 text-sm">Masuk untuk memulai skrining pasien</p>
+                
+                <h1 class="text-2xl font-bold text-gray-800">Admin Login</h1>
+                <p class="text-gray-500 text-sm">Sistem Skrining Kesehatan & VR</p>
             </div>
             
             <form onsubmit="handleLogin(event)" class="space-y-4">
@@ -71,7 +87,7 @@
         <div class="w-full max-w-2xl text-center space-y-8">
             <div>
                 <h2 class="text-3xl font-bold text-gray-800 mb-2">Identifikasi Pasien</h2>
-                <p class="text-gray-500">Masukkan Nomor Identitas Pasien untuk melihat data atau mendaftarkan baru.</p>
+                <p class="text-gray-500">Masukkan Nomor Identitas Pasien untuk memulai sesi kunjungan.</p>
             </div>
 
             <form onsubmit="handleSearch(event)" class="relative w-full shadow-xl rounded-2xl">
@@ -83,7 +99,7 @@
             </form>
 
             <div class="bg-blue-50 text-blue-700 p-4 rounded-lg text-sm border border-blue-100 inline-block">
-                <p>💡 Tip: Jika ID tidak ditemukan, sistem akan otomatis membuka formulir pendaftaran baru.</p>
+                <p>💡 Tip: Jika ID tidak ditemukan, Anda akan diarahkan ke pendaftaran pasien baru.</p>
             </div>
         </div>
     </div>
@@ -99,82 +115,54 @@
                 <i data-lucide="user-check" class="text-yellow-600 w-5 h-5"></i>
                 <div>
                     <h3 class="font-semibold text-yellow-800">Pasien Baru: <span id="reg-id-display"></span></h3>
-                    <p class="text-xs text-yellow-700">ID ini belum terdaftar. Silakan lengkapi data berikut.</p>
+                    <p class="text-xs text-yellow-700">ID ini belum terdaftar. Silakan lengkapi data dasar (Identitas).</p>
                 </div>
             </div>
 
             <form onsubmit="handleRegister(event)" class="p-6">
-                <!-- Grid Container -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                    <!-- Kolom Kiri: Data Pribadi -->
-                    <div class="space-y-6">
-                        <h4 class="font-bold text-gray-800 border-b pb-2">Data Pribadi</h4>
-                        <div class="space-y-4">
-                            <div><label class="block text-sm font-medium text-gray-700">Nama Lengkap</label><input required id="reg-nama" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500 focus:border-teal-500"></div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div><label class="block text-sm font-medium text-gray-700">Usia (Th)</label><input required type="number" id="reg-usia" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Jenis Kelamin</label>
-                                    <select id="reg-jk" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500">
-                                        <option>Laki-laki</option><option>Perempuan</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div><label class="block text-sm font-medium text-gray-700">Pekerjaan</label><input required id="reg-pekerjaan" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></div>
-                            <div><label class="block text-sm font-medium text-gray-700">No HP</label><input required id="reg-hp" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Status</label>
-                                <select id="reg-status" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500">
-                                    <option>Menikah</option><option>Belum Menikah</option><option>Cerai</option>
-                                </select>
-                            </div>
-                            <div><label class="block text-sm font-medium text-gray-700">Alamat</label><textarea id="reg-alamat" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></textarea></div>
-                        </div>
-                    </div>
-                    
-                    <!-- Kolom Kanan: Data Medis -->
-                    <div class="space-y-6">
-                        <h4 class="font-bold text-gray-800 border-b pb-2">Data Klinis & Fisik</h4>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Layanan Kesehatan Jiwa?</label>
-                            <div class="flex gap-4">
-                                <label class="flex items-center"><input type="radio" name="reg-jiwa" value="Sudah" class="mr-2 text-teal-600">Sudah</label>
-                                <label class="flex items-center"><input type="radio" name="reg-jiwa" value="Belum" checked class="mr-2 text-teal-600">Belum</label>
-                            </div>
-                        </div>
-                        <div><label class="block text-sm font-medium text-gray-700">Keluhan</label><textarea id="reg-keluhan" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md p-2 bg-red-50 focus:ring-teal-500"></textarea></div>
+                <!-- Data Pribadi Only -->
+                <div class="space-y-6">
+                    <h4 class="font-bold text-gray-800 border-b pb-2">Data Identitas</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div><label class="block text-sm font-medium text-gray-700">Nama Lengkap</label><input required id="reg-nama" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></div>
                         <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block text-sm font-medium text-gray-700">TB (cm)</label><input type="number" id="reg-tb" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></div>
-                            <div><label class="block text-sm font-medium text-gray-700">BB (kg)</label><input type="number" id="reg-bb" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></div>
-                            <div><label class="block text-sm font-medium text-gray-700">Tensi</label><input type="text" id="reg-tensi" placeholder="120/80" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></div>
-                            <div><label class="block text-sm font-medium text-gray-700">Saturasi (%)</label><input type="number" id="reg-sat" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></div>
-                            <div class="col-span-2"><label class="block text-sm font-medium text-gray-700">Nadi (bpm)</label><input type="number" id="reg-nadi" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></div>
+                            <div><label class="block text-sm font-medium text-gray-700">Usia (Th)</label><input required type="number" id="reg-usia" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></div>
+                            <div><label class="block text-sm font-medium text-gray-700">Jenis Kelamin</label><select id="reg-jk" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"><option>Laki-laki</option><option>Perempuan</option></select></div>
                         </div>
+                        <div><label class="block text-sm font-medium text-gray-700">Pekerjaan</label><input required id="reg-pekerjaan" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></div>
+                        <div><label class="block text-sm font-medium text-gray-700">No HP</label><input required id="reg-hp" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Status</label><select id="reg-status" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"><option>Menikah</option><option>Belum Menikah</option><option>Cerai</option></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Alamat</label><textarea id="reg-alamat" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></textarea></div>
                     </div>
                 </div>
+
                 <div class="mt-8 flex justify-end">
                     <button type="submit" class="bg-teal-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-teal-700 transition flex items-center gap-2 shadow-md">
-                        <i data-lucide="save" class="w-5 h-5"></i> Simpan & Lihat Detail
+                        <i data-lucide="save" class="w-5 h-5"></i> Simpan Data Pasien
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- === VIEW 4: DETAIL === -->
+    <!-- === VIEW 4: DETAIL (DASHBOARD PASIEN) === -->
     <div id="view-detail" class="hidden-view flex-1 p-6 max-w-6xl mx-auto w-full fade-in">
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
             <button onclick="showView('search'); document.getElementById('search-input').value=''" class="flex items-center text-gray-500 hover:text-gray-800 gap-2">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i> Cari Pasien Lain
             </button>
             
             <div class="flex gap-3">
                 <button onclick="prepareEdit()" class="flex items-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition shadow-sm font-medium text-sm">
-                    <i data-lucide="edit" class="w-4 h-4"></i> Edit Data Pasien
+                    <i data-lucide="edit" class="w-4 h-4"></i> Edit Biodata
                 </button>
+                <!-- Tombol Input Vitals Terpisah -->
+                <button onclick="openInputVitals()" class="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition shadow-sm font-medium text-sm">
+                    <i data-lucide="clipboard-plus" class="w-4 h-4"></i> Input Data Kunjungan
+                </button>
+                <!-- Tombol VR Terpisah -->
                 <button onclick="prepareVrSession()" class="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm font-medium text-sm">
-                    <span>Selanjutnya</span> 
-                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    <i data-lucide="glasses" class="w-4 h-4"></i> Mulai Sesi VR
                 </button>
             </div>
         </div>
@@ -196,39 +184,31 @@
                         <div class="flex items-start gap-3 text-gray-700"><i data-lucide="map-pin" class="w-4 h-4 text-gray-400 mt-1"></i><span id="detail-alamat">-</span></div>
                     </div>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i data-lucide="activity" class="w-5 h-5 text-teal-600"></i> Riwayat Layanan Jiwa</h3>
-                    <div id="detail-jiwa" class="p-3 rounded-lg text-center font-medium bg-gray-100">-</div>
-                </div>
             </div>
 
-            <!-- Right: Clinical & VR Scores -->
+            <!-- Right: Clinical & VR Scores History -->
             <div class="lg:col-span-2 space-y-6">
                 
+                <!-- Latest Clinical Data -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i data-lucide="file-text" class="w-5 h-5 text-teal-600"></i> Keluhan Saat Ini</h3>
-                    <div id="detail-keluhan" class="bg-red-50 p-4 rounded-lg border border-red-100 text-gray-800 leading-relaxed">-</div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-gray-800 flex items-center gap-2"><i data-lucide="activity" class="w-5 h-5 text-teal-600"></i> Kondisi Terkini</h3>
+                        <span class="text-xs text-gray-400">Dari kunjungan terakhir</span>
+                    </div>
+                    
+                    <div id="latest-data-container">
+                         <!-- Akan diisi JS -->
+                         <div class="bg-gray-50 p-4 rounded text-center text-gray-500">Belum ada data kunjungan.</div>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex justify-between"><div><p class="text-gray-500 text-sm">Tinggi Badan</p><p class="text-2xl font-bold text-gray-800"><span id="detail-tb">-</span> <span class="text-sm font-normal text-gray-400">cm</span></p></div><i data-lucide="ruler" class="w-8 h-8 text-teal-200"></i></div>
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex justify-between"><div><p class="text-gray-500 text-sm">Berat Badan</p><p class="text-2xl font-bold text-gray-800"><span id="detail-bb">-</span> <span class="text-sm font-normal text-gray-400">kg</span></p></div><i data-lucide="scale" class="w-8 h-8 text-teal-200"></i></div>
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex justify-between"><div><p class="text-gray-500 text-sm">Tekanan Darah</p><p class="text-2xl font-bold text-gray-800"><span id="detail-tensi">-</span> <span class="text-sm font-normal text-gray-400">mmHg</span></p></div><i data-lucide="heart" class="w-8 h-8 text-rose-200"></i></div>
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex justify-between"><div><p class="text-gray-500 text-sm">Saturasi Oksigen</p><p class="text-2xl font-bold text-gray-800"><span id="detail-sat">-</span> <span class="text-sm font-normal text-gray-400">%</span></p></div><i data-lucide="wind" class="w-8 h-8 text-blue-200"></i></div>
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex justify-between md:col-span-2"><div><p class="text-gray-500 text-sm">Denyut Nadi</p><p class="text-2xl font-bold text-gray-800"><span id="detail-nadi">-</span> <span class="text-sm font-normal text-gray-400">bpm</span></p></div><i data-lucide="activity" class="w-8 h-8 text-violet-200"></i></div>
-                </div>
-
-                <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 text-center text-blue-700 text-sm mt-4">
-                    Data ini telah tersimpan dalam sesi sementara.
-                </div>
-
-                <!-- MOVED SECTION: VR Screening Scores (Now at bottom) -->
+                <!-- History Table (VR + Vitals) -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div class="bg-indigo-50 px-6 py-4 border-b border-indigo-100 flex items-center gap-3">
-                        <i data-lucide="glasses" class="text-indigo-600 w-5 h-5"></i>
+                        <i data-lucide="history" class="text-indigo-600 w-5 h-5"></i>
                         <div>
-                            <h3 class="font-semibold text-indigo-900">Hasil Skrining VR (Game)</h3>
-                            <p class="text-xs text-indigo-700">Riwayat pengisian kuesioner via Virtual Reality</p>
+                            <h3 class="font-semibold text-indigo-900">Riwayat Kunjungan & Skrining</h3>
+                            <p class="text-xs text-indigo-700">Daftar riwayat vital signs dan hasil skor VR</p>
                         </div>
                     </div>
                     <div class="p-0">
@@ -237,16 +217,16 @@
                                 <thead class="bg-gray-50 text-gray-600 font-medium border-b">
                                     <tr>
                                         <th class="px-6 py-3">Tanggal</th>
-                                        <th class="px-6 py-3">PHQ-2 (Depresi)</th>
-                                        <th class="px-6 py-3">GAD-2 (Kecemasan)</th>
-                                        <th class="px-6 py-3">Status</th>
+                                        <th class="px-6 py-3">PHQ-2</th>
+                                        <th class="px-6 py-3">GAD-2</th>
+                                        <th class="px-6 py-3">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="detail-vr-list" class="divide-y divide-gray-100">
                                     <!-- Dynamic Rows Here -->
                                 </tbody>
                             </table>
-                            <div id="detail-vr-empty" class="hidden p-6 text-center text-gray-400 italic">Belum ada riwayat skrining VR</div>
+                            <div id="detail-vr-empty" class="hidden p-6 text-center text-gray-400 italic">Belum ada riwayat kunjungan</div>
                         </div>
                     </div>
                 </div>
@@ -254,7 +234,7 @@
         </div>
     </div>
 
-    <!-- === VIEW 5: EDIT === -->
+    <!-- === VIEW 5: EDIT (Biodata Only) === -->
     <div id="view-edit" class="hidden-view flex-1 p-6 max-w-5xl mx-auto w-full fade-in">
         <button onclick="showView('detail')" class="flex items-center text-gray-500 hover:text-gray-800 mb-6 gap-2">
             <i data-lucide="arrow-left" class="w-4 h-4"></i> Batal Edit
@@ -264,46 +244,24 @@
             <div class="bg-blue-50 px-6 py-4 border-b border-blue-100 flex items-center gap-3">
                 <i data-lucide="edit" class="text-blue-600 w-5 h-5"></i>
                 <div>
-                    <h3 class="font-semibold text-blue-800">Edit Data Pasien: <span id="edit-nama-display"></span></h3>
+                    <h3 class="font-semibold text-blue-800">Edit Biodata: <span id="edit-nama-display"></span></h3>
                     <p class="text-xs text-blue-700">ID Pasien: <span id="edit-id-display"></span></p>
                 </div>
             </div>
 
             <form onsubmit="handleUpdate(event)" class="p-6">
-                 <!-- Grid Container -->
-                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                    <div class="space-y-6">
-                        <h4 class="font-bold text-gray-800 border-b pb-2">Data Pribadi</h4>
-                        <div class="space-y-4">
-                            <div><label class="block text-sm font-medium text-gray-700">Nama Lengkap</label><input required id="edit-nama" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"></div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div><label class="block text-sm font-medium text-gray-700">Usia (Th)</label><input required type="number" id="edit-usia" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"></div>
-                                <div><label class="block text-sm font-medium text-gray-700">Jenis Kelamin</label><select id="edit-jk" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"><option>Laki-laki</option><option>Perempuan</option></select></div>
-                            </div>
-                            <div><label class="block text-sm font-medium text-gray-700">Pekerjaan</label><input required id="edit-pekerjaan" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"></div>
-                            <div><label class="block text-sm font-medium text-gray-700">No HP</label><input required id="edit-hp" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"></div>
-                            <div><label class="block text-sm font-medium text-gray-700">Status</label><select id="edit-status" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"><option>Menikah</option><option>Belum Menikah</option><option>Cerai</option></select></div>
-                            <div><label class="block text-sm font-medium text-gray-700">Alamat</label><textarea id="edit-alamat" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"></textarea></div>
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-6">
-                        <h4 class="font-bold text-gray-800 border-b pb-2">Data Klinis & Fisik</h4>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Layanan Kesehatan Jiwa?</label>
-                            <div class="flex gap-4">
-                                <label class="flex items-center"><input type="radio" name="edit-jiwa" value="Sudah" class="mr-2 text-blue-600">Sudah</label>
-                                <label class="flex items-center"><input type="radio" name="edit-jiwa" value="Belum" class="mr-2 text-blue-600">Belum</label>
-                            </div>
-                        </div>
-                        <div><label class="block text-sm font-medium text-gray-700">Keluhan</label><textarea id="edit-keluhan" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md p-2 bg-slate-50 focus:ring-blue-500"></textarea></div>
+                 <div class="space-y-6">
+                    <h4 class="font-bold text-gray-800 border-b pb-2">Data Identitas</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div><label class="block text-sm font-medium text-gray-700">Nama Lengkap</label><input required id="edit-nama" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"></div>
                         <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block text-sm font-medium text-gray-700">TB (cm)</label><input type="number" id="edit-tb" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"></div>
-                            <div><label class="block text-sm font-medium text-gray-700">BB (kg)</label><input type="number" id="edit-bb" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"></div>
-                            <div><label class="block text-sm font-medium text-gray-700">Tensi</label><input type="text" id="edit-tensi" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"></div>
-                            <div><label class="block text-sm font-medium text-gray-700">Saturasi (%)</label><input type="number" id="edit-sat" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"></div>
-                            <div class="col-span-2"><label class="block text-sm font-medium text-gray-700">Nadi (bpm)</label><input type="number" id="edit-nadi" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"></div>
+                            <div><label class="block text-sm font-medium text-gray-700">Usia (Th)</label><input required type="number" id="edit-usia" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"></div>
+                            <div><label class="block text-sm font-medium text-gray-700">Jenis Kelamin</label><select id="edit-jk" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"><option>Laki-laki</option><option>Perempuan</option></select></div>
                         </div>
+                        <div><label class="block text-sm font-medium text-gray-700">Pekerjaan</label><input required id="edit-pekerjaan" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"></div>
+                        <div><label class="block text-sm font-medium text-gray-700">No HP</label><input required id="edit-hp" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Status</label><select id="edit-status" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"><option>Menikah</option><option>Belum Menikah</option><option>Cerai</option></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Alamat</label><textarea id="edit-alamat" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500"></textarea></div>
                     </div>
                 </div>
 
@@ -317,16 +275,14 @@
         </div>
     </div>
 
-    <!-- === VIEW 6: VR SESSION START === -->
+    <!-- === VIEW 6: VR START (ONLY VR) === -->
     <div id="view-vr-start" class="hidden-view flex-1 flex flex-col items-center justify-center p-6 bg-slate-100 fade-in">
         <div class="w-full max-w-2xl">
-            <!-- Header Nav -->
-            <button onclick="showView('detail')" class="flex items-center text-gray-500 hover:text-gray-800 mb-8 gap-2">
+            <button onclick="showView('detail')" class="flex items-center text-gray-500 hover:text-gray-800 mb-6 gap-2">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali ke Detail
             </button>
 
-            <!-- Main Card -->
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+            <form onsubmit="handleVrSubmit(event)" class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
                 <div class="bg-indigo-600 p-8 text-center text-white">
                     <div class="bg-white/20 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
                         <i data-lucide="gamepad-2" class="w-10 h-10 text-white"></i>
@@ -334,7 +290,7 @@
                     <h2 class="text-3xl font-bold mb-2">Mode Skrining VR</h2>
                     <p class="text-indigo-100">Siapkan pasien untuk memulai pengisian kuesioner interaktif</p>
                 </div>
-                
+
                 <div class="p-8">
                     <!-- Patient Info Summary -->
                     <div class="bg-indigo-50 rounded-xl p-4 flex items-center gap-4 mb-8 border border-indigo-100">
@@ -347,46 +303,123 @@
                             <p class="text-xs text-gray-500">ID: <span id="vr-patient-id">p12345</span></p>
                         </div>
                     </div>
-
-                    <!-- Instructions -->
-                    <div class="space-y-4 mb-8">
-                        <h4 class="font-semibold text-gray-700 border-b pb-2">Instruksi Petugas:</h4>
-                        <ol class="list-decimal list-inside space-y-2 text-gray-600 text-sm">
-                            <li>Pasangkan Headset VR pada pasien dengan nyaman.</li>
-                            <li>Pastikan controller terhubung dan baterai cukup.</li>
-                            <li>Arahkan pasien untuk memulai aplikasi "MediScreen VR".</li>
-                            <li>Tekan tombol "Mulai Sesi" di bawah untuk mencatat waktu mulai.</li>
-                        </ol>
-                    </div>
-
-                    <!-- Simulation Form (For Demo Purpose) -->
+                    
                     <div class="border-t pt-6">
-                        <p class="text-xs text-center text-gray-400 mb-4 uppercase tracking-wider font-semibold">Simulasi Data Masuk (Demo Only)</p>
-                        <form onsubmit="handleVrSubmit(event)" class="space-y-4">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Skor PHQ-2 (Depresi)</label>
-                                    <input type="number" id="vr-score-phq" min="0" max="6" required placeholder="0-6" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none text-center text-lg font-bold text-gray-700">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Skor GAD-2 (Cemas)</label>
-                                    <input type="number" id="vr-score-gad" min="0" max="6" required placeholder="0-6" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none text-center text-lg font-bold text-gray-700">
-                                </div>
+                         <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            Simulasi Hasil Skrining VR
+                        </h3>
+                        <p class="text-sm text-gray-500 mb-3">Masukkan skor simulasi yang "diterima" dari alat VR (integrasi nanti):</p>
+                        <div class="grid grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Skor PHQ-2 (Depresi)</label>
+                                <input type="number" id="vr-score-phq" min="0" max="6" required placeholder="0-6" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 font-bold text-center">
                             </div>
-                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
-                                <i data-lucide="play" class="w-5 h-5 fill-current"></i>
-                                Mulai Sesi & Simpan Hasil
-                            </button>
-                        </form>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Skor GAD-2 (Cemas)</label>
+                                <input type="number" id="vr-score-gad" min="0" max="6" required placeholder="0-6" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 font-bold text-center">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
+                            <i data-lucide="save" class="w-5 h-5"></i>
+                            Selesai & Simpan Hasil VR
+                        </button>
                     </div>
                 </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- === MODAL INPUT VITALS === -->
+    <div id="modal-input-vitals" class="hidden-view fixed inset-0 z-50 flex items-center justify-center px-4">
+        <!-- Overlay -->
+        <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity" onclick="closeInputVitals()"></div>
+        
+        <!-- Content -->
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden transform transition-all scale-100">
+            <div class="bg-teal-600 p-4 flex justify-between items-center text-white">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i data-lucide="stethoscope" class="w-5 h-5"></i> Input Data Kunjungan
+                </h3>
+                <button onclick="closeInputVitals()" class="hover:bg-teal-700 p-1 rounded"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <form onsubmit="handleVitalSubmit(event)" class="p-6 space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Keluhan Utama</label>
+                    <textarea id="modal-vr-keluhan" rows="2" required placeholder="Apa yang dirasakan pasien hari ini?" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div><label class="block text-xs font-medium text-gray-500 uppercase">Tinggi Badan (cm)</label><input type="number" id="modal-vr-tb" required class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></div>
+                    <div><label class="block text-xs font-medium text-gray-500 uppercase">Berat Badan (kg)</label><input type="number" id="modal-vr-bb" required class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></div>
+                    <div><label class="block text-xs font-medium text-gray-500 uppercase">Tensi (mmHg)</label><input type="text" id="modal-vr-tensi" placeholder="120/80" required class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></div>
+                    <div><label class="block text-xs font-medium text-gray-500 uppercase">Saturasi (%)</label><input type="number" id="modal-vr-sat" required class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></div>
+                    <div><label class="block text-xs font-medium text-gray-500 uppercase">Nadi (bpm)</label><input type="number" id="modal-vr-nadi" required class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500"></div>
+                </div>
+
+                <div class="pt-4 flex justify-end gap-3">
+                    <button type="button" onclick="closeInputVitals()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Batal</button>
+                    <button type="submit" class="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 shadow-md">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- === MODAL HISTORY DETAIL === -->
+    <div id="modal-history-detail" class="hidden-view fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity" onclick="closeModal()"></div>
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative z-10 overflow-hidden transform transition-all scale-100">
+            <div class="bg-teal-600 p-4 flex justify-between items-center text-white">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i data-lucide="clipboard-list" class="w-5 h-5"></i> Detail Kunjungan
+                </h3>
+                <button onclick="closeModal()" class="hover:bg-teal-700 p-1 rounded"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6">
+                <div class="text-center mb-6">
+                    <p class="text-gray-500 text-sm">Tanggal Kunjungan</p>
+                    <p id="modal-date" class="text-xl font-bold text-gray-800">-</p>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 border-b pb-1">Keluhan</h4>
+                        <p id="modal-keluhan" class="text-gray-800 bg-gray-50 p-3 rounded-lg text-sm italic">-</p>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 border-b pb-1">Tanda-tanda Vital</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex justify-between border-b border-gray-100 py-1"><span class="text-gray-600 text-sm">Tensi</span> <span id="modal-tensi" class="font-medium">-</span></div>
+                            <div class="flex justify-between border-b border-gray-100 py-1"><span class="text-gray-600 text-sm">Nadi</span> <span id="modal-nadi" class="font-medium">-</span></div>
+                            <div class="flex justify-between border-b border-gray-100 py-1"><span class="text-gray-600 text-sm">Saturasi</span> <span id="modal-sat" class="font-medium">-</span></div>
+                            <div class="flex justify-between border-b border-gray-100 py-1"><span class="text-gray-600 text-sm">Berat Badan</span> <span id="modal-bb" class="font-medium">-</span></div>
+                            <div class="flex justify-between border-b border-gray-100 py-1"><span class="text-gray-600 text-sm">Tinggi Badan</span> <span id="modal-tb" class="font-medium">-</span></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 border-b pb-1">Hasil Skrining VR</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-blue-50 p-3 rounded text-center">
+                                <p class="text-xs text-blue-600">PHQ-2 (Depresi)</p>
+                                <p id="modal-phq" class="text-lg font-bold text-blue-800">-</p>
+                            </div>
+                            <div class="bg-indigo-50 p-3 rounded text-center">
+                                <p class="text-xs text-indigo-600">GAD-2 (Cemas)</p>
+                                <p id="modal-gad" class="text-lg font-bold text-indigo-800">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 bg-gray-50 text-right">
+                <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-300">Tutup</button>
             </div>
         </div>
     </div>
 
     <!-- === JAVASCRIPT LOGIC === -->
     <script>
-        // --- DATA AWAL (DUMMY) ---
+        // --- DATA AWAL (DUMMY UPDATED) ---
         let patients = [
             {
                 id: 'p12345',
@@ -397,17 +430,19 @@
                 noHp: '081234567890',
                 status: 'Menikah',
                 alamat: 'Jl. Merpati No. 10, Bandung',
-                layananJiwa: 'Belum',
-                keluhan: 'Sering merasa cemas berlebihan dan sulit tidur sejak 2 minggu terakhir.',
-                tinggiBadan: 170,
-                beratBadan: 70,
-                tensi: '120/80',
-                saturasi: 98,
-                nadi: 80,
-                // --- NEW VR DATA ---
                 riwayatVr: [
-                    { tanggal: '2023-10-01', phq2: 2, gad2: 1 },
-                    { tanggal: '2023-10-15', phq2: 4, gad2: 5 }
+                    { 
+                        tanggal: '2023-10-01', 
+                        phq2: 2, gad2: 1, 
+                        keluhan: 'Sakit kepala ringan', 
+                        tb: 170, bb: 70, tensi: '120/80', saturasi: 99, nadi: 78 
+                    },
+                    { 
+                        tanggal: '2023-10-15', 
+                        phq2: 4, gad2: 5, 
+                        keluhan: 'Cemas berlebihan dan sulit tidur', 
+                        tb: 170, bb: 69, tensi: '130/85', saturasi: 98, nadi: 88 
+                    }
                 ]
             }
         ];
@@ -417,14 +452,10 @@
 
         // --- NAVIGATION HANDLERS ---
         function showView(viewId) {
-            // Sembunyikan semua view
             ['view-login', 'view-search', 'view-register', 'view-detail', 'view-edit', 'view-vr-start'].forEach(id => {
                 document.getElementById(id).classList.add('hidden-view');
             });
-            // Tampilkan yang dipilih
             document.getElementById('view-' + viewId).classList.remove('hidden-view');
-            
-            // Refresh icons setiap pindah halaman agar icon Lucide muncul
             lucide.createIcons();
         }
 
@@ -454,9 +485,7 @@
                 renderDetail();
                 showView('detail');
             } else {
-                // Prepare register form
                 document.getElementById('reg-id-display').textContent = searchQuery;
-                // Reset form
                 document.querySelector('#view-register form').reset();
                 showView('register');
             }
@@ -467,62 +496,70 @@
             if (!activePatient) return;
             const p = activePatient;
             
+            // Render Basic Info
             document.getElementById('detail-nama').textContent = p.nama;
             document.getElementById('detail-initial').textContent = p.nama.charAt(0);
             document.getElementById('detail-id').textContent = 'ID: ' + p.id;
-            
             document.getElementById('detail-jk-usia').textContent = `${p.jenisKelamin}, ${p.usia} Tahun`;
             document.getElementById('detail-pekerjaan').textContent = p.pekerjaan;
             document.getElementById('detail-hp').textContent = p.noHp;
             document.getElementById('detail-status').textContent = p.status;
             document.getElementById('detail-alamat').textContent = p.alamat;
             
-            const jiwaBadge = document.getElementById('detail-jiwa');
-            jiwaBadge.textContent = p.layananJiwa;
-            if (p.layananJiwa === 'Sudah') {
-                jiwaBadge.className = 'p-3 rounded-lg text-center font-medium bg-orange-100 text-orange-800';
-            } else {
-                jiwaBadge.className = 'p-3 rounded-lg text-center font-medium bg-green-100 text-green-800';
-            }
-
-            // --- RENDER VR HISTORY ---
+            // --- RENDER HISTORY & LATEST VITALS ---
             const vrList = document.getElementById('detail-vr-list');
             const vrEmpty = document.getElementById('detail-vr-empty');
+            const latestContainer = document.getElementById('latest-data-container');
+            
             vrList.innerHTML = '';
             
             if (p.riwayatVr && p.riwayatVr.length > 0) {
                 vrEmpty.classList.add('hidden');
-                // Sort by date descending (newest first)
+                
+                // Sort Descending
                 const sortedVr = [...p.riwayatVr].sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
                 
-                sortedVr.forEach(item => {
+                // Display Latest Data in Main Dashboard
+                const latest = sortedVr[0];
+                latestContainer.innerHTML = `
+                    <div class="bg-red-50 p-4 rounded-lg border border-red-100 text-gray-800 leading-relaxed mb-4 text-sm">
+                        <span class="font-bold block text-red-700 mb-1">Keluhan:</span> "${latest.keluhan}"
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+                        <div class="bg-gray-50 p-2 rounded"><p class="text-xs text-gray-500">Tensi</p><p class="font-bold text-gray-800">${latest.tensi}</p></div>
+                        <div class="bg-gray-50 p-2 rounded"><p class="text-xs text-gray-500">Nadi</p><p class="font-bold text-gray-800">${latest.nadi} bpm</p></div>
+                        <div class="bg-gray-50 p-2 rounded"><p class="text-xs text-gray-500">Saturasi</p><p class="font-bold text-gray-800">${latest.saturasi}%</p></div>
+                        <div class="bg-gray-50 p-2 rounded"><p class="text-xs text-gray-500">BB</p><p class="font-bold text-gray-800">${latest.bb} kg</p></div>
+                        <div class="bg-gray-50 p-2 rounded"><p class="text-xs text-gray-500">TB</p><p class="font-bold text-gray-800">${latest.tb} cm</p></div>
+                    </div>
+                `;
+
+                // Render Table Rows
+                sortedVr.forEach((item, index) => {
                     const row = document.createElement('tr');
-                    row.className = 'hover:bg-gray-50 transition';
+                    row.className = 'hover:bg-gray-50 transition border-b border-gray-100';
                     
                     const phqClass = item.phq2 >= 3 ? 'text-red-600 font-bold' : 'text-gray-700';
                     const gadClass = item.gad2 >= 3 ? 'text-red-600 font-bold' : 'text-gray-700';
-                    const statusBadge = (item.phq2 >= 3 || item.gad2 >= 3) 
-                        ? '<span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold inline-flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> Pantau</span>' 
-                        : '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold inline-flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Normal</span>';
+                    const phqDisplay = item.phq2 !== undefined ? item.phq2 : '-';
+                    const gadDisplay = item.gad2 !== undefined ? item.gad2 : '-';
 
                     row.innerHTML = `
                         <td class="px-6 py-4 text-gray-900 font-medium">${item.tanggal}</td>
-                        <td class="px-6 py-4 ${phqClass}">${item.phq2}</td>
-                        <td class="px-6 py-4 ${gadClass}">${item.gad2}</td>
-                        <td class="px-6 py-4">${statusBadge}</td>
+                        <td class="px-6 py-4 ${phqClass}">${phqDisplay}</td>
+                        <td class="px-6 py-4 ${gadClass}">${gadDisplay}</td>
+                        <td class="px-6 py-4">
+                            <button onclick="openModalDetail(${index})" class="text-teal-600 hover:text-teal-800 font-semibold text-xs flex items-center gap-1 bg-teal-50 px-3 py-1.5 rounded-full hover:bg-teal-100 transition">
+                                <i data-lucide="eye" class="w-3 h-3"></i> Lihat
+                            </button>
+                        </td>
                     `;
                     vrList.appendChild(row);
                 });
             } else {
                 vrEmpty.classList.remove('hidden');
+                latestContainer.innerHTML = '<div class="bg-gray-50 p-4 rounded text-center text-gray-500 text-sm">Belum ada data kunjungan. Klik "Input Data Kunjungan".</div>';
             }
-
-            document.getElementById('detail-keluhan').textContent = `"${p.keluhan}"`;
-            document.getElementById('detail-tb').textContent = p.tinggiBadan;
-            document.getElementById('detail-bb').textContent = p.beratBadan;
-            document.getElementById('detail-tensi').textContent = p.tensi;
-            document.getElementById('detail-sat').textContent = p.saturasi;
-            document.getElementById('detail-nadi').textContent = p.nadi;
             
             lucide.createIcons();
         }
@@ -540,13 +577,6 @@
                 noHp: document.getElementById('reg-hp').value,
                 status: document.getElementById('reg-status').value,
                 alamat: document.getElementById('reg-alamat').value,
-                layananJiwa: document.querySelector('input[name="reg-jiwa"]:checked').value,
-                keluhan: document.getElementById('reg-keluhan').value,
-                tinggiBadan: document.getElementById('reg-tb').value,
-                beratBadan: document.getElementById('reg-bb').value,
-                tensi: document.getElementById('reg-tensi').value,
-                saturasi: document.getElementById('reg-sat').value,
-                nadi: document.getElementById('reg-nadi').value,
                 riwayatVr: [] 
             };
 
@@ -556,15 +586,12 @@
             showView('detail');
         }
 
-        // --- EDIT LOGIC ---
+        // --- EDIT BIODATA LOGIC ---
         function prepareEdit() {
             if(!activePatient) return;
             const p = activePatient;
-
             document.getElementById('edit-nama-display').textContent = p.nama;
             document.getElementById('edit-id-display').textContent = p.id;
-
-            // Fill inputs
             document.getElementById('edit-nama').value = p.nama;
             document.getElementById('edit-usia').value = p.usia;
             document.getElementById('edit-jk').value = p.jenisKelamin;
@@ -572,27 +599,13 @@
             document.getElementById('edit-hp').value = p.noHp;
             document.getElementById('edit-status').value = p.status;
             document.getElementById('edit-alamat').value = p.alamat;
-            
-            const radios = document.getElementsByName('edit-jiwa');
-            for(let radio of radios) {
-                if(radio.value === p.layananJiwa) radio.checked = true;
-            }
-
-            document.getElementById('edit-keluhan').value = p.keluhan;
-            document.getElementById('edit-tb').value = p.tinggiBadan;
-            document.getElementById('edit-bb').value = p.beratBadan;
-            document.getElementById('edit-tensi').value = p.tensi;
-            document.getElementById('edit-sat').value = p.saturasi;
-            document.getElementById('edit-nadi').value = p.nadi;
-
             showView('edit');
         }
 
         function handleUpdate(e) {
             e.preventDefault();
-            
             const updatedPatient = {
-                id: activePatient.id, 
+                ...activePatient,
                 nama: document.getElementById('edit-nama').value,
                 usia: document.getElementById('edit-usia').value,
                 jenisKelamin: document.getElementById('edit-jk').value,
@@ -600,36 +613,91 @@
                 noHp: document.getElementById('edit-hp').value,
                 status: document.getElementById('edit-status').value,
                 alamat: document.getElementById('edit-alamat').value,
-                layananJiwa: document.querySelector('input[name="edit-jiwa"]:checked').value,
-                keluhan: document.getElementById('edit-keluhan').value,
-                tinggiBadan: document.getElementById('edit-tb').value,
-                beratBadan: document.getElementById('edit-bb').value,
-                tensi: document.getElementById('edit-tensi').value,
-                saturasi: document.getElementById('edit-sat').value,
-                nadi: document.getElementById('edit-nadi').value,
-                riwayatVr: activePatient.riwayatVr 
             };
 
             const index = patients.findIndex(p => p.id === activePatient.id);
             if(index !== -1) {
                 patients[index] = updatedPatient;
             }
-
             activePatient = updatedPatient;
             renderDetail();
             showView('detail');
+        }
+
+        // --- INPUT VITALS MODAL LOGIC ---
+        function openInputVitals() {
+            document.getElementById('modal-vr-keluhan').value = '';
+            document.getElementById('modal-vr-tb').value = '';
+            document.getElementById('modal-vr-bb').value = '';
+            document.getElementById('modal-vr-tensi').value = '';
+            document.getElementById('modal-vr-sat').value = '';
+            document.getElementById('modal-vr-nadi').value = '';
+            document.getElementById('modal-input-vitals').classList.remove('hidden-view');
+        }
+
+        function closeInputVitals() {
+            document.getElementById('modal-input-vitals').classList.add('hidden-view');
+        }
+
+        function handleVitalSubmit(e) {
+            e.preventDefault();
+            const today = new Date().toISOString().split('T')[0];
+            const newRecord = {
+                tanggal: today,
+                keluhan: document.getElementById('modal-vr-keluhan').value,
+                tb: document.getElementById('modal-vr-tb').value,
+                bb: document.getElementById('modal-vr-bb').value,
+                tensi: document.getElementById('modal-vr-tensi').value,
+                saturasi: document.getElementById('modal-vr-sat').value,
+                nadi: document.getElementById('modal-vr-nadi').value,
+                // VR Data di-set null/undefined dulu
+                phq2: undefined,
+                gad2: undefined
+            };
+
+            if (!activePatient.riwayatVr) {
+                activePatient.riwayatVr = [];
+            }
+            
+            // Cek apakah hari ini sudah ada data? Jika ada, update vitals-nya saja
+            const existingIndex = activePatient.riwayatVr.findIndex(r => r.tanggal === today);
+            if (existingIndex !== -1) {
+                // Merge data baru dengan data lama (misal sudah ada VR score)
+                activePatient.riwayatVr[existingIndex] = { 
+                    ...activePatient.riwayatVr[existingIndex], 
+                    ...newRecord,
+                    // Pertahankan score VR jika sudah ada
+                    phq2: activePatient.riwayatVr[existingIndex].phq2,
+                    gad2: activePatient.riwayatVr[existingIndex].gad2
+                };
+            } else {
+                activePatient.riwayatVr.push(newRecord);
+            }
+
+            closeInputVitals();
+            renderDetail();
+            alert("Data kunjungan berhasil disimpan.");
         }
 
         // --- VR SESSION LOGIC ---
         function prepareVrSession() {
             if(!activePatient) return;
             
-            // Set data di halaman VR Start
+            // LOGIC CHECK: Has visit data been input for today?
+            const today = new Date().toISOString().split('T')[0];
+            const hasVisitToday = activePatient.riwayatVr && activePatient.riwayatVr.some(r => r.tanggal === today);
+
+            if (!hasVisitToday) {
+                alert("Harap Input Data Kunjungan (Tanda Vital & Keluhan) hari ini terlebih dahulu sebelum memulai sesi VR.");
+                return;
+            }
+
+            // Set info pasien di halaman VR
             document.getElementById('vr-patient-name').textContent = activePatient.nama;
             document.getElementById('vr-patient-initial').textContent = activePatient.nama.charAt(0);
             document.getElementById('vr-patient-id').textContent = activePatient.id;
             
-            // Reset form demo
+            // Reset input form
             document.getElementById('vr-score-phq').value = '';
             document.getElementById('vr-score-gad').value = '';
 
@@ -639,35 +707,58 @@
         function handleVrSubmit(e) {
             e.preventDefault();
             
-            const phqScore = parseInt(document.getElementById('vr-score-phq').value);
-            const gadScore = parseInt(document.getElementById('vr-score-gad').value);
-            
-            // Buat tanggal hari ini YYYY-MM-DD
             const today = new Date().toISOString().split('T')[0];
+            const phq = parseInt(document.getElementById('vr-score-phq').value);
+            const gad = parseInt(document.getElementById('vr-score-gad').value);
             
-            const newRecord = {
-                tanggal: today,
-                phq2: phqScore,
-                gad2: gadScore
-            };
-            
-            // Tambahkan ke array riwayatVr pasien aktif
-            // Jika array belum ada (pasien baru), inisialisasi dulu
             if (!activePatient.riwayatVr) {
                 activePatient.riwayatVr = [];
             }
-            activePatient.riwayatVr.push(newRecord);
+
+            // Cari data kunjungan hari ini
+            const existingIndex = activePatient.riwayatVr.findIndex(r => r.tanggal === today);
             
-            // Update array global patients
-            const index = patients.findIndex(p => p.id === activePatient.id);
-            if(index !== -1) {
-                patients[index] = activePatient;
+            if (existingIndex !== -1) {
+                // Update record yang ada dengan hasil VR
+                activePatient.riwayatVr[existingIndex].phq2 = phq;
+                activePatient.riwayatVr[existingIndex].gad2 = gad;
+            } else {
+                // Buat record baru jika belum ada vitals hari ini (Edge case)
+                activePatient.riwayatVr.push({
+                    tanggal: today,
+                    phq2: phq,
+                    gad2: gad,
+                    keluhan: 'Data VR Saja',
+                    tb: '-', bb: '-', tensi: '-', saturasi: '-', nadi: '-'
+                });
             }
 
-            // Kembali ke detail
-            alert(`Sesi VR Selesai!\nData tersimpan:\nPHQ-2: ${phqScore}\nGAD-2: ${gadScore}`);
+            alert(`Sesi VR Selesai! Hasil tersimpan.`);
             renderDetail();
             showView('detail');
+        }
+
+        // --- MODAL HISTORY LOGIC ---
+        function openModalDetail(sortedIndex) {
+            if(!activePatient || !activePatient.riwayatVr) return;
+            const sortedVr = [...activePatient.riwayatVr].sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+            const item = sortedVr[sortedIndex];
+
+            document.getElementById('modal-date').textContent = item.tanggal;
+            document.getElementById('modal-keluhan').textContent = `"${item.keluhan || '-'}"`;
+            document.getElementById('modal-tensi').textContent = (item.tensi || '-') + ' mmHg';
+            document.getElementById('modal-nadi').textContent = (item.nadi || '-') + ' bpm';
+            document.getElementById('modal-sat').textContent = (item.saturasi || '-') + ' %';
+            document.getElementById('modal-bb').textContent = (item.bb || '-') + ' kg';
+            document.getElementById('modal-tb').textContent = (item.tb || '-') + ' cm';
+            document.getElementById('modal-phq').textContent = item.phq2 !== undefined ? item.phq2 : '-';
+            document.getElementById('modal-gad').textContent = item.gad2 !== undefined ? item.gad2 : '-';
+
+            document.getElementById('modal-history-detail').classList.remove('hidden-view');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-history-detail').classList.add('hidden-view');
         }
 
         // Initial icon render
