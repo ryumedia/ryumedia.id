@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Katering Sekolah (Mobile View)</title>
+    <title>Katering Kuttab</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -463,7 +463,7 @@
     </div>
 
     <!-- NEW MODAL: Proof View (Popup Gambar) -->
-    <div id="modalProofView" class="hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4">
+    <div id="modalProofView" onclick="this.classList.add('hidden')" class="hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4">
         <div class="relative max-w-xs w-full">
             <button onclick="document.getElementById('modalProofView').classList.add('hidden')" class="absolute -top-10 right-0 text-white hover:text-gray-300 text-2xl">
                 <i class="fas fa-times"></i>
@@ -1897,31 +1897,56 @@
             const type = document.getElementById('targetType').value; 
             const editId = document.getElementById('editUserId').value; 
             const name = document.getElementById('inputUserName').value; 
-            const email = document.getElementById('inputUserEmail').value; 
+            let email = document.getElementById('inputUserEmail').value; 
             const className = document.getElementById('inputUserClass').value; 
             const allergy = document.getElementById('inputUserAllergy').value;
 
             if(!name || !email) return alert("Mohon lengkapi data!"); 
             
+            // Enforce lowercase
+            email = email.toLowerCase().trim();
+
             btn.disabled = true; 
             btn.innerText = "Proses..."; 
             
-            const payload = { 
-                name: name, 
-                email: email, 
-                role: type === 'murid' ? 'Murid' : document.getElementById('inputUserRoleAdmin').value, 
-                category: type === 'murid' ? document.getElementById('inputUserCategory').value : '-', 
-                class: type === 'murid' ? className : '-', 
-                jenjang: type === 'murid' ? document.getElementById('inputUserJenjang').value : '-',
-                status: type === 'murid' ? document.getElementById('inputUserStatus').value : '-', // BUG: This was not being used
-                status: type === 'murid' ? document.getElementById('inputUserStatus').value : '-',
-                allergy: type === 'murid' ? allergy : '-', // SAVE ALLERGY
-                updatedAt: new Date() 
-            }; 
-            
-            if(!editId) payload.createdAt = new Date(); 
-            
-            try { 
+            try {
+                // Check for duplicate email
+                const q = query(collection(db, "users"), where("email", "==", email));
+                const querySnapshot = await getDocs(q);
+                let isDuplicate = false;
+
+                if (!querySnapshot.empty) {
+                    if (editId) {
+                        // If editing, check if the duplicate is NOT the current user
+                        querySnapshot.forEach((doc) => {
+                            if (doc.id !== editId) isDuplicate = true;
+                        });
+                    } else {
+                        isDuplicate = true;
+                    }
+                }
+
+                if (isDuplicate) {
+                    alert("Email sudah terdaftar! Harap gunakan email lain.");
+                    btn.disabled = false;
+                    btn.innerText = editId ? "Update Data" : "Simpan";
+                    return;
+                }
+
+                const payload = { 
+                    name: name, 
+                    email: email, 
+                    role: type === 'murid' ? 'Murid' : document.getElementById('inputUserRoleAdmin').value, 
+                    category: type === 'murid' ? document.getElementById('inputUserCategory').value : '-', 
+                    class: type === 'murid' ? className : '-', 
+                    jenjang: type === 'murid' ? document.getElementById('inputUserJenjang').value : '-',
+                    status: type === 'murid' ? document.getElementById('inputUserStatus').value : '-',
+                    allergy: type === 'murid' ? allergy : '-', // SAVE ALLERGY
+                    updatedAt: new Date() 
+                }; 
+                
+                if(!editId) payload.createdAt = new Date(); 
+
                 if(editId) { 
                     await updateDoc(doc(db, "users", editId), payload); 
                     alert("Data diperbarui!"); 
@@ -1977,7 +2002,7 @@
                     for (const row of json) {
                         const payload = {
                             name: row.Nama || '',
-                            email: row.Email || '',
+                            email: (row.Email || '').toLowerCase().trim(),
                             class: row.Kelas || '-',
                             jenjang: row.Jenjang || 'Kuttab Awal',
                             status: row.Status || 'Santri Baru',
