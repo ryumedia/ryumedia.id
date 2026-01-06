@@ -189,6 +189,7 @@
                 <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
                     <!-- Redaksi Data Murid diubah menjadi Data Santri -->
                     <button onclick="switchAdminTab('students')" id="tab-students" class="nav-item active w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-medium transition text-gray-600 hover:bg-gray-50"><i class="fas fa-user-graduate w-5"></i> Data Santri</button>
+                    <button onclick="switchAdminTab('classes')" id="tab-classes" class="nav-item w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-medium transition text-gray-600 hover:bg-gray-50"><i class="fas fa-chalkboard w-5"></i> Data Kelas</button>
                     <button onclick="switchAdminTab('admins')" id="tab-admins" class="nav-item w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-medium transition text-gray-600 hover:bg-gray-50"><i class="fas fa-user-shield w-5"></i> Data Admin</button>
                     <button onclick="switchAdminTab('food')" id="tab-food" class="nav-item w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-medium transition text-gray-600 hover:bg-gray-50"><i class="fas fa-utensils w-5"></i> Menu Katering</button>
                     <!-- Redaksi Daftar Alergi Murid diubah menjadi Daftar Alergi Santri -->
@@ -224,11 +225,13 @@
                             <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                             <input type="text" id="searchStudentInput" onkeyup="filterStudents()" placeholder="Cari Nama..." class="pl-10 pr-4 py-2 border rounded-lg outline-none w-full text-sm">
                         </div>
-                        <input type="text" id="filterClassInput" onkeyup="filterStudents()" placeholder="Filter Kelas..." class="px-4 py-2 border rounded-lg outline-none w-full md:w-40 text-sm">
-                        <select id="filterJenjangInput" onchange="filterStudents()" class="px-4 py-2 border rounded-lg outline-none w-full md:w-40 text-sm bg-white cursor-pointer">
+                        <select id="filterJenjangInput" onchange="handleJenjangFilterChange()" class="px-4 py-2 border rounded-lg outline-none w-full md:w-40 text-sm bg-white cursor-pointer">
                             <option value="">Semua Jenjang</option>
                             <option value="Kuttab Awal">Kuttab Awal</option>
                             <option value="Qonuni">Qonuni</option>
+                        </select>
+                        <select id="filterClassInput" onchange="filterStudents()" class="px-4 py-2 border rounded-lg outline-none w-full md:w-40 text-sm bg-white cursor-pointer">
+                            <option value="">Semua Kelas</option>
                         </select>
                         <select id="filterStatusInput" onchange="filterStudents()" class="px-4 py-2 border rounded-lg outline-none w-full md:w-40 text-sm bg-white cursor-pointer">
                             <option value="">Semua Status</option>
@@ -237,11 +240,44 @@
                             <option value="Non Aktif">Non Aktif</option>
                         </select>
                     </div>
-                    <div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 border-b text-gray-600"><tr><th class="p-4">Nama Santri</th><th class="p-4">Kelas</th><th class="p-4">Jenjang</th><th class="p-4">Status</th><th class="p-4">Email</th><th class="p-4">Kategori</th><th class="p-4 text-center">Aksi</th></tr></thead><tbody id="studentTableBody"></tbody></table></div>
+                    <div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 border-b text-gray-600"><tr><th class="p-4">Nama Santri</th><th class="p-4">Jenjang</th><th class="p-4">Kelas</th><th class="p-4">Status</th><th class="p-4">Email</th><th class="p-4">Kategori</th><th class="p-4 text-center">Aksi</th></tr></thead><tbody id="studentTableBody"></tbody></table></div>
                 </div>
+                
+                <!-- SECTION: DATA KELAS (NEW) -->
+                <div id="section-classes" class="cms-section hidden">
+                    <div class="flex justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800">Data Kelas</h2>
+                        <button onclick="openModalClass()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm shadow hover:bg-blue-700 flex items-center gap-2"><i class="fas fa-plus"></i> Tambah Kelas</button>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
+                        <table class="w-full text-left text-sm"><thead class="bg-gray-50 border-b text-gray-600"><tr><th class="p-4 w-16 text-center">No</th><th class="p-4">Nama Kelas</th><th class="p-4">Jenjang</th><th class="p-4 text-center w-32">Aksi</th></tr></thead><tbody id="classTableBody"></tbody></table>
+                    </div>
+                </div>
+
                 <div id="section-admins" class="cms-section hidden"><div class="flex justify-between mb-6"><h2 class="text-2xl font-bold text-slate-800">Data Admin</h2><button onclick="openModalUser('admin')" class="bg-slate-700 text-white px-4 py-2 rounded-lg text-sm shadow hover:bg-slate-800 flex items-center gap-2"><i class="fas fa-plus"></i> Tambah Admin</button></div><div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 border-b text-gray-600"><tr><th class="p-4">Nama Admin</th><th class="p-4">Email</th><th class="p-4">Role</th><th class="p-4 text-center">Aksi</th></tr></thead><tbody id="adminTableBody"></tbody></table></div></div>
                 <div id="section-food" class="cms-section hidden"><h2 class="text-2xl font-bold text-slate-800 mb-6">Manage Menu (Grid)</h2><div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start"><div class="bg-white p-6 rounded-xl shadow-sm border sticky top-0"><h3 class="font-bold text-lg mb-4 border-b pb-2">Editor Menu</h3><div class="mb-4"><label class="block text-xs font-bold text-gray-400 mb-1">MENGATUR TANGGAL</label><div id="adminSelectedDateDisplay" class="font-bold text-blue-700 text-lg">Pilih tanggal di kalender</div><input type="hidden" id="adminSelectedDateRaw"></div><div id="adminMenuForm" class="opacity-50 pointer-events-none transition-opacity"><div class="flex items-center justify-between mb-4 bg-gray-50 p-3 rounded-lg border"><span class="text-sm font-semibold text-gray-700">Set Sebagai Libur?</span><div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in"><input type="checkbox" name="toggle" id="menuHolidayInput" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300"/><label for="toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label></div></div><div id="menuNameContainer"><label class="block text-xs font-bold text-gray-500 mb-1">NAMA MAKANAN</label><input type="text" id="menuNameInput" class="w-full border p-2 rounded-lg mb-4 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Contoh: Ayam Bakar"></div><button onclick="saveMenu()" id="btnSaveMenu" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-medium">Simpan Menu</button></div><p class="text-[10px] text-gray-400 mt-4 text-center">Tips: Klik tanggal di kanan untuk mulai mengedit.</p></div><div class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border"><div class="flex justify-between items-center mb-6"><div class="flex items-center gap-2"><button onclick="changeAdminMonth(-1)" class="p-2 bg-gray-100 hover:bg-gray-200 rounded text-gray-600"><i class="fas fa-chevron-left"></i></button><span id="adminMonthLabel" class="font-bold text-lg w-40 text-center">Desember 2025</span><button onclick="changeAdminMonth(1)" class="p-2 bg-gray-100 hover:bg-gray-200 rounded text-gray-600"><i class="fas fa-chevron-right"></i></button></div><div class="flex gap-3 text-[10px]"><span class="flex items-center gap-1"><div class="w-3 h-3 bg-green-100 border border-green-300 rounded"></div> Ada Menu</span><span class="flex items-center gap-1"><div class="w-3 h-3 bg-red-100 border border-red-300 rounded"></div> Libur</span></div></div><div class="grid grid-cols-4 gap-2 mb-2 text-center text-xs font-bold text-gray-400 uppercase"><div>Sen</div><div>Selasa</div><div>Rabu</div><div>Kamis</div></div><div id="adminCalendarGrid" class="grid grid-cols-4 gap-2 text-sm"></div></div></div></div>
-                <div id="section-finance" class="cms-section hidden"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-slate-800">Laporan Pesanan</h2><div class="flex gap-2"><button onclick="openModalPricing()" class="bg-yellow-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-yellow-600 flex items-center gap-2 shadow"><i class="fas fa-tags"></i> Edit Harga</button><button onclick="fetchOrders()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300 shadow"><i class="fas fa-sync-alt"></i> Refresh</button></div></div><div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 border-b"><tr><th class="p-4">Tanggal Order</th><th class="p-4">Pemesan</th><th class="p-4">Detail</th><th class="p-4">Bukti</th></tr></thead><tbody id="orderTableBody"><tr><td colspan="4" class="p-4 text-center text-gray-400">Memuat data...</td></tr></tbody></table></div></div>
+                <div id="section-finance" class="cms-section hidden">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <h2 class="text-2xl font-bold text-slate-800">Laporan Pesanan</h2>
+                        <div class="flex gap-2">
+                            <button onclick="openModalPricing()" class="bg-yellow-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-yellow-600 flex items-center gap-2 shadow"><i class="fas fa-tags"></i> Edit Harga</button>
+                            <button onclick="fetchOrders()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300 shadow"><i class="fas fa-sync-alt"></i> Refresh</button>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border mb-4">
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            <input type="text" id="financeSearchInput" onkeyup="handleFinanceSearch()" placeholder="Cari Nama Pemesan..." class="pl-10 pr-4 py-2 border rounded-lg outline-none w-full text-sm">
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 border-b"><tr><th class="p-4">Tanggal Order</th><th class="p-4">Pemesan</th><th class="p-4">Detail</th><th class="p-4">Bukti</th></tr></thead>
+                            <tbody id="orderTableBody"><tr><td colspan="4" class="p-4 text-center text-gray-400">Memuat data...</td></tr></tbody>
+                        </table>
+                    </div>
+                    <div id="financePaginationControls" class="mt-4 flex justify-center items-center gap-2 text-sm"></div>
+                </div>
                 
                 <!-- SECTION: REKAP PEMESANAN -->
                 <div id="section-rekap" class="cms-section hidden">
@@ -413,8 +449,8 @@
                 <div><label class="block text-xs font-bold text-gray-500 mb-1">Email</label><input type="email" id="inputUserEmail" class="w-full border p-2 rounded outline-none"></div>
                 
                 <!-- Field Kelas & Kategori (Murid) -->
-                <div id="fieldClass" class="hidden"><label class="block text-xs font-bold text-gray-500 mb-1">Kelas</label><input type="text" id="inputUserClass" class="w-full border p-2 rounded outline-none" placeholder="Contoh: 10 IPA 1"></div>
-                <div id="fieldJenjang" class="hidden"><label class="block text-xs font-bold text-gray-500 mb-1">Jenjang</label><select id="inputUserJenjang" class="w-full border p-2 rounded bg-white"><option value="Kuttab Awal">Kuttab Awal</option><option value="Qonuni">Qonuni</option></select></div>
+                <div id="fieldJenjang" class="hidden"><label class="block text-xs font-bold text-gray-500 mb-1">Jenjang</label><select id="inputUserJenjang" onchange="updateClassDropdown()" class="w-full border p-2 rounded bg-white"><option value="Kuttab Awal">Kuttab Awal</option><option value="Qonuni">Qonuni</option></select></div>
+                <div id="fieldClass" class="hidden"><label class="block text-xs font-bold text-gray-500 mb-1">Kelas</label><select id="inputUserClass" class="w-full border p-2 rounded bg-white"></select></div>
                 <div id="fieldStatus" class="hidden"><label class="block text-xs font-bold text-gray-500 mb-1">Status</label><select id="inputUserStatus" class="w-full border p-2 rounded bg-white"><option value="Santri Baru">Santri Baru</option><option value="Santri Lama">Santri Lama</option><option value="Non Aktif">Non Aktif</option></select></div>
                 <div id="fieldCategory" class="hidden"><label class="block text-xs font-bold text-gray-500 mb-1">Kategori</label><select id="inputUserCategory" class="w-full border p-2 rounded bg-white"><option value="Reguler">Reguler</option><option value="Beasiswa">Beasiswa</option><option value="Anak Guru">Anak Guru</option></select></div>
                 
@@ -506,6 +542,25 @@
         </div>
     </div>
 
+    <!-- Modal Class (NEW) -->
+    <div id="modalClass" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-sm p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-lg" id="modalClassTitle">Tambah Kelas</h3><button onclick="closeModalClass()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button></div>
+            <div class="space-y-4 mb-6">
+                <input type="hidden" id="editClassId">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Nama Kelas</label>
+                    <input type="text" id="inputClassName" class="w-full border p-2 rounded outline-none" placeholder="Contoh: 1A">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Jenjang</label>
+                    <select id="inputClassJenjang" class="w-full border p-2 rounded bg-white"><option value="Kuttab Awal">Kuttab Awal</option><option value="Qonuni">Qonuni</option></select>
+                </div>
+            </div>
+            <div class="flex gap-2 justify-end pt-2 border-t"><button onclick="closeModalClass()" class="px-4 py-2 text-gray-600 text-sm hover:bg-gray-100 rounded">Batal</button><button onclick="saveClass()" id="btnSaveClass" class="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 shadow">Simpan</button></div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, doc, setDoc, updateDoc, deleteDoc, query, orderBy, onSnapshot, where, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -534,6 +589,10 @@
         let selectedDates = new Set();
         let PRICING = { 'reguler': 15000, 'anak_guru': 10000, 'beasiswa': 0 };
         let ordersDataMap = {}; // New: Store order data locally for modal view
+        let allFetchedOrders = []; // NEW: To store all orders for filtering/pagination
+        let financeCurrentPage = 1; // NEW
+        let allClasses = []; // NEW: Store classes globally
+        const financeRowsPerPage = 10; // NEW
         
         // Views
         let viewDate = new Date(); 
@@ -896,8 +955,12 @@
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById(`section-${tab}`).classList.remove('hidden');
             document.getElementById(`tab-${tab}`).classList.add('active');
-            if(tab === 'students') fetchUsersByRole('Murid');
+            if(tab === 'students') {
+                fetchUsersByRole('Murid');
+                updateFilterClassDropdown();
+            }
             if(tab === 'admins') fetchUsersByRole('Admin');
+            if(tab === 'classes') fetchClasses();
             if(tab === 'food') renderAdminCalendar(); 
             if(tab === 'finance') fetchOrders();
             if(tab === 'rekap') fetchRekapData();
@@ -1773,18 +1836,18 @@
             
             for (let i = 0; i < tr.length; i++) { 
                 const tdName = tr[i].getElementsByTagName('td')[0]; 
-                const tdClass = tr[i].getElementsByTagName('td')[1];
-                const tdJenjang = tr[i].getElementsByTagName('td')[2];
+                const tdJenjang = tr[i].getElementsByTagName('td')[1];
+                const tdClass = tr[i].getElementsByTagName('td')[2];
                 const tdStatus = tr[i].getElementsByTagName('td')[3];
 
                 if (tdName && tdClass && tdJenjang && tdStatus) { 
                     const txtName = tdName.textContent.toLowerCase();
-                    const txtClass = tdClass.textContent.toLowerCase();
+                    const txtClass = tdClass.textContent.toLowerCase().trim();
                     const txtJenjang = tdJenjang.textContent.toLowerCase();
                     const txtStatus = tdStatus.textContent.toLowerCase();
 
                     const matchName = txtName.indexOf(filterName) > -1;
-                    const matchClass = txtClass.indexOf(filterClass) > -1;
+                    const matchClass = filterClass === "" || txtClass === filterClass;
                     const matchJenjang = filterJenjang === "" || txtJenjang.indexOf(filterJenjang) > -1;
                     const matchStatus = filterStatus === "" || txtStatus.indexOf(filterStatus) > -1;
 
@@ -1824,7 +1887,7 @@
                         if(u.category === 'Anak Guru') badgeColor = "bg-green-100 text-green-800";
                         else if(u.category === 'Beasiswa') badgeColor = "bg-yellow-100 text-yellow-800";
                         const col3 = `<span class="${badgeColor} px-2 py-1 rounded text-xs">${u.category}</span>`;
-                        tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-4 font-medium">${u.name}</td><td class="p-4 text-gray-600">${u.class || '-'}</td><td class="p-4 text-gray-600">${u.jenjang || '-'}</td><td class="p-4 text-gray-600">${u.status || '-'}</td><td class="p-4 text-gray-600">${u.email}</td><td class="p-4">${col3}</td><td class="p-4 text-center"><button onclick="prepareEditUser('${dataString}')" class="text-blue-600 mx-1"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteUser('${u.id}', '${type}')" class="text-red-500 mx-1"><i class="fas fa-trash"></i></button></td></tr>`;
+                        tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-4 font-medium">${u.name}</td><td class="p-4 text-gray-600">${u.jenjang || '-'}</td><td class="p-4 text-gray-600">${u.class || '-'}</td><td class="p-4 text-gray-600">${u.status || '-'}</td><td class="p-4 text-gray-600">${u.email}</td><td class="p-4">${col3}</td><td class="p-4 text-center"><button onclick="prepareEditUser('${dataString}')" class="text-blue-600 mx-1"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteUser('${u.id}', '${type}')" class="text-red-500 mx-1"><i class="fas fa-trash"></i></button></td></tr>`;
                     } else {
                         const col3 = `<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs">${u.role}</span>`;
                         tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-4 font-medium">${u.name}</td><td class="p-4 text-gray-600">${u.email}</td><td class="p-4">${col3}</td><td class="p-4 text-center"><button onclick="prepareEditUser('${dataString}')" class="text-blue-600 mx-1"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteUser('${u.id}', '${type}')" class="text-red-500 mx-1"><i class="fas fa-trash"></i></button></td></tr>`;
@@ -1837,7 +1900,7 @@
         }
 
         // --- UPDATED: OPEN MODAL WITH CLASS & ALLERGY ---
-        window.openModalUser = function(type) { 
+        window.openModalUser = async function(type) { 
             document.getElementById('modalUser').classList.remove('hidden'); 
             document.getElementById('targetType').value = type; 
             document.getElementById('editUserId').value = ""; 
@@ -1854,7 +1917,10 @@
                 document.getElementById('fieldStatus').classList.remove('hidden');
                 document.getElementById('fieldAllergy').classList.remove('hidden'); // SHOW ALLERGY
                 document.getElementById('fieldRole').classList.add('hidden'); 
-                document.getElementById('inputUserClass').value = ""; 
+                
+                // Load classes and populate dropdown
+                await loadClassesGlobal();
+                updateClassDropdown();
                 document.getElementById('inputUserAllergy').value = ""; // RESET ALLERGY
             } else { 
                 document.getElementById('fieldCategory').classList.add('hidden'); 
@@ -1869,7 +1935,7 @@
         window.closeModalUser = function() { document.getElementById('modalUser').classList.add('hidden'); }
 
         // --- UPDATED: PREPARE EDIT WITH CLASS & ALLERGY ---
-        window.prepareEditUser = function(userJson) { 
+        window.prepareEditUser = async function(userJson) { 
             const user = JSON.parse(userJson); 
             const type = user.role === 'Murid' ? 'murid' : 'admin'; 
             openModalUser(type); 
@@ -1882,13 +1948,57 @@
             
             if(type === 'murid') { 
                 document.getElementById('inputUserCategory').value = user.category; 
-                document.getElementById('inputUserClass').value = user.class || ""; 
                 document.getElementById('inputUserJenjang').value = user.jenjang || "Kuttab Awal";
                 document.getElementById('inputUserStatus').value = user.status || "Santri Lama";
                 document.getElementById('inputUserAllergy').value = user.allergy || ""; // LOAD ALLERGY
+                
+                // Wait for classes to load then set value
+                await loadClassesGlobal();
+                updateClassDropdown();
+                document.getElementById('inputUserClass').value = user.class || ""; 
             } else { 
                 document.getElementById('inputUserRoleAdmin').value = user.role; 
             } 
+        }
+
+        // --- NEW: CLASS DROPDOWN LOGIC ---
+        window.loadClassesGlobal = async function() {
+            if(allClasses.length > 0) return; // Already loaded
+            const snapshot = await getDocs(collection(db, "classes"));
+            allClasses = [];
+            snapshot.forEach(doc => allClasses.push({ id: doc.id, ...doc.data() }));
+            allClasses.sort((a, b) => (a.jenjang || "").localeCompare(b.jenjang || "") || a.name.localeCompare(b.name, undefined, { numeric: true }));
+        }
+
+        window.updateClassDropdown = function() {
+            const jenjang = document.getElementById('inputUserJenjang').value;
+            const classSelect = document.getElementById('inputUserClass');
+            classSelect.innerHTML = '<option value="">- Pilih Kelas -</option>';
+            
+            const filtered = allClasses.filter(c => (c.jenjang || 'Kuttab Awal') === jenjang);
+            filtered.forEach(c => {
+                classSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+            });
+        }
+
+        // --- NEW: FILTER CLASS DROPDOWN LOGIC ---
+        window.updateFilterClassDropdown = async function() {
+            await loadClassesGlobal();
+            const jenjang = document.getElementById('filterJenjangInput').value;
+            const classSelect = document.getElementById('filterClassInput');
+            classSelect.innerHTML = '<option value="">Semua Kelas</option>';
+            
+            let filtered = allClasses;
+            if(jenjang) filtered = allClasses.filter(c => (c.jenjang || 'Kuttab Awal') === jenjang);
+            
+            filtered.forEach(c => {
+                classSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+            });
+        }
+
+        window.handleJenjangFilterChange = async function() {
+            await updateFilterClassDropdown();
+            filterStudents();
         }
 
         // --- UPDATED: SAVE USER WITH CLASS & ALLERGY ---
@@ -1961,6 +2071,66 @@
             } 
             btn.disabled = false; 
         }
+
+        // --- NEW: CLASS MANAGEMENT ---
+        window.fetchClasses = async function() {
+            const tbody = document.getElementById('classTableBody');
+            tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center"><div class="loader"></div></td></tr>';
+            try {
+                const snapshot = await getDocs(collection(db, "classes"));
+                allClasses = []; // Update global
+                snapshot.forEach(doc => allClasses.push({ id: doc.id, ...doc.data() }));
+                allClasses.sort((a, b) => (a.jenjang || "").localeCompare(b.jenjang || "") || a.name.localeCompare(b.name, undefined, { numeric: true }));
+                
+                const classes = allClasses; // Use global
+                
+                tbody.innerHTML = "";
+                if (classes.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-400">Belum ada data kelas.</td></tr>';
+                    return;
+                }
+                classes.forEach((c, index) => {
+                    const safeName = c.name.replace(/'/g, "\\'");
+                    const safeJenjang = c.jenjang ? c.jenjang.replace(/'/g, "\\'") : 'Kuttab Awal';
+                    tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-4 text-center">${index + 1}</td><td class="p-4 font-bold text-gray-800">${c.name}</td><td class="p-4 text-gray-600">${c.jenjang || 'Kuttab Awal'}</td><td class="p-4 text-center"><button onclick="openModalClass('${c.id}', '${safeName}', '${safeJenjang}')" class="text-blue-600 mx-1"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteClass('${c.id}')" class="text-red-500 mx-1"><i class="fas fa-trash"></i></button></td></tr>`;
+                });
+            } catch (e) { console.error(e); tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-red-500">Gagal memuat data.</td></tr>'; }
+        }
+
+        window.openModalClass = function(id = null, name = null, jenjang = 'Kuttab Awal') {
+            document.getElementById('modalClass').classList.remove('hidden');
+            document.getElementById('editClassId').value = id || "";
+            document.getElementById('inputClassName').value = name || "";
+            document.getElementById('inputClassJenjang').value = jenjang || "Kuttab Awal";
+            document.getElementById('modalClassTitle').innerText = id ? "Edit Kelas" : "Tambah Kelas";
+        }
+
+        window.closeModalClass = function() { document.getElementById('modalClass').classList.add('hidden'); }
+
+        window.saveClass = async function() {
+            const btn = document.getElementById('btnSaveClass');
+            const id = document.getElementById('editClassId').value;
+            const name = document.getElementById('inputClassName').value.trim();
+            const jenjang = document.getElementById('inputClassJenjang').value;
+            if(!name) return alert("Nama kelas tidak boleh kosong!");
+            btn.disabled = true; btn.innerText = "...";
+            const payload = { name: name, jenjang: jenjang };
+            try {
+                if(id) {
+                    await updateDoc(doc(db, "classes", id), payload);
+                } else {
+                    payload.createdAt = new Date();
+                    await addDoc(collection(db, "classes"), payload);
+                }
+                alert("Berhasil disimpan!"); closeModalClass(); fetchClasses();
+            } catch(e) { 
+                alert("Gagal: " + e.message); 
+            } finally {
+                btn.disabled = false; btn.innerText = "Simpan";
+            }
+        }
+
+        window.deleteClass = async function(id) { if(confirm("Hapus kelas ini?")) { try { await deleteDoc(doc(db, "classes", id)); fetchClasses(); } catch(e) { alert("Gagal: " + e.message); } } }
 
         // --- NEW: EXCEL UPLOAD ---
         window.openModalUpload = function() {
@@ -2113,60 +2283,98 @@
             } 
         }
 
-        // --- UPDATED: FETCH ORDERS (Admin view with Base64 Modal) ---
+        // --- FINANCE PAGE LOGIC (PAGINATION & SEARCH) ---
         window.fetchOrders = async function() { 
             const tbody = document.getElementById('orderTableBody'); 
             if(tbody) tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center"><div class="loader"></div></td></tr>'; 
             
             try { 
                 const snapshot = await getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc"))); 
-                if(tbody) tbody.innerHTML = ""; 
-                let totalPorsi = 0; 
-                
                 ordersDataMap = {}; // Reset data lokal
-
+                allFetchedOrders = []; // Reset all orders array
+                
                 snapshot.forEach(doc => { 
                     const d = doc.data(); 
-                    totalPorsi += d.dates ? d.dates.length : 0; 
-                    
-                    // Simpan data order (termasuk proofImage base64) ke memory lokal
-                    // Agar tidak perlu render string base64 yang panjang di HTML
+                    d.id = doc.id; // Ensure ID is attached for later use
                     ordersDataMap[doc.id] = d;
-
-                    if(tbody) { 
-                        let orderDate = "-"; 
-                        if(d.createdAt && d.createdAt.toDate) orderDate = d.createdAt.toDate().toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); 
-                        const dateList = d.dates ? d.dates.join(", ") : "-"; 
-                        
-                        // Cek apakah ada bukti gambar
-                        let proofBtn = '<span class="text-gray-300 text-xs">-</span>';
-                        if (d.proofImage) {
-                            // Panggil fungsi viewProof dengan ID dokumen
-                            proofBtn = `<button onclick="viewProof('${doc.id}')" class="bg-blue-100 text-blue-600 px-3 py-1 rounded text-xs font-bold hover:bg-blue-200 transition"><i class="fas fa-eye mr-1"></i> Lihat Bukti</button>`;
-                        } else if (d.proofUrl) {
-                            // Support legacy data (yang masih pakai URL Storage)
-                             proofBtn = `<a href="${d.proofUrl}" target="_blank" class="text-blue-600 underline text-xs">Link Bukti</a>`;
-                        }
-
-                        tbody.innerHTML += `
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="p-4 text-xs text-gray-500 font-medium">${orderDate}</td>
-                                <td class="p-4">
-                                    <div class="font-bold">${d.userName}</div>
-                                    <div class="text-xs text-gray-500">${d.userCategory}</div>
-                                </td>
-                                <td class="p-4">
-                                    <div class="text-xs">Tgl Catering: <span class="text-gray-600">${dateList}</span></div>
-                                    <div class="font-bold text-green-600 mt-1">Rp ${d.totalPrice.toLocaleString()}</div>
-                                </td>
-                                <td class="p-4">${proofBtn}</td>
-                            </tr>`; 
-                    } 
+                    allFetchedOrders.push(d); // Populate the master array
                 }); 
-                
-                const totalEl = document.getElementById('totalPorsi'); 
-                if(totalEl) totalEl.innerText = totalPorsi; 
+
+                financeCurrentPage = 1; // Reset to first page
+                document.getElementById('financeSearchInput').value = ""; // Reset search input
+                renderFinancePage(); // Call the main rendering function
+
             } catch (e) { console.error(e); } 
+        }
+
+        function renderFinancePage() {
+            const tbody = document.getElementById('orderTableBody');
+            if(!tbody) return;
+
+            const searchQuery = document.getElementById('financeSearchInput').value.toLowerCase();
+            const filteredOrders = allFetchedOrders.filter(order => order.userName.toLowerCase().includes(searchQuery));
+
+            const startIndex = (financeCurrentPage - 1) * financeRowsPerPage;
+            const endIndex = startIndex + financeRowsPerPage;
+            const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+
+            tbody.innerHTML = "";
+            if (paginatedOrders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-400">Tidak ada data yang cocok.</td></tr>';
+            } else {
+                paginatedOrders.forEach(d => {
+                    let orderDate = "-"; 
+                    if(d.createdAt && d.createdAt.toDate) orderDate = d.createdAt.toDate().toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); 
+                    const dateList = d.dates ? d.dates.join(", ") : "-"; 
+                    let proofBtn = '<span class="text-gray-300 text-xs">-</span>';
+                    if (d.proofImage) {
+                        proofBtn = `<button onclick="viewProof('${d.id}')" class="bg-blue-100 text-blue-600 px-3 py-1 rounded text-xs font-bold hover:bg-blue-200 transition"><i class="fas fa-eye mr-1"></i> Lihat Bukti</button>`;
+                    } else if (d.proofUrl) {
+                        proofBtn = `<a href="${d.proofUrl}" target="_blank" class="text-blue-600 underline text-xs">Link Bukti</a>`;
+                    }
+                    tbody.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-4 text-xs text-gray-500 font-medium">${orderDate}</td>
+                            <td class="p-4">
+                                <div class="font-bold">${d.userName}</div>
+                                <div class="text-xs text-gray-500">${d.userCategory}</div>
+                            </td>
+                            <td class="p-4">
+                                <div class="text-xs">Tgl Catering: <span class="text-gray-600">${dateList}</span></div>
+                                <div class="font-bold text-green-600 mt-1">Rp ${d.totalPrice.toLocaleString()}</div>
+                            </td>
+                            <td class="p-4">${proofBtn}</td>
+                        </tr>`; 
+                });
+            }
+            renderFinancePagination(filteredOrders.length);
+        }
+
+        function renderFinancePagination(totalItems) {
+            const paginationContainer = document.getElementById('financePaginationControls');
+            if (!paginationContainer) return;
+            const totalPages = Math.ceil(totalItems / financeRowsPerPage);
+            paginationContainer.innerHTML = "";
+            if (totalPages <= 1) return;
+            const prevDisabled = financeCurrentPage === 1;
+            paginationContainer.innerHTML += `<button onclick="changeFinancePage(${financeCurrentPage - 1})" ${prevDisabled ? 'disabled' : ''} class="px-3 py-1 border rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed">Sebelumnya</button>`;
+            paginationContainer.innerHTML += `<span class="text-sm font-medium">Halaman ${financeCurrentPage} dari ${totalPages}</span>`;
+            const nextDisabled = financeCurrentPage === totalPages;
+            paginationContainer.innerHTML += `<button onclick="changeFinancePage(${financeCurrentPage + 1})" ${nextDisabled ? 'disabled' : ''} class="px-3 py-1 border rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed">Selanjutnya</button>`;
+        }
+
+        window.changeFinancePage = function(page) {
+            const searchQuery = document.getElementById('financeSearchInput').value.toLowerCase();
+            const filteredOrders = allFetchedOrders.filter(order => order.userName.toLowerCase().includes(searchQuery));
+            const totalPages = Math.ceil(filteredOrders.length / financeRowsPerPage);
+            if (page < 1 || page > totalPages) return;
+            financeCurrentPage = page;
+            renderFinancePage();
+        }
+
+        window.handleFinanceSearch = function() {
+            financeCurrentPage = 1;
+            renderFinancePage();
         }
 
         // --- NEW: FUNCTION TO OPEN PROOF MODAL ---
