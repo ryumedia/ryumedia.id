@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Katering Kuttab</title>
+    <title>Katering KAF Gedebage</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -99,7 +99,7 @@
                 <!-- Tab Order -->
                 <div id="tabContent-order" class="hidden p-4 animate-fade-in">
                     <div class="bg-white p-4 rounded-xl shadow-sm border mb-4">
-                        <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-gray-800"><i class="far fa-calendar-check text-blue-600 mr-1"></i> Pilih Tanggal</h3><div class="flex items-center bg-gray-100 rounded p-1"><button onclick="changeMonth(-1)" class="w-8 h-8 flex items-center justify-center hover:bg-white rounded shadow-sm"><i class="fas fa-chevron-left text-xs"></i></button><span id="calendarMonthLabel" class="text-xs font-bold px-2 w-24 text-center">...</span><button onclick="changeMonth(1)" class="w-8 h-8 flex items-center justify-center hover:bg-white rounded shadow-sm"><i class="fas fa-chevron-right text-xs"></i></button></div></div>
+                        <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-gray-800"><i class="far fa-calendar-check text-blue-600 mr-1"></i> Pilih Tanggal <span id="orderStatusBadge" class="hidden ml-2 text-[10px] px-2 py-1 rounded"></span></h3><div class="flex items-center bg-gray-100 rounded p-1"><button onclick="changeMonth(-1)" class="w-8 h-8 flex items-center justify-center hover:bg-white rounded shadow-sm"><i class="fas fa-chevron-left text-xs"></i></button><span id="calendarMonthLabel" class="text-xs font-bold px-2 w-24 text-center">...</span><button onclick="changeMonth(1)" class="w-8 h-8 flex items-center justify-center hover:bg-white rounded shadow-sm"><i class="fas fa-chevron-right text-xs"></i></button></div></div>
                         <div class="grid grid-cols-4 gap-1 mb-2 text-center text-[10px] font-bold text-gray-400 uppercase"><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div></div><div id="calendarGrid" class="grid grid-cols-4 gap-1 text-sm mb-4"></div>
                         <div class="flex gap-3 text-[10px] text-gray-500 justify-center border-t pt-2 flex-wrap">
                             <span class="flex items-center gap-1"><div class="w-2 h-2 rounded bg-blue-500"></div> Pilih</span>
@@ -197,6 +197,7 @@
                     <button onclick="switchAdminTab('finance')" id="tab-finance" class="nav-item w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-medium transition text-gray-600 hover:bg-gray-50"><i class="fas fa-wallet w-5"></i> Keuangan</button>
                     <button onclick="switchAdminTab('rekap')" id="tab-rekap" class="nav-item w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-medium transition text-gray-600 hover:bg-gray-50"><i class="fas fa-table w-5"></i> Rekap Pemesanan</button>
                     <button onclick="switchAdminTab('notes')" id="tab-notes" class="nav-item w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-medium transition text-gray-600 hover:bg-gray-50"><i class="fas fa-sticky-note w-5"></i> Catatan</button>
+                    <button onclick="switchAdminTab('report-settings')" id="tab-report-settings" class="nav-item w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-medium transition text-gray-600 hover:bg-gray-50"><i class="fas fa-clock w-5"></i> Pengaturan Laporan</button>
                 </nav>
             </aside>
             <div class="flex-1 p-4 md:p-8 overflow-y-auto">
@@ -342,6 +343,33 @@
                          <div class="text-center py-10 text-gray-400">Memuat catatan...</div>
                     </div>
                 </div>
+
+                <!-- SECTION: PENGATURAN LAPORAN (NEW) -->
+                <div id="section-report-settings" class="cms-section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800">Pengaturan Waktu Laporan</h2>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border p-6 max-w-lg">
+                        <div class="space-y-4">
+                            <div>
+                                <label for="openReportTime" class="block text-sm font-medium text-gray-700 mb-1">Buka Laporan (Jam)</label>
+                                <input type="time" id="openReportTime" class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                            <div>
+                                <label for="closeReportTime" class="block text-sm font-medium text-gray-700 mb-1">Tutup Laporan (Jam)</label>
+                                <input type="time" id="closeReportTime" class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                        </div>
+                        <div class="mt-6 text-right">
+                            <button onclick="saveReportSettings()" class="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm shadow hover:bg-blue-700">Simpan Pengaturan</button>
+                        </div>
+                        <div class="mt-6 text-xs text-gray-500 bg-gray-50 p-3 rounded-lg border">
+                            <i class="fas fa-info-circle mr-1"></i> 
+                            Santri hanya bisa mengirim laporan di antara waktu buka dan tutup. Waktu menggunakan zona waktu Indonesia Barat (WIB/GMT+7).
+                        </div>
+                    </div>
+                </div>
+
 
 
             </div>
@@ -593,6 +621,7 @@
         let financeCurrentPage = 1; // NEW
         let allClasses = []; // NEW: Store classes globally
         const financeRowsPerPage = 10; // NEW
+        let REPORT_SETTINGS = { open: '07:00', close: '16:00' };
         
         // Views
         let viewDate = new Date(); 
@@ -620,6 +649,17 @@
             } catch (e) { console.error(e); }
         }
 
+        async function loadReportSettings() {
+            try {
+                const docSnap = await getDoc(doc(db, "settings", "reportTime"));
+                if (docSnap.exists()) {
+                    REPORT_SETTINGS = docSnap.data();
+                } else {
+                    await setDoc(doc(db, "settings", "reportTime"), REPORT_SETTINGS);
+                }
+            } catch (e) { console.error("Error loading report settings:", e); }
+        }
+
         async function showDashboardForUser(user) {
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('navUser').classList.remove('hidden');
@@ -641,6 +681,7 @@
 
         async function checkSession() {
             await loadPricing(); // Ensure pricing is loaded first
+            await loadReportSettings(); // Load report settings
             const storedUser = localStorage.getItem('kateringUser');
             if (storedUser) {
                 currentUser = JSON.parse(storedUser);
@@ -757,7 +798,7 @@
             document.getElementById('pageTitle').innerText = titles[tabName];
             
             if(tabName === 'menu') renderMobileMenuList();
-            if(tabName === 'order') { viewDate = new Date(); generateFullMonthCalendar(); }
+            if(tabName === 'order') { viewDate = new Date(); generateFullMonthCalendar(); updateOrderSummary(); }
             if(tabName === 'history') { histDate = new Date(); generateHistoryList(); }
             
             // PROFILE RENDER
@@ -849,6 +890,31 @@
 
             btn.disabled = false;
             btn.innerText = "Simpan";
+        }
+
+        window.saveReportSettings = async function() {
+            const btn = event.target;
+            const openTime = document.getElementById('openReportTime').value;
+            const closeTime = document.getElementById('closeReportTime').value;
+
+            if (!openTime || !closeTime) {
+                return alert("Harap isi waktu buka dan tutup laporan!");
+            }
+
+            const settings = { open: openTime, close: closeTime };
+            btn.disabled = true;
+            btn.innerText = "Menyimpan...";
+
+            try {
+                await setDoc(doc(db, "settings", "reportTime"), settings);
+                REPORT_SETTINGS = settings; // Update local state
+                alert("Pengaturan waktu laporan berhasil disimpan.");
+            } catch (e) {
+                alert("Gagal menyimpan pengaturan: " + e.message);
+                console.error("Error saving report settings: ", e);
+            }
+            btn.disabled = false;
+            btn.innerText = "Simpan Pengaturan";
         }
 
         window.renderNotes = async function() {
@@ -966,6 +1032,10 @@
             if(tab === 'rekap') fetchRekapData();
             if(tab === 'allergies') fetchAllergies(); 
             if(tab === 'notes') renderAdminNotes();
+            if(tab === 'report-settings') {
+                document.getElementById('openReportTime').value = REPORT_SETTINGS.open;
+                document.getElementById('closeReportTime').value = REPORT_SETTINGS.close;
+            }
         }
 
         // --- STUDENT UI LOGIC ---
@@ -1081,6 +1151,18 @@
             return dates;
         }
 
+        window.previewProof = function(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('proofPreview').src = e.target.result;
+                    document.getElementById('proofPreview').classList.remove('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+                updateOrderSummary();
+            }
+        }
+
         window.toggleDate = function(el, dateStr) {
             // Logic Check for Sequential Selection (Cross-Month) - ONLY FOR SANTRI BARU
             if (currentUser && currentUser.status === 'Santri Baru') {
@@ -1114,14 +1196,47 @@
             else { selectedDates.add(dateStr); el.classList.add('selected'); }
             updateOrderSummary();
         }
+
+        function isReportOpen() {
+            if (!REPORT_SETTINGS || !REPORT_SETTINGS.open || !REPORT_SETTINGS.close) return true;
+            const now = new Date();
+            const wibTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Jakarta"}));
+            const openTimeParts = REPORT_SETTINGS.open.split(':');
+            const closeTimeParts = REPORT_SETTINGS.close.split(':');
+            
+            const openDate = new Date(wibTime);
+            openDate.setHours(parseInt(openTimeParts[0]), parseInt(openTimeParts[1]), 0);
+            
+            const closeDate = new Date(wibTime);
+            closeDate.setHours(parseInt(closeTimeParts[0]), parseInt(closeTimeParts[1]), 0);
+            
+            return wibTime >= openDate && wibTime <= closeDate;
+        }
+
         function updateOrderSummary() {
             const count = selectedDates.size;
             document.getElementById('totalDays').innerText = `${count} Hari`;
             document.getElementById('grandTotal').innerText = `Rp ${(count * currentUser.price).toLocaleString()}`;
             const btn = document.getElementById('btnOrder');
+            const badge = document.getElementById('orderStatusBadge');
             const hasProof = document.getElementById('proofInput').files.length > 0;
             const needsProof = currentUser.price > 0;
-            btn.disabled = !(count > 0 && (!needsProof || hasProof));
+            
+            const isOpen = isReportOpen();
+
+            if (!isOpen) {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fas fa-lock mr-2"></i> Laporan Tutup (${REPORT_SETTINGS.open} - ${REPORT_SETTINGS.close})`;
+                btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                btn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                if(badge) { badge.innerText = "TUTUP"; badge.className = "ml-2 text-[10px] px-2 py-1 rounded bg-red-100 text-red-600 font-bold inline-block"; }
+            } else {
+                btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                btn.disabled = !(count > 0 && (!needsProof || hasProof));
+                btn.innerText = "Kirim Laporan";
+                if(badge) { badge.innerText = "BUKA"; badge.className = "ml-2 text-[10px] px-2 py-1 rounded bg-green-100 text-green-600 font-bold inline-block"; }
+            }
         }
         window.changeHistMonth = function(offset) { histDate.setMonth(histDate.getMonth() + offset); generateHistoryList(); }
         
@@ -2236,6 +2351,12 @@
 
         // --- UPDATED: SUBMIT ORDER (Simpan Base64 ke Firestore) ---
         window.submitOrder = async function() { 
+            // Cek Waktu Laporan
+            if (!isReportOpen()) {
+                alert(`Katering Buka Pkl. ${REPORT_SETTINGS.open} sampai pkl. ${REPORT_SETTINGS.close} WIB.`);
+                return;
+            }
+
             const btn = document.getElementById('btnOrder'); 
             const fileInput = document.getElementById('proofInput'); 
             btn.disabled = true; 
