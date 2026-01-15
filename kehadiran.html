@@ -8,6 +8,7 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <style>
         .loader { border-top-color: #3498db; animation: spinner 1.5s linear infinite; }
         @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -471,7 +472,7 @@
                                             <label class="text-[9px] font-black text-slate-400 uppercase mb-1">Cetak</label>
                                             <input type="checkbox" ${user.isPrinted ? 'checked' : ''} onchange="window.togglePrintedStatus('${user.id}', this.checked)" class="w-5 h-5 rounded-md border-2 border-slate-100 text-blue-600 cursor-pointer shadow-sm">
                                         </div>
-                                        <button onclick="window.showUserQR('${user.id}', '${user.name.replace(/'/g, "\\'")}', '${user.wa}')" class="p-3.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-2xl transition-all shadow-sm">
+                                        <button onclick="window.showUserQR('${user.id}', '${user.name.replace(/'/g, "\\'")}', '${user.wa}', '${(user.division || '').replace(/'/g, "\\'")}')" class="p-3.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-2xl transition-all shadow-sm">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
                                         </button>
                                         <button onclick="window.showEditUserModal('${user.id}')" class="p-3.5 bg-slate-50 text-slate-500 hover:bg-slate-800 hover:text-white rounded-2xl transition-all shadow-sm">
@@ -907,8 +908,6 @@
         let photoWin = null;
         let pInterval = null;
         let shownLogIds = new Set();
-        let popupQueue = [];
-        let isPopupShowing = false;
 
         window.showAllPhotos = () => {
             if (photoWin && !photoWin.closed) { photoWin.focus(); return; }
@@ -916,8 +915,6 @@
             if (!photoWin) { alert('Izinkan pop-up!'); return; }
             
             shownLogIds = new Set(state.currentActivityLogs.map(l => l.userId));
-            popupQueue = [];
-            isPopupShowing = false;
 
             const html = `<html><head><script src="https://cdn.tailwindcss.com"><\/script><title>Live Gallery<\/title>
                 <style>
@@ -927,63 +924,79 @@
                     .animate-pop-out { animation: popOut 0.3s ease-in forwards; }
                 </style>
                 <\/head><body class="bg-slate-100 h-screen w-full overflow-hidden flex flex-col p-1 relative">
-                <div id="grid" class="grid grid-cols-[repeat(21,minmax(0,1fr))] grid-rows-[repeat(12,minmax(0,1fr))] gap-0.5 flex-grow w-full"><\/div>
+                <div id="grid" class="grid grid-cols-[repeat(23,minmax(0,1fr))] grid-rows-[repeat(11,minmax(0,1fr))] gap-0.5 flex-grow w-full"><\/div>
                 <div id="popup-overlay" class="fixed inset-0 flex items-center justify-center z-50 hidden pointer-events-none">
                     <div id="popup-card" class="bg-white/95 backdrop-blur-sm p-8 rounded-[3rem] shadow-2xl border-4 border-white flex flex-col items-center gap-6 max-w-lg w-full mx-4 transform"></div>
                 </div>
+                <script>
+                    const queue = [];
+                    let isShowing = false;
+
+                    window.updateGrid = (html) => {
+                        const grid = document.getElementById('grid');
+                        if(grid) grid.innerHTML = html;
+                    };
+
+                    window.enqueuePopup = (user) => {
+                        queue.push(user);
+                        processQueue();
+                    };
+
+                    function processQueue() {
+                        if (queue.length === 0 || isShowing) return;
+                        
+                        isShowing = true;
+                        const user = queue.shift();
+                        const overlay = document.getElementById('popup-overlay');
+                        const card = document.getElementById('popup-card');
+                        
+                        if (overlay && card) {
+                            card.innerHTML = \`
+                                <div class="h-48 w-48 rounded-full bg-slate-200 overflow-hidden border-4 border-blue-500 shadow-xl">
+                                    <img src="\${user.photo || 'https://ui-avatars.com/api/?name='+user.name+'&background=random'}" class="w-full h-full object-cover">
+                                </div>
+                                <div class="text-center space-y-2">
+                                    <h2 class="text-4xl font-black text-slate-800 leading-none tracking-tight">\${user.name}</h2>
+                                    <p class="text-xl font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-4 py-1 rounded-full inline-block">\${user.division || 'Peserta'}</p>
+                                </div>
+                                <div class="absolute -top-4 -right-4 bg-green-500 text-white h-12 w-12 rounded-full flex items-center justify-center border-4 border-white shadow-lg animate-bounce">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                                </div>
+                            \`;
+                            
+                            overlay.classList.remove('hidden');
+                            card.classList.remove('animate-pop-out');
+                            card.classList.add('animate-pop-in');
+                            
+                            setTimeout(() => {
+                                card.classList.remove('animate-pop-in');
+                                card.classList.add('animate-pop-out');
+                                setTimeout(() => {
+                                    overlay.classList.add('hidden');
+                                    isShowing = false;
+                                    processQueue();
+                                }, 300);
+                            }, 3000);
+                        }
+                    }
+                <\/script>
             <\/body><\/html>`;
             photoWin.document.write(html);
             photoWin.document.close();
 
-            const processQueue = () => {
-                if (popupQueue.length === 0 || isPopupShowing || !photoWin || photoWin.closed) return;
-                
-                isPopupShowing = true;
-                const user = popupQueue.shift();
-                const overlay = photoWin.document.getElementById('popup-overlay');
-                const card = photoWin.document.getElementById('popup-card');
-                
-                if (overlay && card) {
-                    card.innerHTML = `
-                        <div class="h-48 w-48 rounded-full bg-slate-200 overflow-hidden border-4 border-blue-500 shadow-xl">
-                            <img src="${user.photo || 'https://ui-avatars.com/api/?name='+user.name+'&background=random'}" class="w-full h-full object-cover">
-                        </div>
-                        <div class="text-center space-y-2">
-                            <h2 class="text-4xl font-black text-slate-800 leading-none tracking-tight">${user.name}</h2>
-                            <p class="text-xl font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-4 py-1 rounded-full inline-block">${user.division || 'Peserta'}</p>
-                        </div>
-                        <div class="absolute -top-4 -right-4 bg-green-500 text-white h-12 w-12 rounded-full flex items-center justify-center border-4 border-white shadow-lg animate-bounce">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
-                        </div>
-                    `;
-                    
-                    overlay.classList.remove('hidden');
-                    card.classList.remove('animate-pop-out');
-                    card.classList.add('animate-pop-in');
-                    
-                    setTimeout(() => {
-                        card.classList.remove('animate-pop-in');
-                        card.classList.add('animate-pop-out');
-                        setTimeout(() => {
-                            overlay.classList.add('hidden');
-                            isPopupShowing = false;
-                            processQueue();
-                        }, 300);
-                    }, 3000);
-                }
-            };
-
             const update = () => {
                 if (!photoWin || photoWin.closed) { clearInterval(pInterval); return; }
                 const presentIds = new Set(state.currentActivityLogs.map(l => l.userId));
-                const container = photoWin.document.getElementById('grid');
-                if (container) {
-                    container.innerHTML = state.attendees.map(u => `
+                
+                const gridHtml = state.attendees.map(u => `
                         <div class="relative group w-full h-full">
                             <img src="${u.photo || 'https://ui-avatars.com/api/?name='+u.name+'&background=random'}" 
                                 class="w-full h-full object-cover rounded-[2px] shadow-sm transition-all ${!presentIds.has(u.id) ? 'grayscale opacity-30' : 'border border-blue-500'}">
                             ${presentIds.has(u.id) ? '<div class="absolute top-0.5 right-0.5 h-1.5 w-1.5 bg-green-500 rounded-full border border-white"></div>' : ''}
                         </div>`).join('');
+
+                if (photoWin.updateGrid) {
+                    photoWin.updateGrid(gridHtml);
                 }
 
                 const sortedLogs = [...state.currentActivityLogs].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
@@ -991,15 +1004,19 @@
                     if (!shownLogIds.has(log.userId)) {
                         shownLogIds.add(log.userId);
                         const user = state.attendees.find(u => u.id === log.userId);
-                        if (user) popupQueue.push(user);
+                        if (user && photoWin.enqueuePopup) {
+                            photoWin.enqueuePopup({
+                                name: user.name,
+                                photo: user.photo,
+                                division: user.division
+                            });
+                        }
                     }
                 });
-
-                if (!isPopupShowing && popupQueue.length > 0) processQueue();
             };
 
             setTimeout(update, 200);
-            pInterval = setInterval(update, 1000);
+            pInterval = setInterval(update, 2000);
         };
 
         window.downloadExcelReport = () => {
@@ -1022,63 +1039,112 @@
             a.click();
         };
 
-        window.downloadUserQR = (name, wa) => {
-            const qrCanvas = document.querySelector('#qr-c canvas');
+        window.downloadUserQR = (name, wa, division) => {
+            const qrCanvas = document.querySelector('#qr-card-c canvas');
             if (!qrCanvas) {
                 showToast("Gagal menemukan QR code untuk diunduh.");
                 return;
             }
 
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const padding = 40;
-            const qrSize = 240;
-            
-            // Set canvas dimensions
-            canvas.width = qrSize + (padding * 2);
-            canvas.height = qrSize + (padding * 2) + 80; // Extra space for text
+            const finalCanvas = document.createElement('canvas');
+            const ctx = finalCanvas.getContext('2d');
+            const cardWidth = 415;
+            const cardHeight = 660;
+            finalCanvas.width = cardWidth;
+            finalCanvas.height = cardHeight;
 
-            // Background
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const bgImage = new Image();
+            bgImage.crossOrigin = "anonymous";
+            bgImage.onload = () => {
+                // Draw background image
+                ctx.drawImage(bgImage, 0, 0, cardWidth, cardHeight);
 
-            // Draw QR Code
-            ctx.drawImage(qrCanvas, padding, padding, qrSize, qrSize);
+                // --- Layout Calculations (to mimic justify-evenly) ---
+                const padding = 12; // p-3
+                const qrBgWidth = qrCanvas.width + padding * 2;
+                const qrBgHeight = qrCanvas.height + padding * 2;
+                const textBlockHeight = 50; // Approximate height for name + division
+                const totalContentHeight = qrBgHeight + textBlockHeight;
+                const gap = (cardHeight - totalContentHeight) / 3;
 
-            // Draw Text
-            ctx.fillStyle = '#1e293b';
-            ctx.textAlign = 'center';
-            ctx.font = 'bold 24px sans-serif';
-            ctx.fillText(name, canvas.width / 2, qrSize + padding + 40);
-            ctx.font = '16px monospace';
-            ctx.fillStyle = '#2563eb';
-            ctx.fillText(wa, canvas.width / 2, qrSize + padding + 65);
+                // --- Draw white padded background for QR ---
+                const qrBgX = (cardWidth - qrBgWidth) / 2;
+                const qrBgY = gap + 90;
+                
+                ctx.fillStyle = 'white';
+                const radius = 8; // rounded-lg
+                ctx.beginPath();
+                ctx.moveTo(qrBgX + radius, qrBgY);
+                ctx.lineTo(qrBgX + qrBgWidth - radius, qrBgY);
+                ctx.quadraticCurveTo(qrBgX + qrBgWidth, qrBgY, qrBgX + qrBgWidth, qrBgY + radius);
+                ctx.lineTo(qrBgX + qrBgWidth, qrBgY + qrBgHeight - radius);
+                ctx.quadraticCurveTo(qrBgX + qrBgWidth, qrBgY + qrBgHeight, qrBgX + qrBgWidth - radius, qrBgY + qrBgHeight);
+                ctx.lineTo(qrBgX + radius, qrBgY + qrBgHeight);
+                ctx.quadraticCurveTo(qrBgX, qrBgY + qrBgHeight, qrBgX, qrBgY + qrBgHeight - radius);
+                ctx.lineTo(qrBgX, qrBgY + radius);
+                ctx.quadraticCurveTo(qrBgX, qrBgY, qrBgX + radius, qrBgY);
+                ctx.closePath();
+                ctx.fill();
 
-            // Trigger download
-            const link = document.createElement('a');
-            link.download = `QR_${name.replace(/\s/g, '_')}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
+                // Draw QR Code onto the white background
+                const qrX = qrBgX + padding;
+                const qrY = qrBgY + padding;
+                ctx.drawImage(qrCanvas, qrX, qrY);
+                
+                // --- Draw Text ---
+                const textY = qrBgY + qrBgHeight + gap - 70; // Start of text block + font size offset
+                
+                ctx.textAlign = 'center';
+                ctx.shadowColor = 'rgba(0,0,0,0.7)';
+                ctx.shadowBlur = 4;
+                ctx.shadowOffsetY = 2;
+                
+                // Name
+                ctx.font = 'bold 24px Montserrat, sans-serif';
+                ctx.fillStyle = '#3bc1c8';
+                ctx.fillText(name, cardWidth / 2, textY);
+
+                // Division
+                ctx.font = 'bold 24px Montserrat, sans-serif';
+                ctx.fillStyle = '#3bc1c8'; // slate-200
+                ctx.fillText(division, cardWidth / 2, textY + 50);
+                
+                // Reset shadow
+                ctx.shadowColor = 'transparent';
+
+                // Trigger download
+                const link = document.createElement('a');
+                link.download = `QR_${name.replace(/\s/g, '_')}.png`;
+                link.href = finalCanvas.toDataURL('image/png');
+                link.click();
+            };
+            bgImage.onerror = () => {
+                showToast("Gagal memuat gambar background. Pastikan URL gambar valid dan dapat diakses.");
+            };
+            bgImage.src = "https://i.imghippo.com/files/ADUK8862wc.png";
         };
 
-        window.showUserQR = (id, name, wa) => {
+        window.showUserQR = (id, name, wa, division) => {
             openModal(`
-                <div class="p-12 flex flex-col items-center gap-8">
-                    <div class="text-center">
-                        <h3 class="font-black text-3xl text-slate-800 leading-tight">${name}</h3>
-                        <p class="font-mono text-blue-600 font-bold mt-2 tracking-widest">${wa}</p>
+                <div class="p-8 flex flex-col items-center gap-6 bg-slate-900 rounded-3xl">
+                    <div id="qr-card" class="relative w-64 h-80 rounded-2xl flex flex-col justify-evenly items-center p-6 shadow-lg overflow-hidden bg-slate-900">
+                        <img src="https://i.imghippo.com/files/ADUK8862wc.png" class="absolute inset-0 w-full h-full object-cover z-0" alt="Background">
+                        <div id="qr-card-c" class="relative z-10 bg-white p-3 rounded-lg"></div>
+                        <div class="relative z-10 text-center" style="text-shadow: 0 2px 4px rgba(0,0,0,0.7)">
+                            <h3 class="font-bold text-xl text-white leading-tight">${name}</h3>
+                            <p class="font-semibold text-sm text-slate-200 mt-1">${division || '-'}</p>
+                        </div>
                     </div>
-                    <div id="qr-c" class="bg-white p-6 rounded-[2.5rem] shadow-2xl border border-slate-50"></div>
-                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em]">Kartu Presensi Peserta</p>
+                    <p class="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em]">Kartu Peserta</p>
                     <div class="w-full flex gap-4">
-                        <button onclick="window.closeModal()" class="flex-grow p-5 bg-slate-100 rounded-2xl font-bold">TUTUP</button>
-                        <button onclick="window.downloadUserQR('${name.replace(/'/g, "\\'")}', '${wa}')" class="flex-grow p-5 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-100">DOWNLOAD</button>
+                        <button onclick="window.closeModal()" class="flex-grow p-4 bg-slate-700 text-white rounded-xl font-bold">TUTUP</button>
+                        <button onclick="window.downloadUserQR('${name.replace(/'/g, "\\'")}', '${wa}', '${(division || '').replace(/'/g, "\\'")}')" class="flex-grow p-4 bg-blue-600 text-white rounded-xl font-black shadow-lg shadow-blue-900/50">DOWNLOAD</button>
                     </div>
                 </div>`);
             setTimeout(() => { 
-                const el = document.getElementById("qr-c");
-                if (el) new QRCode(el, { text: wa, width: 240, height: 240, colorDark: "#1e293b", correctLevel: QRCode.CorrectLevel.H }); 
-            }, 150);
+                const el = document.getElementById("qr-card-c");
+                if (el) new QRCode(el, { text: wa, width: 192, height: 192, colorDark: "#1e293b", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H }); 
+            }, 100);
         };
         window.onload = async () => { await initAuth(); };
     </script>
