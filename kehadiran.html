@@ -1121,14 +1121,14 @@
             bgImage.onerror = () => {
                 showToast("Gagal memuat gambar background. Pastikan URL gambar valid dan dapat diakses.");
             };
-            bgImage.src = "https://i.imghippo.com/files/ADUK8862wc.png";
+            bgImage.src = "https://firebasestorage.googleapis.com/v0/b/kehadiran-6345f.firebasestorage.app/o/ID%20CARD%20KOSONG.png?alt=media&token=0e3df504-04d4-4225-9f78-7d35b5ad096c";
         };
 
         window.showUserQR = (id, name, wa, division) => {
             openModal(`
                 <div class="p-8 flex flex-col items-center gap-6 bg-slate-900 rounded-3xl">
                     <div id="qr-card" class="relative w-64 h-80 rounded-2xl flex flex-col justify-evenly items-center p-6 shadow-lg overflow-hidden bg-slate-900">
-                        <img src="https://i.imghippo.com/files/ADUK8862wc.png" class="absolute inset-0 w-full h-full object-cover z-0" alt="Background">
+                        <img src="https://firebasestorage.googleapis.com/v0/b/kehadiran-6345f.firebasestorage.app/o/ID%20CARD%20KOSONG.png?alt=media&token=0e3df504-04d4-4225-9f78-7d35b5ad096c" class="absolute inset-0 w-full h-full object-cover z-0" alt="Background">
                         <div id="qr-card-c" class="relative z-10 bg-white p-3 rounded-lg"></div>
                         <div class="relative z-10 text-center" style="text-shadow: 0 2px 4px rgba(0,0,0,0.7)">
                             <h3 class="font-bold text-xl text-white leading-tight">${name}</h3>
@@ -1149,3 +1149,4 @@
         window.onload = async () => { await initAuth(); };
     </script>
 </body>
+
