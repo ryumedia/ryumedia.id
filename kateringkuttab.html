@@ -107,7 +107,7 @@
                             <span class="flex items-center gap-1"><div class="w-2 h-2 rounded bg-yellow-200"></div> Refund</span>
                         </div>
                     </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border space-y-4"><div><label class="block text-xs font-bold text-gray-500 mb-2 uppercase">Bukti Transfer</label><div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50" onclick="document.getElementById('proofInput').click()"><i class="fas fa-camera text-xl text-gray-300 mb-1"></i><p class="text-xs text-gray-500">Upload Foto</p><input type="file" id="proofInput" class="hidden" accept="image/*" onchange="previewProof(this)"></div><img id="proofPreview" class="hidden mt-2 h-16 w-auto rounded border mx-auto"></div><div class="border-t pt-3"><div class="flex justify-between text-sm mb-1"><span class="text-gray-500">Total Hari</span><span class="font-bold" id="totalDays">0</span></div><div class="flex justify-between text-lg mb-3"><span class="font-bold text-gray-800">Total Bayar</span><span class="font-bold text-blue-600" id="grandTotal">Rp 0</span></div><button onclick="submitOrder()" id="btnOrder" disabled class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold shadow-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:shadow-none transition">Kirim Laporan</button></div></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border space-y-4"><div><div class="flex justify-between items-center mb-2"><label class="block text-xs font-bold text-gray-500 uppercase mb-0">Bukti Transfer</label><button onclick="showUploadAdvice()" class="bg-orange-100 hover:bg-orange-200 text-orange-600 text-[10px] px-2 py-1 rounded font-bold flex items-center gap-1 transition"><i class="fas fa-exclamation-triangle"></i> SARAN UPLOAD</button></div><div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50" onclick="document.getElementById('proofInput').click()"><i class="fas fa-camera text-xl text-gray-300 mb-1"></i><p class="text-xs text-gray-500">Upload Foto</p><input type="file" id="proofInput" class="hidden" accept="image/*" onchange="previewProof(this)"></div><img id="proofPreview" class="hidden mt-2 h-16 w-auto rounded border mx-auto"></div><div class="border-t pt-3"><div class="flex justify-between text-sm mb-1"><span class="text-gray-500">Total Hari</span><span class="font-bold" id="totalDays">0</span></div><div class="flex justify-between text-lg mb-3"><span class="font-bold text-gray-800">Total Bayar</span><span class="font-bold text-blue-600" id="grandTotal">Rp 0</span></div><button onclick="submitOrder()" id="btnOrder" disabled class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold shadow-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:shadow-none transition">Kirim Laporan</button></div></div>
                 </div>
                 <!-- Tab History -->
                 <div id="tabContent-history" class="hidden p-4 animate-fade-in">
@@ -290,6 +290,18 @@
                             <button onclick="changeRekapMonth(1)" class="p-2 bg-white border rounded shadow-sm hover:bg-gray-50"><i class="fas fa-chevron-right"></i></button>
                         </div>
                     </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border mb-4 flex gap-2">
+                        <div class="relative flex-grow">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            <input type="text" id="rekapSearchInput" onkeyup="filterRekap()" placeholder="Cari Nama Santri..." class="pl-10 pr-4 py-2 border rounded-lg outline-none w-full text-sm">
+                        </div>
+                        <button onclick="fetchRekapData(true)" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm transition shadow-sm" title="Refresh Data"><i class="fas fa-sync-alt"></i></button>
+                    </div>
+                    <!-- NEW: Pagination Controls -->
+                    <div class="flex justify-between items-center mb-4 text-sm">
+                        <div id="rekapPaginationInfo" class="text-gray-600"></div>
+                        <div id="rekapPaginationControls" class="flex items-center gap-1"></div>
+                    </div>
                     <div class="flex gap-4 text-xs mb-4 flex-wrap">
                          <div class="flex items-center gap-2"><div class="w-4 h-4 bg-green-100 border border-green-400"></div> Lunas</div>
                          <div class="flex items-center gap-2"><div class="w-4 h-4 bg-white border"></div> Kosong</div>
@@ -468,6 +480,22 @@
     </main>
 
     <!-- Modals -->
+    <!-- Modal Upload Advice -->
+    <div id="modalUploadAdvice" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-sm p-6 shadow-2xl animate-fade-in">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg text-orange-600"><i class="fas fa-lightbulb mr-2"></i>Saran Upload</h3>
+                <button onclick="document.getElementById('modalUploadAdvice').classList.add('hidden')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            <p class="text-sm text-gray-600 leading-relaxed">
+                Gunakan gambar yang ukurannya tidak terlalu besar. Cara termudah adalah dengan mengirim foto tersebut melalui WhatsApp terlebih dahulu, lalu menyimpan dan meng-upload gambar hasil dari WhatsApp tersebut, karena ukurannya sudah otomatis diperkecil.
+            </p>
+            <div class="mt-6 text-right">
+                <button onclick="document.getElementById('modalUploadAdvice').classList.add('hidden')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm shadow hover:bg-blue-700">Mengerti</button>
+            </div>
+        </div>
+    </div>
+
     <div id="modalUser" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl w-full max-w-2xl p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-lg" id="modalTitle">Tambah User</h3><button onclick="closeModalUser()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button></div>
@@ -635,6 +663,8 @@
         let allOrders = []; 
         let allRefunds = {};
         let allNotOrdered = {};
+        let rekapCurrentPage = 1;
+        const rekapRowsPerPage = 25;
         
         // Dapur State
         let dapurDate = new Date();
@@ -1322,46 +1352,56 @@
         // --- ADMIN REKAP PEMESANAN ---
         window.changeRekapMonth = function(offset) {
             rekapDate.setMonth(rekapDate.getMonth() + offset);
-            renderRekapTable();
+            fetchRekapData(false); // Fetch data for the new month without refreshing students/orders
         }
 
         window.fetchRekapData = async function(forceRefresh = false, showLoader = true) {
             if (showLoader) document.getElementById('rekapTbody').innerHTML = '<tr><td class="p-4 text-center"><div class="loader"></div></td></tr>';
             try {
-                // 1. Get All Students
-                // This is the only part that needs to be re-fetched frequently
-                const userSnap = await getDocs(query(collection(db, "users"), where("role", "==", "Murid")));
-                allStudents = [];
-                userSnap.forEach(doc => allStudents.push({ id: doc.id, ...doc.data() }));
-                // Urutkan berdasarkan kelas, lalu nama
-                allStudents.sort((a, b) => (a.class || "").localeCompare(b.class || "") || a.name.localeCompare(b.name));
-
-                // 2. Get All Orders (Only if not already fetched)
-                if (forceRefresh || allOrders.length === 0) {
+                // 1. Get All Students & Orders (Fetch only if cache is empty or on force refresh)
+                if (allStudents.length === 0 || forceRefresh) {
+                    const userSnap = await getDocs(query(collection(db, "users"), where("role", "==", "Murid")));
+                    allStudents = [];
+                    userSnap.forEach(doc => allStudents.push({ id: doc.id, ...doc.data() }));
+                    allStudents.sort((a, b) => (a.class || "").localeCompare(b.class || "") || a.name.localeCompare(b.name));
+                }
+                if (allOrders.length === 0 || forceRefresh) {
                     allOrders = [];
                     const orderSnap = await getDocs(collection(db, "orders"));
                     orderSnap.forEach(doc => {
                         const d = doc.data();
-                        if(d.dates && Array.isArray(d.dates)) {
+                        if (d.dates && Array.isArray(d.dates)) {
                             allOrders.push({ userName: d.userName, dates: d.dates, id: doc.id });
                         }
                     });
                 }
 
-                // 3. Get Refunds & Not Ordered (Only if not already fetched)
-                if (forceRefresh || Object.keys(allRefunds).length === 0) {
-                    allRefunds = {};
-                    const refundSnap = await getDocs(collection(db, "refunds"));
-                    refundSnap.forEach(doc => { allRefunds[`${doc.data().userName}_${doc.data().date}`] = true; });
-                }
-                if (forceRefresh || Object.keys(allNotOrdered).length === 0) {
-                    allNotOrdered = {};
-                    const notOrderedSnap = await getDocs(collection(db, "not_ordered"));
-                    notOrderedSnap.forEach(doc => { allNotOrdered[`${doc.data().userName}_${doc.data().date}`] = true; });
-                }
+                // 3. Get Refunds & Not Ordered FOR CURRENT MONTH (Always re-fetch on month change)
+                const year = rekapDate.getFullYear();
+                const month = rekapDate.getMonth();
+                const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+                const nextMonthYear = month === 11 ? year + 1 : year;
+                const nextMonth = month === 11 ? 1 : month + 2;
+                const endDate = `${nextMonthYear}-${String(nextMonth).padStart(2, '0')}-01`;
 
+                allRefunds = {};
+                const refundQuery = query(collection(db, "refunds"), where("date", ">=", startDate), where("date", "<", endDate));
+                const refundSnap = await getDocs(refundQuery);
+                refundSnap.forEach(doc => { allRefunds[`${doc.data().userName}_${doc.data().date}`] = true; });
+
+                allNotOrdered = {};
+                const notOrderedQuery = query(collection(db, "not_ordered"), where("date", ">=", startDate), where("date", "<", endDate));
+                const notOrderedSnap = await getDocs(notOrderedQuery);
+                notOrderedSnap.forEach(doc => { allNotOrdered[`${doc.data().userName}_${doc.data().date}`] = true; });
+
+                rekapCurrentPage = 1; // Reset to first page on data fetch
                 renderRekapTable();
             } catch(e) { console.error(e); }
+        }
+
+        window.filterRekap = function() {
+            rekapCurrentPage = 1; // Reset to page 1 on new search
+            renderRekapTable();
         }
 
         function renderRekapTable() {
@@ -1392,13 +1432,20 @@
             thead.innerHTML = headHtml;
 
             // GENERATE ROWS
+            const filter = document.getElementById('rekapSearchInput').value.toLowerCase();
+            const filteredStudents = allStudents.filter(student => student.name.toLowerCase().includes(filter));
+
+            const startIndex = (rekapCurrentPage - 1) * rekapRowsPerPage;
+            const endIndex = startIndex + rekapRowsPerPage;
+            const paginatedStudents = filteredStudents.slice(startIndex, endIndex);
+
             let bodyHtml = "";
-            allStudents.forEach((student, index) => {
+            paginatedStudents.forEach((student, index) => {
                 let nameDisplay = student.name;
                 if(student.category === 'Anak Guru') {
                     nameDisplay += ` <span class="italic text-gray-500 text-[10px]">(Anak Guru)</span>`;
                 }
-                bodyHtml += `<tr><td class="p-2 border text-center text-xs">${index+1}</td><td class="p-2 border text-xs font-medium whitespace-nowrap">${nameDisplay}</td><td class="p-2 border text-xs whitespace-nowrap">${student.class || '-'}</td><td class="p-2 border text-xs whitespace-nowrap">${student.status || '-'}</td>`;
+                bodyHtml += `<tr><td class="p-2 border text-center text-xs">${startIndex + index + 1}</td><td class="p-2 border text-xs font-medium whitespace-nowrap">${nameDisplay}</td><td class="p-2 border text-xs whitespace-nowrap">${student.class || '-'}</td><td class="p-2 border text-xs whitespace-nowrap">${student.status || '-'}</td>`;
                 
                 validDays.forEach(day => {
                     const mStr = (month + 1).toString().padStart(2, '0');
@@ -1438,6 +1485,42 @@
                 bodyHtml += `</tr>`;
             });
             tbody.innerHTML = bodyHtml;
+            renderRekapPagination(filteredStudents.length);
+        }
+
+        function renderRekapPagination(totalItems) {
+            const paginationContainer = document.getElementById('rekapPaginationControls');
+            const paginationInfo = document.getElementById('rekapPaginationInfo');
+            if (!paginationContainer || !paginationInfo) return;
+
+            const startIndex = (rekapCurrentPage - 1) * rekapRowsPerPage;
+            const endIndex = startIndex + rekapRowsPerPage;
+
+            const totalPages = Math.ceil(totalItems / rekapRowsPerPage);
+            paginationContainer.innerHTML = "";
+            
+            if (totalItems > 0) {
+                paginationInfo.innerText = `Menampilkan ${startIndex + 1} - ${Math.min(endIndex, totalItems)} dari ${totalItems} santri`;
+            } else {
+                paginationInfo.innerText = "Tidak ada data santri yang cocok.";
+            }
+
+            if (totalPages <= 1) return;
+
+            const prevDisabled = rekapCurrentPage === 1;
+            paginationContainer.innerHTML += `<button onclick="changeRekapPage(${rekapCurrentPage - 1})" ${prevDisabled ? 'disabled' : ''} class="px-3 py-1 border rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed text-xs">Sebelumnya</button>`;
+            
+            paginationContainer.innerHTML += `<span class="text-xs font-medium px-2">Hal ${rekapCurrentPage} dari ${totalPages}</span>`;
+
+            const nextDisabled = rekapCurrentPage === totalPages;
+            paginationContainer.innerHTML += `<button onclick="changeRekapPage(${rekapCurrentPage + 1})" ${nextDisabled ? 'disabled' : ''} class="px-3 py-1 border rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed text-xs">Selanjutnya</button>`;
+        }
+
+        window.changeRekapPage = function(page) {
+            const totalPages = Math.ceil(allStudents.filter(s => s.name.toLowerCase().includes(document.getElementById('rekapSearchInput').value.toLowerCase())).length / rekapRowsPerPage);
+            if (page < 1 || page > totalPages) return;
+            rekapCurrentPage = page;
+            renderRekapTable();
         }
 
         window.openRekapModal = function(userName, dateStr, status) {
@@ -1471,13 +1554,10 @@
                     notOrderedSnap.forEach(async (d) => await deleteDoc(doc(db, "not_ordered", d.id)));
                 }
 
-                // Handle Orders
-                const orderSnapshot = await getDocs(collection(db, "orders"));
-                let targetOrders = [];
-                orderSnapshot.forEach(doc => {
-                    const d = doc.data();
-                    if (d.userName === userName) targetOrders.push({id: doc.id, dates: d.dates});
-                });
+                // Handle Orders (More efficient query)
+                const orderQuery = query(collection(db, "orders"), where("userName", "==", userName));
+                const orderSnapshot = await getDocs(orderQuery);
+                const targetOrders = orderSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 if (newStatus === 'paid') {
                     const exists = targetOrders.some(o => o.dates && o.dates.includes(dateStr));
@@ -1487,7 +1567,8 @@
                             const newDates = [...(targetOrders[0].dates || []), dateStr].sort();
                             await updateDoc(doc(db, "orders", orderId), { dates: newDates });
                         } else {
-                            await addDoc(collection(db, "orders"), { userName: userName, dates: [dateStr], totalPrice: 0, status: 'manual_admin', createdAt: new Date() });
+                            // Create a new order doc for this user
+                            await addDoc(collection(db, "orders"), { userName: userName, userCategory: 'manual', dates: [dateStr], totalPrice: 0, status: 'manual_admin', createdAt: new Date() });
                         }
                     }
                 } else { // For 'refund', 'not_ordered', and 'unpaid', we ensure the date is removed from orders.
@@ -1498,7 +1579,39 @@
                         }
                     }
                 }
-                await fetchRekapData(true, false);
+                
+                // --- OPTIMIZATION: Update local state instead of full refetch ---
+                // 1. Update allRefunds cache
+                delete allRefunds[`${userName}_${dateStr}`];
+                if (newStatus === 'refund') {
+                    allRefunds[`${userName}_${dateStr}`] = true;
+                }
+
+                // 2. Update allNotOrdered cache
+                delete allNotOrdered[`${userName}_${dateStr}`];
+                if (newStatus === 'not_ordered') {
+                    allNotOrdered[`${userName}_${dateStr}`] = true;
+                }
+
+                // 3. Update allOrders cache
+                allOrders.forEach(order => {
+                    if (order.userName === userName && order.dates) {
+                        const index = order.dates.indexOf(dateStr);
+                        if (index > -1) order.dates.splice(index, 1);
+                    }
+                });
+                if (newStatus === 'paid') {
+                    let userOrder = allOrders.find(o => o.userName === userName);
+                    if (userOrder) {
+                        if (!userOrder.dates.includes(dateStr)) userOrder.dates.push(dateStr);
+                    } else {
+                        allOrders.push({ userName: userName, dates: [dateStr], id: 'local_' + Date.now() });
+                    }
+                }
+                
+                // 4. Re-render the table instantly from the updated local cache
+                renderRekapTable();
+
             } catch(e) { console.error(e); alert("Gagal update status: " + e.message); }
         }
 
@@ -2319,6 +2432,10 @@
         window.openModalPricing = function() { document.getElementById('modalPricing').classList.remove('hidden'); document.getElementById('priceReguler').value = PRICING.reguler; document.getElementById('priceGuru').value = PRICING.anak_guru; document.getElementById('priceBeasiswa').value = PRICING.beasiswa; }
         window.savePricing = async function() { const btn = document.getElementById('btnSavePricing'); btn.innerText = "..."; btn.disabled = true; const newPricing = { reguler: parseInt(document.getElementById('priceReguler').value)||0, anak_guru: parseInt(document.getElementById('priceGuru').value)||0, beasiswa: parseInt(document.getElementById('priceBeasiswa').value)||0 }; try { await setDoc(doc(db, "settings", "prices"), newPricing); PRICING = newPricing; alert("Harga diperbarui!"); document.getElementById('modalPricing').classList.add('hidden'); } catch (e) { alert("Gagal: " + e.message); } btn.innerText = "Simpan"; btn.disabled = false; }
         window.previewProof = function(input) { const preview = document.getElementById('proofPreview'); if (input.files[0]) { const reader = new FileReader(); reader.onload = (e) => { preview.src = e.target.result; preview.classList.remove('hidden'); }; reader.readAsDataURL(input.files[0]); updateOrderSummary(); } }
+        
+        window.showUploadAdvice = function() {
+            document.getElementById('modalUploadAdvice').classList.remove('hidden');
+        }
         
         // --- NEW: COMPRESS IMAGE FUNCTION (Mencegah Firestore Over Limit) ---
         function compressImage(file) {
