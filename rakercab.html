@@ -43,6 +43,40 @@
         .chevron.rotate {
             transform: rotate(180deg);
         }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-box {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.visible .modal-box {
+            transform: scale(1);
+        }
     </style>
 </head>
 <body class="min-h-screen bg-slate-100 py-6 px-4 flex justify-center items-start">
@@ -52,6 +86,14 @@
         
         <!-- Header Visual -->
         <img src="https://blogger.googleusercontent.com/img/a/AVvXsEiiiG7rVZkEv0NVmk6APwbXNOwLGozvBcQX8yH_U-x6qg7MXihUObEfs-LNk7nOGr-TL2OrTqwDH_W985UXOC1TA3fSM5xfUc-NKqTyWxk6sp5jVqRKDu3hMllYolSP1baCd67LsdqnXy2fzV0_jEX2tEp_veTEQf3avciBB4Uxk22dYBveQ8iSVqULpuo" alt="Header Rakercab" class="w-full h-auto">
+
+        <!-- Tombol Safety Briefing -->
+        <div class="bg-slate-50 text-center py-4">
+            <button id="safety-button" class="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-700 transition-colors">
+                <i data-lucide="shield-alert" width="20" height="20"></i>
+                <span class="font-semibold text-sm">Safety Briefing</span>
+            </button>
+        </div>
 
         <!-- Content Container -->
         <div id="rundown-container" class="p-4 space-y-3 bg-slate-50 min-h-[500px]">
@@ -67,11 +109,30 @@
 
     </div>
 
+    <!-- Modal Pop-up untuk Safety Briefing -->
+    <div id="safety-modal" class="modal-overlay">
+        <div class="modal-box space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-slate-800">Safety Brief</h2>
+                <button id="close-modal" class="text-slate-500 hover:text-slate-800">
+                    <i data-lucide="x" width="24" height="24"></i>
+                </button>
+            </div>
+            <div class="h-px bg-slate-200"></div>
+            <div class="text-slate-600 space-y-3 leading-relaxed">
+                <p>Informasi keselamatan singkat.</p>
+                <p>Apabila terjadi kondisi darurat, mohon Bapak dan Ibu tetap tenang, tidak panik, dan segera keluar ruangan dengan tertib melalui akses yang tersedia. Mohon gunakan tangga untuk turun ke lantai dasar.</p>
+                <p>Setelah berada di luar gedung, silakan langsung menuju titik kumpul atau assembly point yang berada di lapangan parkir depan gedung, lalu tetap berkumpul dan menunggu arahan selanjutnya.</p>
+                <p class="font-semibold">Demikian informasi keselamatan ini kami sampaikan. Terima kasih atas perhatian dan kerja samanya.</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Data Rundown
         const rundownData = [
             { id: 1, time: "08:00 - 08:30", title: "Registrasi Peserta", pengisi: "Panitia", detail: "Pendataan ulang peserta rakercab. Peserta mengisi daftar hadiri acara.", perlengkapan: "Form Registrasi", type: "general" },
-            { id: 2, time: "08:30 - 08:45", title: "Pembukaan Acara", pengisi: "MC: Sigit Kurniawan", detail: "Pembukaan resmi dengan pembacaan Surat Al-Fatihah dan Sholawat.", perlengkapan: "-", type: "main" },
+            { id: 2, time: "08:30 - 08:45", title: "Pembukaan Acara & Safety Briefing", pengisi: "MC: Sigit Kurniawan", detail: "Pembukaan resmi dengan pembacaan Surat Al-Fatihah dan Sholawat.", perlengkapan: "-", type: "main" },
             { id: 3, time: "08:45 - 08:50", title: "Menyanyikan Indonesia Raya", pengisi: "Operator", detail: "Seluruh hadirin dimohon berdiri.", perlengkapan: "File Video", type: "main" },
             { id: 4, time: "08:50 - 08:55", title: "Menyanyikan Mars PKS", pengisi: "Operator", detail: "Seluruh hadirin dimohon mengikuti instruksi dirigen.", perlengkapan: "File Video", type: "main" },
             { id: 5, time: "08:55 - 09:00", title: "Tilawah", pengisi: "Ustad Deni Birrulwalidain", detail: "Pembacaan ayat suci Al-Qur'an.", perlengkapan: "-", type: "special" },
@@ -215,6 +276,27 @@
         // Initial Render when DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
             renderRundown();
+
+            // Safety Modal Logic
+            const safetyButton = document.getElementById('safety-button');
+            const modal = document.getElementById('safety-modal');
+            const closeModalBtn = document.getElementById('close-modal');
+
+            const showModal = () => modal.classList.add('visible');
+            const hideModal = () => modal.classList.remove('visible');
+
+            safetyButton.addEventListener('click', showModal);
+            closeModalBtn.addEventListener('click', hideModal);
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    hideModal();
+                }
+            });
+            
+            // Initial icon creation for static elements
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
         });
         
         // Backup: Run immediately just in case
