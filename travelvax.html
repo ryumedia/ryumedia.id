@@ -20,6 +20,13 @@
             color: #2563eb;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
         }
+        
+        /* Tema Khusus Anak */
+        .tab-child-active {
+            background-color: white;
+            color: #f97316; /* Orange */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
 
         .glass-nav {
             background: rgba(255, 255, 255, 0.8);
@@ -27,7 +34,6 @@
             -webkit-backdrop-filter: blur(12px);
         }
 
-        /* Perbaikan CSS Notifikasi */
         .notification-toast {
             opacity: 0;
             visibility: hidden;
@@ -41,6 +47,11 @@
             visibility: visible;
             transform: translate(-50%, 0);
             pointer-events: auto;
+        }
+
+        /* Ornamen Anak */
+        .kids-blob {
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
         }
     </style>
 </head>
@@ -132,12 +143,15 @@
         
         <!-- Tab Selection -->
         <div class="flex justify-center mb-12">
-            <div class="inline-flex bg-slate-200 p-1 rounded-xl">
-                <button onclick="switchTab('travel')" id="tabTravelBtn" class="px-8 py-2.5 rounded-lg font-bold transition-all flex items-center gap-2 tab-active">
-                    <i data-lucide="plane" class="w-5 h-5"></i> Travel
+            <div class="inline-flex bg-slate-200 p-1 rounded-2xl">
+                <button onclick="switchTab('travel')" id="tabTravelBtn" class="px-6 md:px-8 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 tab-active text-sm md:text-base">
+                    <i data-lucide="plane" class="w-4 h-4 md:w-5 h-5"></i> Travel
                 </button>
-                <button onclick="switchTab('vax')" id="tabVaxBtn" class="px-8 py-2.5 rounded-lg font-bold transition-all flex items-center gap-2 text-slate-600">
-                    <i data-lucide="syringe" class="w-5 h-5"></i> Vaksinasi
+                <button onclick="switchTab('vax')" id="tabVaxBtn" class="px-6 md:px-8 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 text-slate-600 text-sm md:text-base">
+                    <i data-lucide="syringe" class="w-4 h-4 md:w-5 h-5"></i> Vaksin Dewasa
+                </button>
+                <button onclick="switchTab('kids')" id="tabKidsBtn" class="px-6 md:px-8 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 text-slate-600 text-sm md:text-base">
+                    <i data-lucide="baby" class="w-4 h-4 md:w-5 h-5"></i> Vaksin Anak
                 </button>
             </div>
         </div>
@@ -284,6 +298,66 @@
             </div>
         </div>
 
+        <!-- Kids Content (Vaksin Anak - Hidden by Default) -->
+        <div id="kidsContent" class="max-w-4xl mx-auto space-y-8 hidden relative">
+            <!-- Kids Decorative Icon -->
+            <div class="absolute -top-12 -left-12 opacity-10 pointer-events-none">
+                <i data-lucide="heart" class="w-32 h-32 text-orange-400 fill-current"></i>
+            </div>
+
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-extrabold text-orange-600">Vaksinasi Si Kecil 👶</h2>
+                <p class="text-slate-500 mt-2">Perlindungan ekstra untuk senyum mereka yang ceria.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Kid Item 1 -->
+                <div class="bg-orange-50 rounded-[40px] p-6 border-2 border-orange-100 relative overflow-hidden hover:border-orange-300 transition-colors">
+                    <div class="relative z-10">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="bg-white p-3 rounded-2xl shadow-sm text-orange-500">
+                                <i data-lucide="baby" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-800">Paket Dasar Bayi</h3>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-6">Paket lengkap Polio, Campak, dan Hepatitis B untuk perlindungan dasar tumbuh kembang.</p>
+                        <div class="flex items-center justify-between">
+                            <p class="text-xl font-black text-orange-600">Rp 450.000</p>
+                            <button onclick="showToast('Paket Vaksin Bayi')" class="bg-orange-500 text-white px-5 py-2 rounded-2xl font-bold hover:bg-orange-600 transition-all shadow-md">Daftar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kid Item 2 -->
+                <div class="bg-purple-50 rounded-[40px] p-6 border-2 border-purple-100 relative overflow-hidden hover:border-purple-300 transition-colors">
+                    <div class="relative z-10">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="bg-white p-3 rounded-2xl shadow-sm text-purple-500">
+                                <i data-lucide="shield" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-800">Vaksin PCV (Pneumonia)</h3>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-6">Mencegah radang paru pada si kecil. Sangat disarankan untuk daerah dengan udara lembab.</p>
+                        <div class="flex items-center justify-between">
+                            <p class="text-xl font-black text-purple-600">Rp 950.000</p>
+                            <button onclick="showToast('Vaksin PCV')" class="bg-purple-500 text-white px-5 py-2 rounded-2xl font-bold hover:bg-purple-600 transition-all shadow-md">Daftar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parents Note -->
+            <div class="bg-white rounded-[40px] p-8 border-dashed border-2 border-orange-200 flex flex-col md:flex-row items-center gap-6">
+                <div class="bg-yellow-100 p-4 rounded-full text-yellow-600">
+                    <i data-lucide="sparkles" class="w-8 h-8"></i>
+                </div>
+                <div class="text-center md:text-left">
+                    <h4 class="font-bold text-slate-800">Tips Tenang untuk Bunda</h4>
+                    <p class="text-sm text-slate-500 leading-relaxed">Berikan pelukan hangat dan mainan favorit si kecil saat proses vaksinasi. Tim medis kami terlatih untuk menangani anak dengan penuh kesabaran.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Trust Section -->
         <section class="mt-24 grid grid-cols-1 md:grid-cols-3 gap-12 text-center bg-white rounded-[40px] p-12 border border-slate-100 shadow-sm">
             <div class="space-y-4">
@@ -339,7 +413,7 @@
                     <ul class="space-y-4 text-sm">
                         <li><a href="#" class="hover:text-white">Wisata Alam</a></li>
                         <li><a href="#" class="hover:text-white">Vaksinasi Wajib</a></li>
-                        <li><a href="#" class="hover:text-white">Konsultasi Medis</a></li>
+                        <li><a href="#" class="hover:text-white">Vaksin Anak</a></li>
                     </ul>
                 </div>
                 <div>
@@ -388,23 +462,33 @@
         function switchTab(tab) {
             const travelContent = document.getElementById('travelContent');
             const vaxContent = document.getElementById('vaxContent');
+            const kidsContent = document.getElementById('kidsContent');
+            
             const tabTravelBtn = document.getElementById('tabTravelBtn');
             const tabVaxBtn = document.getElementById('tabVaxBtn');
+            const tabKidsBtn = document.getElementById('tabKidsBtn');
+
+            // Reset semua tampilan
+            travelContent.classList.add('hidden');
+            vaxContent.classList.add('hidden');
+            kidsContent.classList.add('hidden');
+            
+            tabTravelBtn.className = "px-6 md:px-8 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 text-slate-600 text-sm md:text-base";
+            tabVaxBtn.className = "px-6 md:px-8 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 text-slate-600 text-sm md:text-base";
+            tabKidsBtn.className = "px-6 md:px-8 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 text-slate-600 text-sm md:text-base";
 
             if(tab === 'travel') {
                 travelContent.classList.remove('hidden');
-                vaxContent.classList.add('hidden');
                 tabTravelBtn.classList.add('tab-active');
                 tabTravelBtn.classList.remove('text-slate-600');
-                tabVaxBtn.classList.remove('tab-active');
-                tabVaxBtn.classList.add('text-slate-600');
-            } else {
-                travelContent.classList.add('hidden');
+            } else if(tab === 'vax') {
                 vaxContent.classList.remove('hidden');
                 tabVaxBtn.classList.add('tab-active');
                 tabVaxBtn.classList.remove('text-slate-600');
-                tabTravelBtn.classList.remove('tab-active');
-                tabTravelBtn.classList.add('text-slate-600');
+            } else if(tab === 'kids') {
+                kidsContent.classList.remove('hidden');
+                tabKidsBtn.classList.add('tab-child-active');
+                tabKidsBtn.classList.remove('text-slate-600');
             }
         }
 
