@@ -11,9 +11,14 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         
+        html, body {
+            height: 100%;
+        }
+
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #f1f5f9;
+            overflow-x: hidden; /* Mencegah scroll horizontal di body */
         }
 
         .app-container {
@@ -150,6 +155,16 @@
                         <div class="p-3 flex-1 flex flex-col">
                             <h3 class="text-xs font-bold mb-1 truncate">Safari Kenya</h3>
                             <p class="text-[9px] text-slate-500 mb-2 truncate">Nairobi, Kenya</p>
+                            <div class="space-y-1.5 text-[9px] text-slate-600 mb-3">
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="plane" class="w-3 h-3 text-slate-400"></i>
+                                    <span>Qatar Airways</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="building-2" class="w-3 h-3 text-slate-400"></i>
+                                    <span>Serena Hotel</span>
+                                </div>
+                            </div>
                             <div class="mt-auto">
                                 <p class="text-blue-600 font-bold text-xs mb-2">Rp 15.5jt</p>
                                 <button onclick="showToast('Safari Kenya')" class="w-full bg-slate-900 text-white py-1.5 rounded-lg text-[10px] font-bold">Pesan</button>
@@ -168,6 +183,16 @@
                         <div class="p-3 flex-1 flex flex-col">
                             <h3 class="text-xs font-bold mb-1 truncate">Tokyo Culture</h3>
                             <p class="text-[9px] text-slate-500 mb-2 truncate">Tokyo, Jepang</p>
+                            <div class="space-y-1.5 text-[9px] text-slate-600 mb-3">
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="plane" class="w-3 h-3 text-slate-400"></i>
+                                    <span>Japan Airlines</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="building-2" class="w-3 h-3 text-slate-400"></i>
+                                    <span>Park Hyatt</span>
+                                </div>
+                            </div>
                             <div class="mt-auto">
                                 <p class="text-blue-600 font-bold text-xs mb-2">Rp 12.0jt</p>
                                 <button onclick="showToast('Tokyo Tour')" class="w-full bg-slate-900 text-white py-1.5 rounded-lg text-[10px] font-bold">Pesan</button>
@@ -186,6 +211,16 @@
                         <div class="p-3 flex-1 flex flex-col">
                             <h3 class="text-xs font-bold mb-1 truncate">Amazon Adventure</h3>
                             <p class="text-[9px] text-slate-500 mb-2 truncate">Manaus, Brasil</p>
+                            <div class="space-y-1.5 text-[9px] text-slate-600 mb-3">
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="plane" class="w-3 h-3 text-slate-400"></i>
+                                    <span>LATAM Airlines</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="building-2" class="w-3 h-3 text-slate-400"></i>
+                                    <span>Juma Opera Hotel</span>
+                                </div>
+                            </div>
                             <div class="mt-auto">
                                 <p class="text-blue-600 font-bold text-xs mb-2">Rp 22.3jt</p>
                                 <button onclick="showToast('Amazon Adventure')" class="w-full bg-slate-900 text-white py-1.5 rounded-lg text-[10px] font-bold">Pesan</button>
@@ -204,38 +239,123 @@
                         <div class="p-3 flex-1 flex flex-col">
                             <h3 class="text-xs font-bold mb-1 truncate">Winter Air Balloon</h3>
                             <p class="text-[9px] text-slate-500 mb-2 truncate">Cappadocia, Turkiye</p>
+                            <div class="space-y-1.5 text-[9px] text-slate-600 mb-3">
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="plane" class="w-3 h-3 text-slate-400"></i>
+                                    <span>Turkish Airlines</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="building-2" class="w-3 h-3 text-slate-400"></i>
+                                    <span>Sultan Cave Suites</span>
+                                </div>
+                            </div>
                             <div class="mt-auto">
                                 <p class="text-blue-600 font-bold text-xs mb-2">Rp 18.3jt</p>
-                                <button onclick="showToast('Amazon Adventure')" class="w-full bg-slate-900 text-white py-1.5 rounded-lg text-[10px] font-bold">Pesan</button>
+                                <button onclick="showToast('Winter Air Balloon')" class="w-full bg-slate-900 text-white py-1.5 rounded-lg text-[10px] font-bold">Pesan</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Adult Vax Content -->
-                <div id="vaxContent" class="space-y-3 hidden">
-                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-4">
-                        <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center shrink-0">
-                            <i data-lucide="syringe" class="w-6 h-6 text-teal-600"></i>
+                <div id="vaxContent" class="grid grid-cols-2 gap-3 hidden">
+                    <!-- Vax 1 -->
+                    <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex flex-col flex-1 items-center text-center aspect-square justify-between">
+                        <div class="w-24 h-24 bg-teal-100 rounded-full flex items-center justify-center">
+                            <i data-lucide="syringe" class="w-10 h-10 text-teal-600"></i>
                         </div>
-                        <div class="flex-1">
-                            <h3 class="text-xs font-bold">Vaksin Yellow Fever</h3>
-                            <p class="text-[9px] text-blue-600 font-bold mt-1">Rp 850.000</p>
+                        <div>
+                            <h3 class="text-md font-bold">Yellow Fever</h3>
+                            <p class="text-[12px] text-blue-600 font-bold">Rp 850rb</p>
                         </div>
-                        <button onclick="showToast('Yellow Fever')" class="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold">Pesan</button>
+                        <button onclick="showToast('Yellow Fever')" class="w-full bg-slate-900 text-white py-1.5 rounded-lg text-[14px] font-bold">Pesan</button>
+                    </div>
+
+                    <!-- Vax 2 -->
+                    <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex flex-col flex-1 items-center text-center aspect-square justify-between">
+                        <div class="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center">
+                            <i data-lucide="shield-plus" class="w-10 h-10 text-blue-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-md font-bold">Influenza</h3>
+                            <p class="text-[12px] text-blue-600 font-bold">Rp 450rb</p>
+                        </div>
+                        <button onclick="showToast('Influenza')" class="w-full bg-slate-900 text-white py-1.5 rounded-lg text-[14px] font-bold">Pesan</button>
+                    </div>
+
+                    <!-- Vax 3 -->
+                    <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex flex-col flex-1 items-center text-center aspect-square justify-between">
+                        <div class="w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center">
+                            <i data-lucide="activity" class="w-10 h-10 text-purple-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-md font-bold">Meningitis</h3>
+                            <p class="text-[12px] text-blue-600 font-bold">Rp 950rb</p>
+                        </div>
+                        <button onclick="showToast('Meningitis')" class="w-full bg-slate-900 text-white py-1.5 rounded-lg text-[14px] font-bold">Pesan</button>
+                    </div>
+
+                    <!-- Vax 4 -->
+                    <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex flex-col flex-1 items-center text-center aspect-square justify-between">
+                        <div class="w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center">
+                            <i data-lucide="heart-pulse" class="w-10 h-10 text-rose-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-md font-bold">Hepatitis B</h3>
+                            <p class="text-[12px] text-blue-600 font-bold">Rp 250rb</p>
+                        </div>
+                        <button onclick="showToast('Hepatitis B')" class="w-full bg-slate-900 text-white py-1.5 rounded-lg text-[14px] font-bold">Pesan</button>
                     </div>
                 </div>
 
                 <!-- Kids Vax Content -->
-                <div id="kidsContent" class="space-y-4 hidden text-center">
-                    <div class="bg-orange-50 rounded-2xl p-4 border border-orange-100">
-                        <i data-lucide="baby" class="w-8 h-8 text-orange-500 mx-auto mb-1"></i>
-                        <h3 class="text-sm font-bold text-orange-700">Area Vaksin Anak</h3>
+                <div id="kidsContent" class="grid grid-cols-2 gap-3 hidden">
+                    <!-- Kid Vax 1 -->
+                    <div class="bg-white rounded-2xl p-3 shadow-sm border border-orange-100 flex flex-col flex-1 items-center text-center aspect-square justify-between">
+                        <div class="w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center">
+                            <i data-lucide="baby" class="w-10 h-10 text-orange-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-md font-bold text-slate-800">Polio Tetes</h3>
+                            <p class="text-[12px] text-orange-500 font-bold">Rp 200rb</p>
+                        </div>
+                        <button onclick="showToast('Vaksin Polio')" class="w-full bg-orange-500 text-white py-1.5 rounded-lg text-[14px] font-bold">Pesan</button>
                     </div>
-                    <div class="bg-white rounded-2xl p-4 border border-orange-100 text-left">
-                        <h4 class="font-bold text-slate-800 text-xs">Paket Dasar Bayi</h4>
-                        <p class="text-orange-600 font-bold text-xs mt-2">Rp 450rb</p>
-                        <button onclick="showToast('Vaksin Bayi')" class="w-full mt-3 bg-orange-500 text-white py-2 rounded-xl text-[10px] font-bold">Daftar</button>
+
+                    <!-- Kid Vax 2 -->
+                    <div class="bg-white rounded-2xl p-3 shadow-sm border border-yellow-100 flex flex-col flex-1 items-center text-center aspect-square justify-between">
+                        <div class="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <i data-lucide="sun" class="w-10 h-10 text-yellow-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-md font-bold text-slate-800">Campak Rubella</h3>
+                            <p class="text-[12px] text-yellow-500 font-bold">Rp 350rb</p>
+                        </div>
+                        <button onclick="showToast('Vaksin Campak')" class="w-full bg-yellow-500 text-white py-1.5 rounded-lg text-[14px] font-bold">Pesan</button>
+                    </div>
+
+                    <!-- Kid Vax 3 -->
+                    <div class="bg-white rounded-2xl p-3 shadow-sm border border-pink-100 flex flex-col flex-1 items-center text-center aspect-square justify-between">
+                        <div class="w-24 h-24 bg-pink-100 rounded-full flex items-center justify-center">
+                            <i data-lucide="heart" class="w-10 h-10 text-pink-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-md font-bold text-slate-800">DPT Combo</h3>
+                            <p class="text-[12px] text-pink-500 font-bold">Rp 550rb</p>
+                        </div>
+                        <button onclick="showToast('Vaksin DPT')" class="w-full bg-pink-500 text-white py-1.5 rounded-lg text-[14px] font-bold">Pesan</button>
+                    </div>
+
+                    <!-- Kid Vax 4 -->
+                    <div class="bg-white rounded-2xl p-3 shadow-sm border border-sky-100 flex flex-col flex-1 items-center text-center aspect-square justify-between">
+                        <div class="w-24 h-24 bg-sky-100 rounded-full flex items-center justify-center">
+                            <i data-lucide="smile" class="w-10 h-10 text-sky-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-md font-bold text-slate-800">Flu Anak</h3>
+                            <p class="text-[12px] text-sky-500 font-bold">Rp 300rb</p>
+                        </div>
+                        <button onclick="showToast('Vaksin Flu Anak')" class="w-full bg-sky-500 text-white py-1.5 rounded-lg text-[14px] font-bold">Pesan</button>
                     </div>
                 </div>
             </div>
@@ -248,7 +368,7 @@
                     <i data-lucide="check" class="w-4 h-4 text-white"></i>
                 </div>
                 <div>
-                    <p class="text-[10px] font-bold">Permintaan Terkirim!</p>
+                    <p id="toast-message" class="text-[10px] font-bold">Permintaan Terkirim!</p>
                 </div>
             </div>
         </div>
@@ -311,6 +431,8 @@
 
         function showToast(itemName) {
             const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.textContent = `Pesanan untuk "${itemName}" telah terkirim!`;
             toast.classList.add('show');
             setTimeout(() => { toast.classList.remove('show'); }, 3000);
         }
