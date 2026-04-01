@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pelacak Hafalan Al-Qur'an</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Import Firebase SDK (Compat Version untuk kemudahan di single HTML) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container-9-16 {
+            max-width: 450px;
+            min-height: 100vh;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .input-card, .auth-card {
+            background-color: #fff;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+        }
+        .result-box {
+            background-color: #10b981; /* Green 500 */
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 1.5rem;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.4);
+        }
+        .result-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        select, input[type="email"], input[type="password"], input[type="number"], input[type="date"], input[type="text"] {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 0.5rem;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+        select:focus, input:focus {
+            border-color: #3b82f6; /* Blue 500 */
+            outline: none;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .nav-link.active {
+            border-bottom: 3px solid #3b82f6; /* Blue 500 */
+            color: #3b82f6; /* Blue 500 */
+            font-weight: 700;
+        }
+        #statusMessage {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            display: none;
+            transition: opacity 0.3s ease;
+        }
+        .bg-success { background-color: #d1fae5; color: #065f46; border: 1px solid #34d399; }
+        .bg-error { background-color: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+        .modal-content {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        /* Style untuk tombol filter */
+        .filter-button {
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .filter-button.active {
+            background-color: #3b82f6; /* Blue 500 */
+            color: white;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+        }
+        .filter-button:not(.active) {
+            background-color: #e5e7eb; /* Gray 200 */
+            color: #4b5563; /* Gray 600 */
+            border: 1px solid #d1d5db;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container-9-16">
+        
+        <!-- 0. HALAMAN SAMPUL (SPLASH SCREEN) - Default Tampil -->
+        <div id="splashView" class="flex flex-col items-center justify-center text-center p-8 flex-grow">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-green-500 mb-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+            </svg>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Mutaba'ah Hafalan</h2>
+            <p class="text-gray-500 mb-8">Catat dan pantau pencapaian hafalan Qur'an.</p>
+            <button onclick="showAuthModal('login')" class="w-full max-w-[250px] bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition duration-150 ease-in-out">
+                Masuk untuk Melanjutkan
+            </button>
+            <p id="authSessionStatus" class="mt-4 text-sm text-gray-400">Memeriksa sesi...</p>
+        </div>
+
+
+        <!-- APLIKASI UTAMA (HEADER, INPUT, HISTORY) - Default Sembunyi -->
+        <div id="mainAppContainer" class="flex-grow flex flex-col hidden">
+
+            <!-- HEADER DAN NAVIGASI TABS -->
+            <header id="appHeader" class="bg-white shadow-lg border-b border-gray-200">
+                <div class="flex justify-between items-center px-4 pt-4">
+                    <h1 class="text-xl font-bold text-gray-800">Mutaba'ah Hafalan</h1>
+                    <div class="flex items-center gap-3">
+                        <!-- Tombol Manajemen User (Hanya Admin) -->
+                        <button id="adminMgmtBtn" onclick="renderPage('management')" class="hidden text-gray-500 hover:text-blue-600 transition p-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        </button>
+                        <button onclick="handleLogout()" class="text-sm text-red-500 hover:text-red-700 font-semibold transition">Logout</button>
+                    </div>
+                </div>
+                <div class="px-4 pb-2">
+                    <div class="flex justify-between items-end">
+                        <p class="text-xs text-gray-500 truncate">Akun: <span id="userEmailDisplay" class="font-medium text-gray-700"></span></p>
+                        <p id="adminStatus" class="text-xs text-red-500 font-medium"></p>
+                    </div>
+                </div>
+                <nav class="flex justify-around mt-1">
+                    <a id="navInput" href="#" onclick="renderPage('input')" class="nav-link p-3 text-sm text-gray-500 hover:text-blue-500 transition duration-150 active">
+                        Input Hafalan
+                    </a>
+                    <a id="navHistory" href="#" onclick="renderPage('history')" class="nav-link p-3 text-sm text-gray-500 hover:text-blue-500 transition duration-150">
+                        Riwayat Laporan
+                    </a>
+                </nav>
+            </header>
+
+            <!-- KONTEN UTAMA APLIKASI -->
+            <main class="flex-grow overflow-y-auto p-4 flex flex-col">
+
+                <!-- 1. APP VIEW (INPUT) -->
+                <div id="inputView" class="flex-grow">
+                    <!-- Bagian: Input Tanggal Laporan -->
+                    <div class="mb-4">
+                        <label for="reportDate" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Laporan</label>
+                        <input type="date" id="reportDate" required>
+                    </div>
+
+                    <div class="mb-4 input-card">
+                        <h2 class="text-lg font-semibold mb-3 text-gray-700">Hafalan Terakhir</h2>
+                        <div class="grid grid-cols-12 gap-3">
+                            <div class="col-span-6">
+                                <label for="startSurah" class="block text-sm font-medium text-gray-600 mb-1">Surah</label>
+                                <select id="startSurah" onchange="updateMaxAyat('start')"></select>
+                            </div>
+                            <div class="col-span-3">
+                                <label for="startAyat" class="block text-sm font-medium text-gray-600 mb-1">Ayat</label>
+                                <input type="number" id="startAyat" min="1" value="1" oninput="handleAyatInput('start')">
+                            </div>
+                            <div class="col-span-3">
+                                <label for="startPage" class="block text-sm font-medium text-gray-600 mb-1">Halaman</label>
+                                <input type="number" id="startPage" min="1" max="604" value="1" oninput="calculateHafalan()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4 input-card">
+                        <h2 class="text-lg font-semibold mb-3 text-gray-700">Hafalan Terbaru</h2>
+                        <div class="grid grid-cols-12 gap-3">
+                            <div class="col-span-6">
+                                <label for="endSurah" class="block text-sm font-medium text-gray-600 mb-1">Surah</label>
+                                <select id="endSurah" onchange="updateMaxAyat('end')"></select>
+                            </div>
+                            <div class="col-span-3">
+                                <label for="endAyat" class="block text-sm font-medium text-gray-600 mb-1">Ayat</label>
+                                <input type="number" id="endAyat" min="1" value="3" oninput="handleAyatInput('end')">
+                            </div>
+                            <div class="col-span-3">
+                                <label for="endPage" class="block text-sm font-medium text-gray-600 mb-1">Halaman</label>
+                                <input type="number" id="endPage" min="1" max="604" value="3" oninput="calculateHafalan()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-box">
+                        <div class="flex justify-around items-center">
+                            <div>
+                                <div class="result-number" id="ayatHafalan">0</div>
+                                <div class="text-sm font-medium opacity-80">Total Ayat Baru</div>
+                            </div>
+                            <div class="h-16 w-px bg-white opacity-40"></div>
+                            <div>
+                                <div class="result-number" id="halamanHafalan">0</div>
+                                <div class="text-sm font-medium opacity-80">Total Halaman Baru</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="showReportModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 mt-4 rounded-xl shadow-md transition duration-150 ease-in-out">
+                        Laporkan
+                    </button>
+                </div>
+
+                <!-- 2. APP VIEW (HISTORY) -->
+                <div id="historyView" class="hidden flex-grow">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-gray-800">Riwayat Laporan</h2>
+                        <span id="historyTitle" class="text-gray-500 font-semibold text-sm">Anda</span>
+                    </div>
+                    
+                    <!-- BARU: Kontrol Filter Admin (Dropdown Nama & Rentang Tanggal) -->
+                    <div id="adminFilterControls" class="mb-6 space-y-3 hidden">
+                        <!-- Dropdown Nama Pengguna -->
+                        <div>
+                            <label for="userFilter" class="block text-sm font-medium text-gray-700 mb-1">Filter Pengguna</label>
+                            <!-- ID Pengguna yang dipilih akan di-handle oleh JS -->
+                            <select id="userFilter" onchange="renderHistory()"> 
+                                <option value="all">-- Semua Pengguna --</option>
+                                <!-- Opsi pengguna akan diisi oleh JS -->
+                            </select>
+                        </div>
+
+                        <!-- Rentang Tanggal -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label for="dateStartFilter" class="block text-sm font-medium text-gray-700 mb-1">Dari Tanggal</label>
+                                <input type="date" id="dateStartFilter" onchange="renderHistory()">
+                            </div>
+                            <div>
+                                <label for="dateEndFilter" class="block text-sm font-medium text-gray-700 mb-1">Sampai Tanggal</label>
+                                <input type="date" id="dateEndFilter" onchange="renderHistory()">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- AKHIR BARU: Kontrol Filter Admin -->
+
+                    <!-- KOTAK REKAPITULASI BARU -->
+                    <div class="mb-6 grid grid-cols-2 gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl shadow-sm">
+                        <div class="text-center p-2 border-r border-blue-200">
+                            <div id="totalAyatRecap" class="text-2xl font-bold text-blue-800">0</div>
+                            <div class="text-xs text-blue-600 font-semibold">Total Ayat</div>
+                        </div>
+                        <div class="text-center p-2">
+                            <div id="totalHalamanRecap" class="text-2xl font-bold text-blue-800">0</div>
+                            <div class="text-xs text-blue-600 font-semibold">Total Halaman</div>
+                        </div>
+                        <div class="text-center p-2 border-t border-r border-blue-200">
+                            <div id="avgAyatRecap" class="text-xl font-semibold text-blue-700">0</div>
+                            <div class="text-xs text-blue-500">Rata-rata Ayat/Laporan</div>
+                        </div>
+                        <div class="text-center p-2 border-t border-blue-200">
+                            <div id="avgHalamanRecap" class="text-xl font-semibold text-blue-700">0</div>
+                            <div class="text-xs text-blue-500">Rata-rata Hal/Laporan</div>
+                        </div>
+                    </div>
+                    <!-- AKHIR KOTAK REKAPITULASI -->
+
+                    <div id="reportList" class="space-y-3">
+                        <!-- Daftar laporan akan dimuat di sini oleh JavaScript -->
+                    </div>
+                </div>
+
+                <!-- 3. APP VIEW (USER MANAGEMENT) -->
+                <div id="managementView" class="hidden flex-grow">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-gray-800">Manajemen Pengguna</h2>
+                        <button onclick="openAddUserModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition">
+                            + Tambah User
+                        </button>
+                    </div>
+                    <div id="userManagementList" class="space-y-3">
+                        <!-- Daftar user untuk admin -->
+                    </div>
+                </div>
+
+            </main>
+        </div>
+        
+        <!-- Pesan Status (Toaster) -->
+        <div id="statusMessage" style="display: none;"></div>
+    </div>
+
+    <!-- MODAL KONFIRMASI LAPORAN (TETAP SAMA) -->
+    <div id="reportModal" class="modal-overlay hidden" onclick="closeModal('reportModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="text-xl font-bold text-gray-800">Konfirmasi Laporan Hafalan</h3>
+                <button onclick="closeModal('reportModal')" class="text-gray-400 hover:text-gray-600 text-2xl font-semibold leading-none">&times;</button>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-gray-100 p-3 rounded-lg flex justify-between items-center font-medium">
+                    <span class="text-sm text-gray-600">Tanggal Laporan:</span>
+                    <span id="modalDate" class="text-base text-gray-800 font-bold"></span>
+                </div>
+
+                <div class="border-t pt-3">
+                    <p class="text-sm font-semibold text-gray-700 mb-2">Rincian Hafalan:</p>
+                    
+                    <div class="mb-3 p-3 bg-red-50 border-l-4 border-red-400 rounded-lg">
+                        <p class="text-sm font-bold text-red-700 mb-1">Hafalan Terakhir (Selesai):</p>
+                        <ul class="text-xs space-y-0.5 ml-2">
+                            <li><span class="font-medium">Surah:</span> <span id="modalStartSurah" class="font-semibold"></span></li>
+                            <li><span class="font-medium">Ayat Terakhir:</span> <span id="modalStartAyat"></span></li>
+                            <li><span class="font-medium">Halaman:</span> <span id="modalStartPage"></span></li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-3 p-3 bg-green-50 border-l-4 border-green-400 rounded-lg">
+                        <p class="text-sm font-bold text-green-700 mb-1">Hafalan Terbaru (Akhir):</p>
+                         <ul class="text-xs space-y-0.5 ml-2">
+                            <li><span class="font-medium">Surah:</span> <span id="modalEndSurah" class="font-semibold"></span></li>
+                            <li><span class="font-medium">Ayat Akhir:</span> <span id="modalEndAyat"></span></li>
+                            <li><span class="font-medium">Halaman:</span> <span id="modalEndPage"></span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Hasil Perhitungan -->
+                <div class="border-t pt-3 flex justify-around text-center">
+                    <div>
+                        <p class="text-2xl font-bold text-blue-600" id="modalTotalAyat"></p>
+                        <p class="text-xs font-semibold text-gray-500">Total Ayat Baru</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-blue-600" id="modalTotalHalaman"></p>
+                        <p class="text-xs font-semibold text-gray-500">Total Halaman Baru</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <!-- Tombol Kirim -->
+                <button id="kirimButton" onclick="kirimReport()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition duration-150 ease-in-out">
+                    Kirim Laporan
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- MODAL AUTHENTIKASI (LOGIN/SIGNUP) - Diperbarui dengan input Nama -->
+    <div id="authModal" class="modal-overlay hidden" onclick="closeModal('authModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 class="text-2xl font-bold text-center mb-6 text-gray-800" id="authTitle">Masuk ke Akun Anda</h2>
+            
+            <div class="space-y-4">
+                <!-- Input Nama Lengkap -->
+                <div id="authNameField">
+                    <label for="authName" class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                    <input type="text" id="authName" placeholder="Nama Lengkap Anda" required>
+                </div>
+                <!-- AKHIR BARU -->
+                
+                <div>
+                    <label for="authEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="authEmail" placeholder="email@contoh.com" required>
+                </div>
+                <div>
+                    <label for="authPassword" class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi</label>
+                    <input type="password" id="authPassword" placeholder="Minimal 6 karakter" required>
+                </div>
+                
+                <button id="authButton" onclick="handleAuthAction()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition duration-150 ease-in-out">
+                    Masuk
+                </button>
+
+                <p class="text-center text-sm text-gray-500 mt-4">
+                    <span id="authToggleText">Belum punya akun?</span> 
+                    <a href="#" onclick="toggleAuthMode()" class="text-blue-600 hover:text-blue-800 font-medium transition">Daftar Sekarang</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH USER (ADMIN ONLY) -->
+    <div id="userModal" class="modal-overlay hidden" onclick="closeModal('userModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Tambah Pengguna Baru</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                    <input type="text" id="newUserName" placeholder="Masukkan nama">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="newUserEmail" placeholder="email@contoh.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi</label>
+                    <input type="password" id="newUserPassword" placeholder="Minimal 6 karakter">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                    <select id="newUserRole">
+                        <option value="member">Member</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button onclick="closeModal('userModal')" class="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-xl">
+                        Batal
+                    </button>
+                    <button id="saveUserBtn" onclick="processAddUser()" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl shadow-md">
+                        Simpan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===============================================
+        //  PENTING: GANTI DENGAN KONFIGURASI FIREBASE ANDA
+        // ===============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNnqi5diHOnufck4LgWUzPlCv-dCpm7vw",
+            authDomain: "rekaphafalan-ceed9.firebaseapp.com",
+            projectId: "rekaphafalan-ceed9",
+            storageBucket: "rekaphafalan-ceed9.firebasestorage.app",
+            messagingSenderId: "844899938635",
+            appId: "1:844899938635:web:99ce7d4429204dbd6fb8ce"
+        };
+        const USER_PROFILE_TABLE = 'users'; // GANTI DENGAN NAMA TABEL PROFIL ANDA (Misal: 'profiles', 'app_users')
+
+        let db, auth;
+        let authMode = 'login'; // State: 'login' atau 'signup'
+        let currentUser = null; // Menyimpan objek user Supabase
+        let currentPage = 'input'; 
+        let isAdmin = false; // Menyimpan status Admin
+        let userRole = 'member'; // Menyimpan role yang diambil dari DB
+        let userName = 'Pengguna'; // BARU: Menyimpan nama pengguna
+        let userNamesMap = {}; // BARU: Map untuk menyimpan nama pengguna agar tidak perlu query berulang
+        let userFilterId = 'my'; // 'my' (default) atau ID pengguna/ 'all'
+        let dateStartFilter = null;
+        let dateEndFilter = null;
+
+        // --- DATA QURAN (Dipersingkat) ---
+        const QURAN_DATA = [
+            // ... (Data Surah lengkap)
+            { id: 1, name: "Al-Fatihah", verses: 7, startPage: 1 },
+            { id: 2, name: "Al-Baqarah", verses: 286, startPage: 2 },
+            { id: 3, name: "Ali 'Imran", verses: 200, startPage: 50 },
+            { id: 4, name: "An-Nisa'", verses: 176, startPage: 77 },
+            { id: 5, name: "Al-Ma'idah", verses: 120, startPage: 106 },
+            { id: 6, name: "Al-An'am", verses: 165, startPage: 128 },
+            { id: 7, name: "Al-A'raf", verses: 206, startPage: 151 },
+            { id: 8, name: "Al-Anfal", verses: 75, startPage: 177 },
+            { id: 9, name: "At-Tawbah", verses: 129, startPage: 187 },
+            { id: 10, name: "Yunus", verses: 109, startPage: 208 },
+            { id: 11, name: "Hud", verses: 123, startPage: 221 },
+            { id: 12, name: "Yusuf", verses: 111, startPage: 235 },
+            { id: 13, name: "Ar-Ra'd", verses: 43, startPage: 249 },
+            { id: 14, name: "Ibrahim", verses: 52, startPage: 255 },
+            { id: 15, name: "Al-Hijr", verses: 99, startPage: 262 },
+            { id: 16, name: "An-Nahl", verses: 128, startPage: 267 },
+            { id: 17, name: "Al-Isra'", verses: 111, startPage: 282 },
+            { id: 18, name: "Al-Kahf", verses: 110, startPage: 293 },
+            { id: 19, name: "Maryam", verses: 98, startPage: 305 },
+            { id: 20, name: "Taha", verses: 135, startPage: 312 },
+            { id: 21, name: "Al-Anbiya'", verses: 112, startPage: 322 },
+            { id: 22, name: "Al-Hajj", verses: 78, startPage: 332 },
+            { id: 23, name: "Al-Mu'minun", verses: 118, startPage: 342 },
+            { id: 24, name: "An-Nur", verses: 64, startPage: 350 },
+            { id: 25, name: "Al-Furqan", verses: 77, startPage: 359 },
+            { id: 26, name: "Asy-Syu'ara'", verses: 227, startPage: 367 },
+            { id: 27, name: "An-Naml", verses: 93, startPage: 377 },
+            { id: 28, name: "Al-Qasas", verses: 88, startPage: 385 },
+            { id: 29, name: "Al-'Ankabut", verses: 69, startPage: 396 },
+            { id: 30, name: "Ar-Rum", verses: 60, startPage: 404 },
+            { id: 31, name: "Luqman", verses: 34, startPage: 411 },
+            { id: 32, name: "As-Sajdah", verses: 30, startPage: 415 },
+            { id: 33, name: "Al-Ahzab", verses: 73, startPage: 418 },
+            { id: 34, name: "Saba'", verses: 54, startPage: 428 },
+            { id: 35, name: "Fatir", verses: 45, startPage: 434 },
+            { id: 36, name: "Yasin", verses: 83, startPage: 440 },
+            { id: 37, name: "As-Saffat", verses: 182, startPage: 446 },
+            { id: 38, name: "Sad", verses: 88, startPage: 453 },
+            { id: 39, name: "Az-Zumar", verses: 75, startPage: 458 },
+            { id: 40, name: "Ghafir", verses: 85, startPage: 467 },
+            { id: 41, name: "Fussilat", verses: 54, startPage: 477 },
+            { id: 42, name: "Asy-Syura", verses: 53, startPage: 483 },
+            { id: 43, name: "Az-Zukhruf", verses: 89, startPage: 489 },
+            { id: 44, name: "Ad-Dukhan", verses: 59, startPage: 496 },
+            { id: 45, name: "Al-Jatsiyah", verses: 37, startPage: 499 },
+            { id: 46, name: "Al-Ahqaf", verses: 35, startPage: 502 },
+            { id: 47, name: "Muhammad", verses: 38, startPage: 507 },
+            { id: 48, name: "Al-Fath", verses: 29, startPage: 511 },
+            { id: 49, name: "Al-Hujurat", verses: 18, startPage: 515 },
+            { id: 50, name: "Qaf", verses: 45, startPage: 518 },
+            { id: 51, name: "Adz-Dzariyat", verses: 60, startPage: 520 },
+            { id: 52, name: "At-Tur", verses: 49, startPage: 523 },
+            { id: 53, name: "An-Najm", verses: 62, startPage: 526 },
+            { id: 54, name: "Al-Qamar", verses: 55, startPage: 528 },
+            { id: 55, name: "Ar-Rahman", verses: 78, startPage: 531 },
+            { id: 56, name: "Al-Waqi'ah", verses: 96, startPage: 534 },
+            { id: 57, name: "Al-Hadid", verses: 29, startPage: 537 },
+            { id: 58, name: "Al-Mujadalah", verses: 22, startPage: 542 },
+            { id: 59, name: "Al-Hasyr", verses: 24, startPage: 545 },
+            { id: 60, name: "Al-Mumtahanah", verses: 13, startPage: 550 },
+            { id: 61, name: "As-Saff", verses: 14, startPage: 551 },
+            { id: 62, name: "Al-Jumu'ah", verses: 11, startPage: 553 },
+            { id: 63, name: "Al-Munafiqun", verses: 11, startPage: 554 },
+            { id: 64, name: "At-Taghabun", verses: 18, startPage: 556 },
+            { id: 65, name: "At-Talaq", verses: 12, startPage: 558 },
+            { id: 66, name: "At-Tahrim", verses: 12, startPage: 560 },
+            { id: 67, name: "Al-Mulk", verses: 30, startPage: 562 },
+            { id: 68, name: "Al-Qalam", verses: 52, startPage: 564 },
+            { id: 69, name: "Al-Haqqah", verses: 52, startPage: 566 },
+            { id: 70, name: "Al-Ma'arij", verses: 44, startPage: 568 },
+            { id: 71, name: "Nuh", verses: 28, startPage: 570 },
+            { id: 72, name: "Al-Jinn", verses: 28, startPage: 572 },
+            { id: 73, name: "Al-Muzzammil", verses: 20, startPage: 574 },
+            { id: 74, name: "Al-Muddatstsir", verses: 56, startPage: 575 },
+            { id: 75, name: "Al-Qiyamah", verses: 40, startPage: 577 },
+            { id: 76, name: "Al-Insan", verses: 31, startPage: 578 },
+            { id: 77, name: "Al-Mursalat", verses: 50, startPage: 580 },
+            { id: 78, name: "An-Naba'", verses: 40, startPage: 582 },
+            { id: 79, name: "An-Nazi'at", verses: 46, startPage: 583 },
+            { id: 80, name: "'Abasa", verses: 42, startPage: 585 },
+            { id: 81, name: "At-Takwir", verses: 29, startPage: 586 },
+            { id: 82, name: "Al-Infitar", verses: 19, startPage: 587 },
+            { id: 83, name: "Al-Muthaffifin", verses: 36, startPage: 587 },
+            { id: 84, name: "Al-Insyiqaq", verses: 25, startPage: 589 },
+            { id: 85, name: "Al-Buruj", verses: 22, startPage: 590 },
+            { id: 86, name: "At-Tariq", verses: 17, startPage: 591 },
+            { id: 87, name: "Al-A'la", verses: 19, startPage: 591 },
+            { id: 88, name: "Al-Ghasyiyah", verses: 26, startPage: 592 },
+            { id: 89, name: "Al-Fajr", verses: 30, startPage: 593 },
+            { id: 90, name: "Al-Balad", verses: 20, startPage: 594 },
+            { id: 91, name: "Asy-Syams", verses: 15, startPage: 595 },
+            { id: 92, name: "Al-Lail", verses: 21, startPage: 595 },
+            { id: 93, name: "Ad-Duha", verses: 11, startPage: 596 },
+            { id: 94, name: "Al-Insyirah", verses: 8, startPage: 596 },
+            { id: 95, name: "At-Tin", verses: 8, startPage: 597 },
+            { id: 96, name: "Al-'Alaq", verses: 19, startPage: 597 },
+            { id: 97, name: "Al-Qadr", verses: 5, startPage: 598 },
+            { id: 98, name: "Al-Bayyinah", verses: 8, startPage: 598 },
+            { id: 99, name: "Az-Zalzalah", verses: 8, startPage: 599 },
+            { id: 100, name: "Al-'Adiyat", verses: 11, startPage: 599 },
+            { id: 101, name: "Al-Qari'ah", verses: 11, startPage: 600 },
+            { id: 102, name: "At-Takatsur", verses: 8, startPage: 600 },
+            { id: 103, name: "Al-'Ashr", verses: 3, startPage: 601 },
+            { id: 104, name: "Al-Humazah", verses: 9, startPage: 601 },
+            { id: 105, name: "Al-Fil", verses: 5, startPage: 601 },
+            { id: 106, name: "Quraisy", verses: 4, startPage: 602 },
+            { id: 107, name: "Al-Ma'un", verses: 7, startPage: 602 },
+            { id: 108, name: "Al-Kautsar", verses: 3, startPage: 602 },
+            { id: 109, name: "Al-Kafirun", verses: 6, startPage: 603 },
+            { id: 110, name: "An-Nashr", verses: 3, startPage: 603 },
+            { id: 111, name: "Al-Lahab", verses: 5, startPage: 603 },
+            { id: 112, name: "Al-Ikhlas", verses: 4, startPage: 604 },
+            { id: 113, name: "Al-Falaq", verses: 5, startPage: 604 },
+            { id: 114, name: "An-Nas", verses: 6, startPage: 604 }
+        ];
+
+        // --- SUPABASE & AUTH LOGIC ---
+
+        // Dapatkan elemen baru untuk Nama
+        const authNameInput = document.getElementById('authName');
+        const authNameField = document.getElementById('authNameField');
+
+        // FUNGSI BARU: Mengambil Role dan Nama dari Database
+        async function checkUserRoleAndAdminStatus(userId) {
+            console.log(`Mencari role untuk User ID: ${userId}`);
+            try {
+                const doc = await db.collection(USER_PROFILE_TABLE).doc(userId).get();
+                if (!doc.exists) {
+                    return { role: 'member', isAdmin: false, name: currentUser.displayName || 'Pengguna' };
+                }
+                const data = doc.data();
+                const retrievedRole = (data.role || 'member').toLowerCase();
+                const retrievedName = data.full_name || currentUser.displayName || 'Pengguna';
+                const isUserAdmin = retrievedRole === 'admin';
+                userNamesMap[userId] = retrievedName;
+
+                console.log(`Role ditemukan: ${retrievedRole}, Status Admin: ${isUserAdmin}, Nama: ${retrievedName}`);
+                return { role: retrievedRole, isAdmin: isUserAdmin, name: retrievedName };
+            } catch (error) {
+                console.error('Error saat mengambil role:', error);
+                return { role: 'member', isAdmin: false, name: 'Pengguna' };
+            }
+        }
+        
+        // BARU: Fungsi untuk mengambil semua nama pengguna (hanya dipanggil oleh Admin)
+        async function fetchAllUserNames() {
+            if (!isAdmin) return;
+            try {
+                const snapshot = await db.collection(USER_PROFILE_TABLE).get();
+                userNamesMap = {};
+                const userFilterSelect = document.getElementById('userFilter');
+                userFilterSelect.innerHTML = '<option value="all">-- Semua Pengguna --</option>';
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    userNamesMap[doc.id] = data.full_name || doc.id.substring(0, 8);
+                    
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = data.full_name || doc.id.substring(0, 8);
+                    userFilterSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error fetching all user names:', error);
+            }
+        }
+        
+        // FUNGSI BARU: Mengambil laporan terakhir pengguna untuk mengisi form
+        async function fetchLastReport(userId) {
+            try {
+                const snapshot = await db.collection('reports')
+                    .where('user_id', '==', userId)
+                    .orderBy('report_date', 'desc')
+                    .limit(1)
+                    .get();
+
+                if (snapshot.empty) return null;
+                return snapshot.docs[0].data();
+            } catch (error) {
+                console.error("Error fetching last report:", error);
+                return null;
+            }
+        }
+        
+        function initializeFirebase() {
+            const statusText = document.getElementById('authSessionStatus');
+            statusText.textContent = 'Memuat konfigurasi...';
+
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            auth = firebase.auth();
+            
+            auth.onAuthStateChanged((user) => {
+                console.log(`Auth State Changed: ${user ? 'Logged In' : 'Logged Out'}`);
+                updateUI(user);
+                const statusText = document.getElementById('authSessionStatus');
+                statusText.textContent = user ? 'Sesi ditemukan.' : 'Siap untuk Masuk.';
+            });
+        }
+        
+        /**
+         * Mengupdate UI berdasarkan status sesi.
+         */
+        async function updateUI(user) {
+            const splashView = document.getElementById('splashView');
+            const mainAppContainer = document.getElementById('mainAppContainer');
+            const adminFilterControls = document.getElementById('adminFilterControls');
+
+            if (user) {
+                currentUser = user;
+                
+                // BARU: Ambil Role dan Nama dari Database
+                const roleData = await checkUserRoleAndAdminStatus(currentUser.uid);
+                isAdmin = roleData.isAdmin;
+                userRole = roleData.role;
+                userName = roleData.name; // Simpan nama pengguna
+
+                // Panggil fetchAllUserNames jika Admin
+                if (isAdmin) {
+                    await fetchAllUserNames();
+                    document.getElementById('adminMgmtBtn').classList.remove('hidden');
+                    adminFilterControls.classList.remove('hidden'); // Tampilkan kontrol filter
+                    
+                    // BARU: Atur nilai default filter saat Admin login
+                    userFilterId = 'all'; 
+                    document.getElementById('userFilter').value = 'all';
+                    
+                    const today = new Date().toISOString().split('T')[0];
+                    // Atur tanggal mulai default ke 30 hari lalu atau sesuai kebutuhan
+                    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                    
+                    document.getElementById('dateStartFilter').value = thirtyDaysAgo;
+                    document.getElementById('dateEndFilter').value = today;
+                    
+                    dateStartFilter = thirtyDaysAgo;
+                    dateEndFilter = today;
+                    // *************************************************
+
+                } else {
+                    adminFilterControls.classList.add('hidden'); // Sembunyikan kontrol filter
+                    document.getElementById('adminMgmtBtn').classList.add('hidden');
+                    userFilterId = 'my'; // Member hanya melihat riwayat sendiri
+                }
+                
+                // Sembunyikan Splash View, Tampilkan App
+                splashView.classList.add('hidden');
+                mainAppContainer.classList.remove('hidden');
+                
+                // Tampilkan Nama di header
+                document.getElementById('userEmailDisplay').textContent = userName;
+                
+                // Tampilkan status Role yang DARI DATABASE di header
+                document.getElementById('adminStatus').textContent = `Role: ${userRole.toUpperCase()} ${isAdmin ? '(Melihat Semua Data)' : ''}`;
+                
+                // Panggil renderPage untuk memuat konten
+                renderPage(currentPage);
+
+                // BARU: Ambil laporan terakhir dan isi form input
+                const lastReport = await fetchLastReport(currentUser.uid);
+                populateStartInputs(lastReport);
+
+                closeModal('authModal');
+                showMessage(`Marhaban, ${userName}! Sebagai: ${userRole.toUpperCase()}`, 'success');
+
+            } else {
+                currentUser = null;
+                isAdmin = false; // Reset status Admin
+                userRole = 'member'; // Reset role
+                userName = 'Pengguna'; // Reset nama
+                userFilterId = 'my'; // Gunakan userFilterId bukan historyFilter
+                adminFilterControls.classList.add('hidden');
+
+                // Sembunyikan App, Tampilkan Splash View
+                mainAppContainer.classList.add('hidden');
+                splashView.classList.remove('hidden');
+            }
+        }
+
+        function showAuthModal(mode) {
+            authMode = mode;
+            toggleAuthMode(true); // Memastikan modal dibuka dengan mode yang benar
+            
+            const authModal = document.getElementById('authModal');
+            authModal.classList.remove('hidden');
+            authModal.classList.add('flex');
+            document.getElementById('authEmail').value = '';
+            document.getElementById('authPassword').value = '';
+            document.getElementById('authName').value = ''; // Reset nama
+        }
+        
+        function toggleAuthMode(skipShow = false) {
+            if (!skipShow) {
+                authMode = authMode === 'login' ? 'signup' : 'login';
+            }
+            
+            document.getElementById('authTitle').textContent = authMode === 'login' ? 'Masuk ke Akun Anda' : 'Daftar Akun Baru';
+            document.getElementById('authButton').textContent = authMode === 'login' ? 'Masuk' : 'Daftar';
+            document.getElementById('authToggleText').textContent = authMode === 'login' ? 'Belum punya akun?' : 'Sudah punya akun?';
+            document.querySelector('.text-center.text-sm a').textContent = authMode === 'login' ? 'Daftar Sekarang' : 'Masuk Sekarang';
+            
+            // Logika untuk menampilkan/menyembunyikan input Nama
+            if (authMode === 'login') {
+                authNameField.classList.add('hidden');
+            } else {
+                authNameField.classList.remove('hidden');
+            }
+        }
+
+        async function handleAuthAction() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            const name = document.getElementById('authName').value.trim(); // Ambil dan bersihkan Nama
+            
+            if (!email || password.length < 6) {
+                showMessage("Email wajib diisi dan Kata Sandi minimal 6 karakter.", 'error');
+                return;
+            }
+            
+            const authButton = document.getElementById('authButton');
+            authButton.disabled = true;
+            authButton.textContent = 'Memproses...';
+
+            try {
+                if (authMode === 'signup') {
+                    if (!name) throw new Error("Nama Lengkap wajib diisi.");
+                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                    // Update Profile
+                    await userCredential.user.updateProfile({ displayName: name });
+                    // Simpan ke Firestore users collection
+                    await db.collection(USER_PROFILE_TABLE).doc(userCredential.user.uid).set({
+                        full_name: name,
+                        email: email,
+                        role: 'member',
+                        created_at: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    showMessage("Pendaftaran berhasil!", 'success');
+                    toggleAuthMode();
+                } else {
+                    await auth.signInWithEmailAndPassword(email, password);
+                }
+            } catch (error) {
+                console.error('Auth Error:', error);
+                showMessage(`Gagal: ${error.message}`, 'error');
+            } finally {
+                authButton.disabled = false;
+                authButton.textContent = authMode === 'login' ? 'Masuk' : 'Daftar';
+            
+            }
+        }
+        
+        /**
+         * Setelah pendaftaran berhasil, kita perlu memasukkan data pengguna ke tabel `users`
+         * dengan role default 'member'. Ini dipanggil di dalam onAuthStateChange (atau setelah signup),
+         * tetapi Supabase Hook/Trigger di dashboard lebih disarankan untuk kasus nyata.
+         * Untuk demo ini, kita asumsikan Trigger/Hook Supabase sudah ada dan menangani ini.
+         * Jadi tidak perlu kode insert profile di sisi klien.
+         */
+        async function handleLogout() {
+            try {
+                await auth.signOut();
+                showMessage("Anda telah berhasil keluar.", 'success');
+            } catch (error) {
+                showMessage(`Gagal Logout: ${error.message}`, 'error');
+            }
+        }
+
+        // FUNGSI BARU: Mengisi form input berdasarkan data laporan terakhir
+        function populateStartInputs(lastReport) {
+            if (!lastReport) return;
+
+            // Mengisi card "Hafalan Terakhir"
+            document.getElementById('startSurah').value = lastReport.end_surah_id;
+            updateMaxAyat('start'); // Penting: update max ayat sebelum set nilainya
+            document.getElementById('startAyat').value = lastReport.end_ayat;
+            document.getElementById('startPage').value = lastReport.end_page;
+
+            // Juga mengisi card "Hafalan Terbaru" dengan nilai yang sama,
+            // agar pengguna bisa langsung lanjut mengisi hafalan berikutnya.
+            document.getElementById('endSurah').value = lastReport.end_surah_id;
+            updateMaxAyat('end');
+            document.getElementById('endAyat').value = lastReport.end_ayat;
+            document.getElementById('endPage').value = lastReport.end_page;
+
+            // Hitung ulang nilai di result box
+            calculateHafalan();
+        }
+
+
+        // --- UTILITY & PERHITUNGAN ---
+        
+        // BARU: Variabel untuk debounce request API
+        let pageFetchDebounceTimer;
+
+        // BARU: Fungsi untuk menangani input ayat dengan debounce
+        function handleAyatInput(type) {
+            calculateHafalan(); // Hitung sementara
+            
+            clearTimeout(pageFetchDebounceTimer);
+            pageFetchDebounceTimer = setTimeout(() => {
+                autoFillPage(type);
+            }, 500); // Tunggu 500ms setelah user berhenti mengetik agar tidak spam API
+        }
+
+        // BARU: Fungsi Auto-fill Halaman dari API AlQuran.cloud
+        async function autoFillPage(type) {
+            const surah = document.getElementById(`${type}Surah`).value;
+            const ayat = document.getElementById(`${type}Ayat`).value;
+            const pageInput = document.getElementById(`${type}Page`);
+
+            if (!surah || !ayat) return;
+
+            try {
+                const response = await fetch(`https://api.alquran.cloud/v1/ayah/${surah}:${ayat}`);
+                const data = await response.json();
+                
+                if (data.code === 200 && data.data.page) {
+                    pageInput.value = data.data.page;
+                    calculateHafalan(); // Hitung ulang dengan halaman yang baru didapat
+                }
+            } catch (error) {
+                console.error("Gagal mengambil data halaman otomatis:", error);
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            if (modalId === 'reportModal') {
+                document.getElementById('kirimButton').disabled = false;
+                document.getElementById('kirimButton').textContent = 'Kirim Laporan';
+            }
+        }
+
+        function getSurahName(id) {
+            const surah = QURAN_DATA.find(s => s.id === parseInt(id));
+            return surah ? `${surah.id}. ${surah.name}` : 'N/A';
+        }
+        
+        function showMessage(message, type = 'success') {
+            const msgElement = document.getElementById('statusMessage');
+            msgElement.textContent = message;
+            msgElement.className = ''; 
+            msgElement.classList.add(type === 'success' ? 'bg-success' : 'bg-error');
+            msgElement.style.display = 'block';
+            msgElement.style.opacity = '1';
+
+            setTimeout(() => {
+                msgElement.style.opacity = '0';
+                setTimeout(() => { msgElement.style.display = 'none'; }, 300);
+            }, 3000);
+        }
+
+        function renderPage(pageName) {
+            currentPage = pageName;
+            
+            const inputView = document.getElementById('inputView');
+            const historyView = document.getElementById('historyView');
+            const navInput = document.getElementById('navInput');
+            const navHistory = document.getElementById('navHistory');
+            const managementView = document.getElementById('managementView');
+
+            if (!currentUser) return; // Lindungi agar tidak merender jika belum login
+
+            [inputView, historyView, managementView].forEach(el => el.classList.add('hidden'));
+            [navInput, navHistory].forEach(el => el.classList.remove('active'));
+
+            if (pageName === 'input') {
+                inputView.classList.remove('hidden');
+                navInput.classList.add('active');
+            } else if (pageName === 'history') {
+                historyView.classList.remove('hidden');
+                navHistory.classList.add('active');
+                
+                // BARU: Panggil renderHistory dengan filter yang benar
+                // Logika filter sudah dihandle oleh renderHistory() dan state global userFilterId
+                
+                renderHistory(); // Panggil fungsi Supabase
+
+                // Tampilkan kontrol filter jika Admin
+                if (isAdmin) {
+                    document.getElementById('adminFilterControls').classList.remove('hidden');
+                } else {
+                    document.getElementById('adminFilterControls').classList.add('hidden');
+                }
+            } else if (pageName === 'management' && isAdmin) {
+                managementView.classList.remove('hidden');
+                renderUserManagement();
+            }
+        }
+
+
+        function initializeSurahDropdowns() {
+            const startSurahSelect = document.getElementById('startSurah');
+            const endSurahSelect = document.getElementById('endSurah');
+            const reportDateInput = document.getElementById('reportDate');
+
+            QURAN_DATA.forEach(surah => {
+                const optionStart = document.createElement('option');
+                optionStart.value = surah.id;
+                optionStart.textContent = `${surah.id}. ${surah.name}`;
+                const optionEnd = optionStart.cloneNode(true);
+                startSurahSelect.appendChild(optionStart);
+                endSurahSelect.appendChild(optionEnd);
+            });
+
+            startSurahSelect.value = 1;
+            endSurahSelect.value = 1; 
+
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            reportDateInput.value = `${yyyy}-${mm}-${dd}`;
+
+            updateMaxAyat('start');
+            updateMaxAyat('end');
+        }
+
+        function updateMaxAyat(type) {
+            const surahSelect = document.getElementById(`${type}Surah`);
+            const ayatInput = document.getElementById(`${type}Ayat`);
+            const selectedSurahId = parseInt(surahSelect.value);
+            const surahData = QURAN_DATA.find(s => s.id === selectedSurahId);
+
+            if (surahData) {
+                ayatInput.max = surahData.verses;
+                if (parseInt(ayatInput.value) > surahData.verses) {
+                    ayatInput.value = surahData.verses;
+                }
+            }
+            calculateHafalan();
+            autoFillPage(type); // BARU: Cek halaman otomatis saat ganti surat
+        }
+
+        function calculateHafalan() {
+            const startSurahId = parseInt(document.getElementById('startSurah').value);
+            const startAyat = parseInt(document.getElementById('startAyat').value) || 1;
+            const endSurahId = parseInt(document.getElementById('endSurah').value);
+            const endAyat = parseInt(document.getElementById('endAyat').value) || 1;
+            const startPageValue = parseInt(document.getElementById('startPage').value);
+            const endPageValue = parseInt(document.getElementById('endPage').value);
+
+            const startSurah = QURAN_DATA.find(s => s.id === startSurahId);
+            const endSurah = QURAN_DATA.find(s => s.id === endSurahId);
+
+            let totalAyat = 0;
+            let totalHalaman = 0;
+
+            if (!startSurah || !endSurah) return;
+
+            // Cek urutan
+            if (startSurahId > endSurahId || startPageValue > endPageValue || 
+                (startSurahId === endSurahId && startAyat >= endAyat)) 
+            {
+                document.getElementById('ayatHafalan').textContent = "---";
+                document.getElementById('halamanHafalan').textContent = "Periksa Input";
+                return;
+            }
+
+            // HITUNG TOTAL AYAT
+            if (startSurahId === endSurahId) {
+                totalAyat = endAyat - startAyat;
+            } else {
+                totalAyat += startSurah.verses - startAyat;
+                for (let i = startSurahId + 1; i < endSurahId; i++) {
+                    const surahTengah = QURAN_DATA.find(s => s.id === i);
+                    if (surahTengah) totalAyat += surahTengah.verses;
+                }
+                totalAyat += endAyat;
+            }
+
+            // HITUNG TOTAL HALAMAN
+            totalHalaman = endPageValue - startPageValue;
+            
+            document.getElementById('ayatHafalan').textContent = Math.max(0, totalAyat);
+            document.getElementById('halamanHafalan').textContent = Math.max(0, totalHalaman);
+        }
+
+        // --- MODAL & DATA PERSISTENCE (SUPABASE) LOGIC ---
+
+        function showReportModal() {
+            if (!currentUser) {
+                showMessage("Anda harus login untuk mengirim laporan.", 'error');
+                showAuthModal('login'); // Ajak user login
+                return;
+            }
+
+            calculateHafalan(); 
+            
+            const totalAyatText = document.getElementById('ayatHafalan').textContent;
+
+            if (totalAyatText === "---" || totalAyatText === "0") {
+                showMessage("Pastikan Titik Akhir berada setelah Titik Awal, dan total hafalan minimal 1 ayat.", 'error');
+                return; 
+            }
+
+            // Ambil semua input
+            const startSurahId = document.getElementById('startSurah').value;
+            const startAyat = document.getElementById('startAyat').value;
+            const startPage = document.getElementById('startPage').value;
+            const endSurahId = document.getElementById('endSurah').value;
+            const endAyat = document.getElementById('endAyat').value;
+            const endPage = document.getElementById('endPage').value;
+            const reportDate = document.getElementById('reportDate').value;
+            const totalHalaman = document.getElementById('halamanHafalan').textContent;
+            
+            document.getElementById('modalDate').textContent = new Date(reportDate).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('modalStartSurah').textContent = getSurahName(startSurahId);
+            document.getElementById('modalStartAyat').textContent = startAyat;
+            document.getElementById('modalStartPage').textContent = startPage;
+            document.getElementById('modalEndSurah').textContent = getSurahName(endSurahId);
+            document.getElementById('modalEndAyat').textContent = endAyat;
+            document.getElementById('modalEndPage').textContent = endPage;
+            document.getElementById('modalTotalAyat').textContent = totalAyatText;
+            document.getElementById('modalTotalHalaman').textContent = totalHalaman;
+
+
+            // Tampilkan modal
+            document.getElementById('reportModal').classList.remove('hidden');
+            document.getElementById('reportModal').classList.add('flex');
+        }
+        
+        /**
+         * Mengirim laporan ke tabel 'reports' Supabase, menggunakan ID pengguna yang sedang login.
+         */
+        async function kirimReport() {
+            const kirimButton = document.getElementById('kirimButton');
+            kirimButton.disabled = true;
+            kirimButton.textContent = 'Mengirim...';
+
+            // Ambil data dari modal (yang sudah diambil dari input)
+            const reportData = {
+                user_id: currentUser.uid,
+                report_date: document.getElementById('reportDate').value,
+                start_surah_id: parseInt(document.getElementById('startSurah').value),
+                start_ayat: parseInt(document.getElementById('startAyat').value),
+                start_page: parseInt(document.getElementById('startPage').value),
+                end_surah_id: parseInt(document.getElementById('endSurah').value),
+                end_ayat: parseInt(document.getElementById('endAyat').value),
+                end_page: parseInt(document.getElementById('endPage').value),
+                total_ayat: parseInt(document.getElementById('modalTotalAyat').textContent),
+                total_halaman: parseInt(document.getElementById('modalTotalHalaman').textContent),
+            };
+
+             try {
+                await db.collection('reports').add({
+                    ...reportData,
+                    created_at: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showMessage("Laporan hafalan berhasil disimpan!", 'success');
+                closeModal('reportModal');
+                
+                // BARU: Update form input dengan data yang baru saja dikirim
+                const newStartData = {
+                    end_surah_id: reportData.end_surah_id,
+                    end_ayat: reportData.end_ayat,
+                    end_page: reportData.end_page
+                };
+                populateStartInputs(newStartData);
+
+                // Otomatis pindah ke riwayat jika berhasil
+                if (currentPage === 'history') {
+                    renderHistory();
+                }
+            } catch (error) {
+                showMessage(`Gagal: ${error.message}`, 'error');
+            } finally {
+                kirimButton.disabled = false;
+                kirimButton.textContent = 'Kirim Laporan';
+            }
+        }
+
+        // FUNGSI BARU: Menghapus Laporan
+        async function deleteReport(reportId) {
+            if (!confirm('Apakah Anda yakin ingin menghapus laporan ini? Data yang dihapus tidak dapat dikembalikan.')) {
+                return;
+            }
+
+            try {
+                await db.collection('reports').doc(reportId).delete();
+                showMessage('Laporan berhasil dihapus.', 'success');
+                renderHistory(); // Refresh daftar riwayat
+            } catch (error) {
+                showMessage(`Gagal: ${error.message}`, 'error');
+            }
+        }
+
+        async function renderHistory() {
+            if (!currentUser) return;
+
+            const historyList = document.getElementById('reportList');
+            const totalAyatRecap = document.getElementById('totalAyatRecap');
+            const totalHalamanRecap = document.getElementById('totalHalamanRecap');
+            const avgAyatRecap = document.getElementById('avgAyatRecap');
+            const avgHalamanRecap = document.getElementById('avgHalamanRecap');
+            
+            const historyTitle = document.getElementById('historyTitle');
+
+            let query = db.collection('reports');
+            const userFilterSelect = document.getElementById('userFilter');
+            const dateStartInput = document.getElementById('dateStartFilter');
+            const dateEndInput = document.getElementById('dateEndFilter');
+
+            // 1. Update State Filter dari input UI (Hanya relevan jika Admin sedang melihat)
+            if (isAdmin) {
+                userFilterId = userFilterSelect.value;
+                dateStartFilter = dateStartInput.value;
+                dateEndFilter = dateEndInput.value;
+            } else {
+                userFilterId = 'my'; // Member selalu 'my'
+            }
+
+            // 2. Terapkan Filter Pengguna (USER ID)
+            if (userFilterId === 'my' || !isAdmin) {
+                // Member atau Admin di mode default/pribadi
+                query = query.where('user_id', '==', currentUser.uid);
+                document.getElementById('historyTitle').textContent = 'Anda';
+            } else if (userFilterId !== 'all') {
+                // Admin memilih pengguna spesifik
+                query = query.where('user_id', '==', userFilterId);
+                // Tampilkan nama yang difilter di judul
+                document.getElementById('historyTitle').textContent = userNamesMap[userFilterId] || 'Pengguna Lain';
+            } else {
+                // Admin memilih 'Semua Pengguna'
+                document.getElementById('historyTitle').textContent = 'Semua Pengguna';
+            }
+
+            // 3. Terapkan Filter Tanggal
+            if (dateStartFilter) {
+                // Filter tanggal laporan LEBIH DARI ATAU SAMA DENGAN tanggal mulai
+                query = query.where('report_date', '>=', dateStartFilter);
+            }
+            if (dateEndFilter) {
+                // Filter tanggal laporan KURANG DARI ATAU SAMA DENGAN tanggal akhir
+                query = query.where('report_date', '<=', dateEndFilter);
+            }
+            
+            // Tambahkan pengurutan
+            query = query.orderBy('report_date', 'desc');
+
+            // Reset Rekapitulasi saat memuat
+            totalAyatRecap.textContent = '...';
+            totalHalamanRecap.textContent = '...';
+            avgAyatRecap.textContent = '...';
+            avgHalamanRecap.textContent = '...';
+
+            historyList.innerHTML = `
+                <div class="text-center p-8 bg-gray-50 rounded-xl">
+                    <svg class="animate-spin h-5 w-5 mr-3 inline text-blue-500" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Memuat riwayat laporan...
+                </div>`;
+            
+             try {
+                const snapshot = await query.get();
+                const reports = [];
+                snapshot.forEach(doc => reports.push({ id: doc.id, ...doc.data() }));
+
+                if (reports.length === 0) {
+                const filterText = userFilterId === 'my' ? 'Anda' : (userFilterId === 'all' ? 'Semua pengguna' : userNamesMap[userFilterId] || 'pengguna ini');
+                historyList.innerHTML = `<p class="text-center text-gray-500 mt-10 p-4 bg-gray-100 rounded-lg">Belum ada riwayat laporan tersimpan untuk ${filterText}.</p>`;
+                
+                // Reset rekapitulasi ke 0
+                totalAyatRecap.textContent = '0';
+                totalHalamanRecap.textContent = '0';
+                avgAyatRecap.textContent = '0';
+                avgHalamanRecap.textContent = '0';
+                return;
+            }
+            
+            // --- 1. LOGIKA PERHITUNGAN REKAPITULASI ---
+            const totalReports = reports.length;
+            let totalAyat = 0;
+            let totalHalaman = 0;
+
+            reports.forEach(report => {
+                totalAyat += report.total_ayat || 0;
+                totalHalaman += report.total_halaman || 0;
+            });
+
+            const avgAyat = totalReports > 0 ? (totalAyat / totalReports).toFixed(1) : 0;
+            const avgHalaman = totalReports > 0 ? (totalHalaman / totalReports).toFixed(1) : 0;
+
+            // --- 2. MENAMPILKAN REKAPITULASI ---
+            totalAyatRecap.textContent = totalAyat.toLocaleString('id-ID');
+            totalHalamanRecap.textContent = totalHalaman.toLocaleString('id-ID');
+            avgAyatRecap.textContent = avgAyat;
+            avgHalamanRecap.textContent = avgHalaman;
+            
+            // --- 3. MERENDER DAFTAR LAPORAN ---
+            historyList.innerHTML = reports.map(report => {
+                const dateFormatted = new Date(report.report_date).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
+                const startSurahName = getSurahName(report.start_surah_id);
+                const endSurahName = getSurahName(report.end_surah_id);
+                
+                // BARU: Dapatkan nama pengguna dari map
+                const reporterName = userNamesMap[report.user_id] || report.user_id.substring(0, 8) + '...';
+
+                // Tampilkan Nama Pengguna jika Admin sedang melihat riwayat pengguna lain (bukan 'my')
+                const userInfo = (isAdmin && userFilterId !== 'my') 
+                    ? `<div class="mb-2 text-xs font-semibold text-gray-700 p-2 bg-gray-100 rounded-lg">Pelapor: ${reporterName}</div>` 
+                    : '';
+
+                return `
+                    <div class="bg-white p-4 border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition">
+                        ${userInfo}
+                        <div class="flex justify-between items-center border-b pb-2 mb-2">
+                            <span class="text-sm font-semibold text-blue-600">${dateFormatted}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-medium text-green-600 bg-green-100 px-2 py-0.5 rounded-full">${report.total_ayat} Ayat</span>
+                                <button onclick="deleteReport('${report.id}')" class="text-gray-400 hover:text-red-500 transition p-1" title="Hapus Laporan">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-y-2 text-sm">
+                            <div class="font-medium text-gray-700">Awal:</div>
+                            <div class="text-right text-gray-900">${startSurahName} Ayat ${report.start_ayat}</div>
+                            
+                            <div class="font-medium text-gray-700">Akhir:</div>
+                            <div class="text-right text-gray-900">${endSurahName} Ayat ${report.end_ayat}</div>
+
+                            <div class="font-medium text-gray-700">Halaman Akhir:</div>
+                            <div class="text-right text-gray-900">${report.end_page}</div>
+                            
+                            <div class="font-medium text-gray-700 border-t pt-2 mt-2">Total Halaman:</div>
+                            <div class="text-right text-gray-900 border-t pt-2 mt-2">${report.total_halaman} Halaman</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            } catch (error) {
+                console.error(error);
+                historyList.innerHTML = `<p class="text-center text-red-500 mt-10 p-4 bg-red-100 rounded-lg">Gagal memuat riwayat. Pastikan Anda sudah membuat Index di Firebase Console jika menggunakan filter.</p>`;
+            }
+        }
+
+        // --- USER MANAGEMENT LOGIC (ADMIN ONLY) ---
+
+        function openAddUserModal() {
+            document.getElementById('newUserName').value = '';
+            document.getElementById('newUserEmail').value = '';
+            document.getElementById('newUserPassword').value = '';
+            document.getElementById('newUserRole').value = 'member';
+            
+            const modal = document.getElementById('userModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        async function processAddUser() {
+            const name = document.getElementById('newUserName').value.trim();
+            const email = document.getElementById('newUserEmail').value.trim();
+            const password = document.getElementById('newUserPassword').value;
+            const role = document.getElementById('newUserRole').value;
+            const btn = document.getElementById('saveUserBtn');
+
+            if (!name || !email || password.length < 6) {
+                showMessage("Mohon lengkapi data. Sandi minimal 6 karakter.", "error");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = "Memproses...";
+
+            try {
+                // Trik: Gunakan secondary app agar admin tidak ter-logout
+                const tempAppName = "TempApp_" + Date.now();
+                const tempApp = firebase.initializeApp(firebaseConfig, tempAppName);
+                const tempAuth = tempApp.auth();
+
+                // 1. Buat User di Authentication
+                const userCredential = await tempAuth.createUserWithEmailAndPassword(email, password);
+                const newUid = userCredential.user.uid;
+                
+                // Set Display Name di Auth
+                await userCredential.user.updateProfile({ displayName: name });
+
+                // 2. Simpan profil di Firestore
+                await db.collection(USER_PROFILE_TABLE).doc(newUid).set({
+                    full_name: name,
+                    email: email,
+                    role: role,
+                    created_at: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // 3. Cleanup
+                await tempAuth.signOut();
+                await tempApp.delete();
+
+                showMessage(`Berhasil menambahkan ${name} sebagai ${role}`, "success");
+                closeModal('userModal');
+                renderUserManagement();
+                fetchAllUserNames(); // Refresh map nama
+            } catch (error) {
+                console.error("Error saat Admin menambah user:", error);
+                if (error.code === 'permission-denied') {
+                    showMessage("Akses Ditolak: Pastikan Firestore Rules mengizinkan Admin menulis data user lain.", "error");
+                } else {
+                    showMessage("Gagal: " + error.message, "error");
+                }
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Simpan";
+            }
+        }
+
+        async function renderUserManagement() {
+            const listContainer = document.getElementById('userManagementList');
+            listContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Memuat data pengguna...</p>';
+
+            try {
+                const snapshot = await db.collection(USER_PROFILE_TABLE).orderBy('full_name', 'asc').get();
+                
+                if (snapshot.empty) {
+                    listContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Tidak ada data pengguna.</p>';
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach(doc => {
+                    const u = doc.data();
+                    const isMe = doc.id === currentUser.uid;
+                    const roleBadge = u.role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700';
+                    
+                    html += `
+                        <div class="bg-white p-4 border border-gray-200 rounded-xl shadow-sm flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-gray-800">${u.full_name} ${isMe ? '(Anda)' : ''}</div>
+                                <div class="text-xs text-gray-500">${u.email}</div>
+                                <div class="mt-2">
+                                    <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${roleBadge}">
+                                        ${u.role}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-gray-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+                    `;
+                });
+                listContainer.innerHTML = html;
+            } catch (error) {
+                listContainer.innerHTML = `<p class="text-red-500 text-sm">Error: ${error.message}</p>`;
+            }
+        }
+
+        // Panggil fungsi inisialisasi saat dokumen dimuat
+        window.onload = function() {
+            initializeFirebase();
+            initializeSurahDropdowns();
+            calculateHafalan();
+            // updateUI akan dipanggil oleh onAuthStateChanged setelah Firebase selesai memeriksa sesi.
+        };
+    </script>
+
+</body>
+</html>
