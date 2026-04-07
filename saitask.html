@@ -204,15 +204,17 @@
                 <div id="admin-section-projects" class="hidden max-w-4xl">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">Pengaturan Project</h2>
                     <form onsubmit="dataManager.handleProjectSubmit(event)" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                            <input id="project-name-input" class="border border-gray-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Nama Project Baru..." required>
+                            <input id="project-pic-input" class="border border-gray-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="PIC Project...">
+                        </div>
                         <div class="flex flex-col md:flex-row gap-3">
-                            <input id="project-name-input" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Nama Project Baru..." required>
-                            
+                            <input id="project-desc-input" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Keterangan Project...">
                             <div class="flex items-center gap-2">
                                 <label class="text-sm font-medium text-gray-600 whitespace-nowrap">Target:</label>
                                 <input type="date" id="project-target-input" class="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
-                            
-                            <button type="submit" id="btn-save-proj" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700">Buat Project</button>
+                            <button type="submit" id="btn-save-proj" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 shrink-0">Buat Project</button>
                         </div>
                         <div id="btn-cancel-proj" onclick="dataManager.resetProjectForm()" class="hidden mt-2 text-right">
                             <button type="button" class="text-sm text-gray-500 hover:text-gray-700 underline">Batal Edit</button>
@@ -562,14 +564,20 @@
                     const subs = proj.subProjects || [];
                     const total = subs.length > 0 ? subs.reduce((acc, curr) => acc + (parseInt(curr.percentage) || 0), 0) / subs.length : 0;
                     const projTargetDisplay = proj.targetDate ? `<span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs border border-orange-200">Target: ${formatDate(proj.targetDate)}</span>` : '';
+                    const picDisplay = proj.pic ? `<div class="text-xs text-indigo-600 font-bold mb-1">PIC: ${proj.pic}</div>` : '';
+                    const descDisplay = proj.description ? `<p class="text-xs text-gray-500 mb-3 line-clamp-2">${proj.description}</p>` : '';
 
                     return `
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
                             <div class="flex justify-between items-start mb-2">
-                                <h3 class="text-lg font-bold text-gray-800">${proj.name}</h3>
+                                <div class="flex-1">
+                                    ${picDisplay}
+                                    <h3 class="text-lg font-bold text-gray-800">${proj.name}</h3>
+                                </div>
                                 <div class="text-2xl font-black text-indigo-600">${Math.round(total)}%</div>
                             </div>
-                            <div class="mb-4 flex items-center">${projTargetDisplay}</div>
+                            <div class="mb-2 flex items-center">${projTargetDisplay}</div>
+                            ${descDisplay}
                             <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6"><div class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" style="width: ${Math.min(total, 100)}%"></div></div>
                             <div class="space-y-3">
                                 <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sub Project</h4>
@@ -603,9 +611,16 @@
                     return `
                         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                             <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
-                                <div class="flex items-center"><h3 class="font-bold text-lg text-gray-800">${proj.name}</h3>${projTargetInfo}</div>
+                                <div class="flex flex-col">
+                                    <div class="flex items-center">
+                                        <h3 class="font-bold text-lg text-gray-800">${proj.name}</h3>
+                                        ${projTargetInfo}
+                                    </div>
+                                    ${proj.pic ? `<span class="text-xs text-indigo-600 font-semibold">PIC: ${proj.pic}</span>` : ''}
+                                    ${proj.description ? `<p class="text-xs text-gray-500 mt-1">${proj.description}</p>` : ''}
+                                </div>
                                 <div class="flex gap-2">
-                                    <button onclick="dataManager.editProject('${proj.id}', '${proj.name}', '${proj.targetDate || ''}')" class="bg-white border border-gray-300 text-blue-600 px-3 py-1.5 rounded-lg text-sm hover:bg-blue-50"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                                    <button onclick="dataManager.editProject('${proj.id}', '${proj.name}', '${proj.targetDate || ''}', '${proj.pic || ''}', '${proj.description || ''}')" class="bg-white border border-gray-300 text-blue-600 px-3 py-1.5 rounded-lg text-sm hover:bg-blue-50"><i data-lucide="pencil" class="w-4 h-4"></i></button>
                                     <button onclick="dataManager.deleteProject('${proj.id}')" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-sm hover:bg-red-100 border border-red-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                 </div>
                             </div>
@@ -851,28 +866,40 @@
                 e.preventDefault();
                 const nameInput = document.getElementById('project-name-input');
                 const dateInput = document.getElementById('project-target-input');
+                const picInput = document.getElementById('project-pic-input');
+                const descInput = document.getElementById('project-desc-input');
                 const name = nameInput.value.trim();
                 const targetDate = dateInput.value; 
+                const pic = picInput.value.trim();
+                const description = descInput.value.trim();
+                
                 if(!name) return;
                 await safeWrite(async () => {
                     if (state.editingProjId) {
-                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'projects', state.editingProjId), { name, targetDate });
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'projects', state.editingProjId), { name, targetDate, pic, description });
                         dataManager.resetProjectForm();
                     } else {
-                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'projects'), { name, targetDate, subProjects: [] });
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'projects'), { name, targetDate, pic, description, subProjects: [] });
                         nameInput.value = '';
                         dateInput.value = '';
+                        picInput.value = '';
+                        descInput.value = '';
                     }
                 });
             },
-            editProject: (id, currentName, currentDate) => {
+            editProject: (id, currentName, currentDate, currentPic, currentDesc) => {
                 state.editingProjId = id;
                 const nameInput = document.getElementById('project-name-input');
                 const dateInput = document.getElementById('project-target-input');
+                const picInput = document.getElementById('project-pic-input');
+                const descInput = document.getElementById('project-desc-input');
                 const btnSave = document.getElementById('btn-save-proj');
                 const btnCancel = document.getElementById('btn-cancel-proj');
                 nameInput.value = currentName;
                 dateInput.value = currentDate || '';
+                picInput.value = currentPic || '';
+                descInput.value = currentDesc || '';
+                
                 nameInput.focus();
                 btnSave.innerText = "Update";
                 btnCancel.classList.remove('hidden');
@@ -881,6 +908,8 @@
                 state.editingProjId = null;
                 document.getElementById('project-name-input').value = '';
                 document.getElementById('project-target-input').value = '';
+                document.getElementById('project-pic-input').value = '';
+                document.getElementById('project-desc-input').value = '';
                 document.getElementById('btn-save-proj').innerText = "Buat Project";
                 document.getElementById('btn-cancel-proj').classList.add('hidden');
             },
