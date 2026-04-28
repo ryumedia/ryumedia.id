@@ -663,6 +663,7 @@
         let allOrders = []; 
         let allRefunds = {};
         let allNotOrdered = {};
+        let ordersLookupMap = {}; // Optimized lookup for rekap
         let rekapCurrentPage = 1;
         const rekapRowsPerPage = 25;
         
@@ -1367,10 +1368,13 @@
                 }
                 if (allOrders.length === 0 || forceRefresh) {
                     allOrders = [];
+                    ordersLookupMap = {};
                     const orderSnap = await getDocs(collection(db, "orders"));
                     orderSnap.forEach(doc => {
                         const d = doc.data();
                         if (d.dates && Array.isArray(d.dates)) {
+                            if (!ordersLookupMap[d.userName]) ordersLookupMap[d.userName] = {};
+                            d.dates.forEach(date => { ordersLookupMap[d.userName][date] = true; });
                             allOrders.push({ userName: d.userName, dates: d.dates, id: doc.id });
                         }
                     });
@@ -1454,7 +1458,7 @@
 
                     // CHECK STATUS
                     const isRefund = allRefunds[`${student.name}_${dateStr}`];
-                    const isPaid = allOrders.some(o => o.userName === student.name && o.dates.includes(dateStr));
+                    const isPaid = ordersLookupMap[student.name] && ordersLookupMap[student.name][dateStr];
                     const isNotOrdered = allNotOrdered[`${student.name}_${dateStr}`];
                     const menuItem = dbMenus[dateStr];
                     const isHoliday = menuItem ? menuItem.isHoliday : false;
@@ -1594,12 +1598,17 @@
                 }
 
                 // 3. Update allOrders cache
+                if (!ordersLookupMap[userName]) ordersLookupMap[userName] = {};
                 allOrders.forEach(order => {
                     if (order.userName === userName && order.dates) {
                         const index = order.dates.indexOf(dateStr);
-                        if (index > -1) order.dates.splice(index, 1);
+                        if (index > -1) {
+                            order.dates.splice(index, 1);
+                            delete ordersLookupMap[userName][dateStr];
+                        }
                     }
                 });
+
                 if (newStatus === 'paid') {
                     let userOrder = allOrders.find(o => o.userName === userName);
                     if (userOrder) {
@@ -1607,6 +1616,7 @@
                     } else {
                         allOrders.push({ userName: userName, dates: [dateStr], id: 'local_' + Date.now() });
                     }
+                    ordersLookupMap[userName][dateStr] = true;
                 }
                 
                 // 4. Re-render the table instantly from the updated local cache
