@@ -260,6 +260,11 @@
                 <div id="section-finance" class="cms-section hidden">
                     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                         <h2 class="text-2xl font-bold text-slate-800">Laporan Pesanan</h2>
+                        <div class="flex items-center gap-2">
+                            <button onclick="changeFinanceMonth(-1)" class="p-2 bg-white border rounded shadow-sm hover:bg-gray-50"><i class="fas fa-chevron-left"></i></button>
+                            <span id="financeMonthLabel" class="font-bold text-gray-700 w-40 text-center text-sm">...</span>
+                            <button onclick="changeFinanceMonth(1)" class="p-2 bg-white border rounded shadow-sm hover:bg-gray-50"><i class="fas fa-chevron-right"></i></button>
+                        </div>
                         <div class="flex gap-2">
                             <button onclick="openModalPricing()" class="bg-yellow-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-yellow-600 flex items-center gap-2 shadow"><i class="fas fa-tags"></i> Edit Harga</button>
                             <button onclick="fetchOrders()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300 shadow"><i class="fas fa-sync-alt"></i> Refresh</button>
@@ -290,12 +295,12 @@
                             <button onclick="changeRekapMonth(1)" class="p-2 bg-white border rounded shadow-sm hover:bg-gray-50"><i class="fas fa-chevron-right"></i></button>
                         </div>
                     </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border mb-4 flex gap-2">
-                        <div class="relative flex-grow">
-                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                            <input type="text" id="rekapSearchInput" onkeyup="filterRekap()" placeholder="Cari Nama Santri..." class="pl-10 pr-4 py-2 border rounded-lg outline-none w-full text-sm">
-                        </div>
-                        <button onclick="fetchRekapData(true)" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm transition shadow-sm" title="Refresh Data"><i class="fas fa-sync-alt"></i></button>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border mb-4 flex flex-col md:flex-row gap-3 items-center">
+                        <label class="text-sm font-bold text-gray-600">Pilih Kelas:</label>
+                        <select id="rekapClassFilter" onchange="fetchRekapData(true)" class="px-4 py-2 border rounded-lg outline-none w-full md:w-64 text-sm bg-white cursor-pointer">
+                            <option value="">Semua Kelas</option>
+                        </select>
+                        <button onclick="fetchRekapData(true)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition shadow-md flex items-center gap-2" title="Refresh Data"><i class="fas fa-sync-alt"></i> Update Data</button>
                     </div>
                     <!-- NEW: Pagination Controls -->
                     <div class="flex justify-between items-center mb-4 text-sm">
@@ -401,13 +406,10 @@
             <div class="flex-1 overflow-y-auto bg-gray-50">
                 <!-- Tab 1: Jumlah Pesanan -->
                 <div id="dapurContent-orders" class="p-4 space-y-4 animate-fade-in">
-                    <!-- Month Selector -->
-                    <div class="flex justify-between items-center mb-4 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                        <button onclick="changeDapurMonth(-1)" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-lg text-gray-600"><i class="fas fa-chevron-left text-sm"></i></button>
-                        <span id="dapurMonthLabel" class="text-sm font-bold text-gray-800 w-32 text-center">...</span>
-                        <button onclick="changeDapurMonth(1)" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-lg text-gray-600"><i class="fas fa-chevron-right text-sm"></i></button>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-4">
+                        <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">Pilih Tanggal Masak</label>
+                        <input type="date" id="dapurTargetDate" onchange="renderDapurOrders()" class="w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50 font-bold text-lg">
                     </div>
-                    <!-- List Container -->
                     <div id="dapurOrderList" class="space-y-3">
                         <div class="text-center py-10 text-gray-400"><div class="loader"></div> Loading data...</div>
                     </div>
@@ -647,6 +649,7 @@
         let ordersDataMap = {}; // New: Store order data locally for modal view
         let allFetchedOrders = []; // NEW: To store all orders for filtering/pagination
         let financeCurrentPage = 1; // NEW
+        let financeDate = new Date(); // NEW: Selected month for Finance
         let allClasses = []; // NEW: Store classes globally
         const financeRowsPerPage = 10; // NEW
         let REPORT_SETTINGS = { open: '07:00', close: '16:00' };
@@ -1351,52 +1354,120 @@
         }
 
         // --- ADMIN REKAP PEMESANAN ---
+        window.updateRekapClassFilter = async function() {
+            const classSelect = document.getElementById('rekapClassFilter');
+            if (!classSelect) return;
+            
+            await loadClassesGlobal();
+            
+            if (classSelect.options.length <= 1) {
+                classSelect.innerHTML = '<option value="">Semua Kelas</option>';
+                allClasses.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.name;
+                    opt.textContent = c.name;
+                    classSelect.appendChild(opt);
+                });
+                
+                // Set default class as requested by user
+                if (!classSelect.dataset.initialized) {
+                    classSelect.value = "Kuttab Awal 1A";
+                    classSelect.dataset.initialized = "true";
+                }
+            }
+        }
+
         window.changeRekapMonth = function(offset) {
             rekapDate.setMonth(rekapDate.getMonth() + offset);
+            const label = document.getElementById('rekapMonthLabel');
+            if(label) label.innerText = rekapDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
             fetchRekapData(false); // Fetch data for the new month without refreshing students/orders
+        }
+        
+        // Helper untuk mengambil data dalam potongan (karena limit 'in' di Firebase adalah 30)
+        async function getDocsByNames(colName, names, additionalQueries = []) {
+            if (names.length === 0) return [];
+            const chunks = [];
+            for (let i = 0; i < names.length; i += 30) {
+                chunks.push(names.slice(i, i + 30));
+            }
+            const promises = chunks.map(chunk => 
+                getDocs(query(collection(db, colName), where("userName", "in", chunk), ...additionalQueries))
+            );
+            const snapshots = await Promise.all(promises);
+            return snapshots.flatMap(snap => snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         }
 
         window.fetchRekapData = async function(forceRefresh = false, showLoader = true) {
+            // Tampilkan label bulan SEGERA (Bulan Mei 2026 sesuai konteks saat ini)
+            const label = document.getElementById('rekapMonthLabel');
+            if(label) label.innerText = rekapDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+
             if (showLoader) document.getElementById('rekapTbody').innerHTML = '<tr><td class="p-4 text-center"><div class="loader"></div></td></tr>';
             try {
-                // 1. Get All Students & Orders (Fetch only if cache is empty or on force refresh)
-                if (allStudents.length === 0 || forceRefresh) {
-                    const userSnap = await getDocs(query(collection(db, "users"), where("role", "==", "Murid")));
-                    allStudents = [];
-                    userSnap.forEach(doc => allStudents.push({ id: doc.id, ...doc.data() }));
-                    allStudents.sort((a, b) => (a.class || "").localeCompare(b.class || "") || a.name.localeCompare(b.name));
-                }
-                if (allOrders.length === 0 || forceRefresh) {
-                    allOrders = [];
-                    ordersLookupMap = {};
-                    const orderSnap = await getDocs(collection(db, "orders"));
-                    orderSnap.forEach(doc => {
-                        const d = doc.data();
-                        if (d.dates && Array.isArray(d.dates)) {
-                            if (!ordersLookupMap[d.userName]) ordersLookupMap[d.userName] = {};
-                            d.dates.forEach(date => { ordersLookupMap[d.userName][date] = true; });
-                            allOrders.push({ userName: d.userName, dates: d.dates, id: doc.id });
-                        }
-                    });
-                }
+                // RESET GLOBAL STATE: Sangat penting agar aplikasi tidak semakin lambat karena data menumpuk
+                allStudents = [];
+                allOrders = [];
+                ordersLookupMap = {};
+                allRefunds = {};
+                allNotOrdered = {};
 
-                // 3. Get Refunds & Not Ordered FOR CURRENT MONTH (Always re-fetch on month change)
+                await updateRekapClassFilter();
+                const classFilter = document.getElementById('rekapClassFilter').value;
+
+                // OPTIMASI: Hitung rentang waktu bulan terpilih
                 const year = rekapDate.getFullYear();
                 const month = rekapDate.getMonth();
-                const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
-                const nextMonthYear = month === 11 ? year + 1 : year;
-                const nextMonth = month === 11 ? 1 : month + 2;
-                const endDate = `${nextMonthYear}-${String(nextMonth).padStart(2, '0')}-01`;
+                const startOfMonth = new Date(year, month, 1);
+                const endOfMonth = new Date(year, month + 1, 1);
+                const startDateStr = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+                const endDateStr = `${month === 11 ? year + 1 : year}-${String(month === 11 ? 1 : month + 2).padStart(2, '0')}-01`;
 
-                allRefunds = {};
-                const refundQuery = query(collection(db, "refunds"), where("date", ">=", startDate), where("date", "<", endDate));
-                const refundSnap = await getDocs(refundQuery);
-                refundSnap.forEach(doc => { allRefunds[`${doc.data().userName}_${doc.data().date}`] = true; });
+                // 1. Query Santri: HANYA yang ada di kelas terpilih (jika ada filter)
+                let qUser = query(collection(db, "users"), where("role", "==", "Murid"));
+                if (classFilter) {
+                    qUser = query(collection(db, "users"), where("role", "==", "Murid"), where("class", "==", classFilter));
+                }
+                const userSnap = await getDocs(qUser);
+                
+                userSnap.forEach(doc => allStudents.push({ id: doc.id, ...doc.data() }));
+                
+                // Ambil daftar nama untuk filter data transaksi
+                const studentNames = allStudents.map(s => s.name);
 
-                allNotOrdered = {};
-                const notOrderedQuery = query(collection(db, "not_ordered"), where("date", ">=", startDate), where("date", "<", endDate));
-                const notOrderedSnap = await getDocs(notOrderedQuery);
-                notOrderedSnap.forEach(doc => { allNotOrdered[`${doc.data().userName}_${doc.data().date}`] = true; });
+                // 2. Ambil data transaksi secara paralel & Ter-Filter Nama (Sangat Cepat)
+                let snapOrders, snapRefunds, snapNotOrdered;
+
+                if (classFilter && studentNames.length > 0) {
+                    // Jika ada kelas, ambil data KHUSUS santri di kelas tersebut
+                    [snapOrders, snapRefunds, snapNotOrdered] = await Promise.all([
+                        getDocsByNames("orders", studentNames),
+                        getDocsByNames("refunds", studentNames, [where("date", ">=", startDateStr), where("date", "<", endDateStr)]),
+                        getDocsByNames("not_ordered", studentNames, [where("date", ">=", startDateStr), where("date", "<", endDateStr)])
+                    ]);
+                } else {
+                    // Fallback jika "Semua Kelas" (Query bulanan biasa)
+                    const qOrder = query(collection(db, "orders"), where("createdAt", ">=", startOfMonth), where("createdAt", "<", endOfMonth));
+                    const qRefund = query(collection(db, "refunds"), where("date", ">=", startDateStr), where("date", "<", endDateStr));
+                    const qNotOrdered = query(collection(db, "not_ordered"), where("date", ">=", startDateStr), where("date", "<", endDateStr));
+                    
+                    const results = await Promise.all([getDocs(qOrder), getDocs(qRefund), getDocs(qNotOrdered)]);
+                    snapOrders = results[0].docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    snapRefunds = results[1].docs.map(doc => doc.data());
+                    snapNotOrdered = results[2].docs.map(doc => doc.data());
+                }
+
+                allStudents.sort((a, b) => a.name.localeCompare(b.name));
+                snapOrders.forEach(d => {
+                    if (d.dates && Array.isArray(d.dates)) {
+                        if (!ordersLookupMap[d.userName]) ordersLookupMap[d.userName] = {};
+                        d.dates.forEach(date => { ordersLookupMap[d.userName][date] = true; });
+                    }
+                });
+
+                snapRefunds.forEach(d => { allRefunds[`${d.userName}_${d.date}`] = true; });
+
+                snapNotOrdered.forEach(d => { allNotOrdered[`${d.userName}_${d.date}`] = true; });
 
                 rekapCurrentPage = 1; // Reset to first page on data fetch
                 renderRekapTable();
@@ -1411,9 +1482,6 @@
         function renderRekapTable() {
             const thead = document.getElementById('rekapThead');
             const tbody = document.getElementById('rekapTbody');
-            const label = document.getElementById('rekapMonthLabel');
-            
-            label.innerText = rekapDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
             
             const year = rekapDate.getFullYear();
             const month = rekapDate.getMonth();
@@ -1435,9 +1503,8 @@
             headHtml += `</tr>`;
             thead.innerHTML = headHtml;
 
-            // GENERATE ROWS
-            const filter = document.getElementById('rekapSearchInput').value.toLowerCase();
-            const filteredStudents = allStudents.filter(student => student.name.toLowerCase().includes(filter));
+            // GENERATE ROWS (allStudents sudah difilter oleh query fetch data berdasarkan kelas)
+            const filteredStudents = allStudents;
 
             const startIndex = (rekapCurrentPage - 1) * rekapRowsPerPage;
             const endIndex = startIndex + rekapRowsPerPage;
@@ -1521,7 +1588,7 @@
         }
 
         window.changeRekapPage = function(page) {
-            const totalPages = Math.ceil(allStudents.filter(s => s.name.toLowerCase().includes(document.getElementById('rekapSearchInput').value.toLowerCase())).length / rekapRowsPerPage);
+            const totalPages = Math.ceil(allStudents.length / rekapRowsPerPage);
             if (page < 1 || page > totalPages) return;
             rekapCurrentPage = page;
             renderRekapTable();
@@ -1700,146 +1767,151 @@
         // --- NEW: DAPUR LOGIC ---
         window.showAdminDapur = function() { 
             document.getElementById('adminDapurDashboard').classList.remove('hidden'); 
+            // Set default tanggal ke hari ini
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dapurTargetDate').value = today;
+
             fetchDapurData(); 
             switchDapurTab('orders'); 
         }
 
         window.fetchDapurData = async function() {
-            // Re-use logic to fetch all necessary data for calculation
             try {
-                // 1. All Orders
-                const orderSnap = await getDocs(collection(db, "orders"));
-                allOrders = [];
-                orderSnap.forEach(doc => { const d = doc.data(); if(d.dates) allOrders.push({ userName: d.userName, dates: d.dates }); });
+                // CUKUP AMBIL DATA SANTRI SEKALI SAJA (Data Statis)
+                if (allStudents.length === 0) {
+                    const userSnap = await getDocs(query(collection(db, "users"), where("role", "==", "Murid")));
+                    allStudents = []; 
+                    userSnap.forEach(doc => allStudents.push({ id: doc.id, ...doc.data() }));
+                }
 
-                // 2. All Refunds
-                const refundSnap = await getDocs(collection(db, "refunds"));
-                allRefunds = {};
-                refundSnap.forEach(doc => { const d = doc.data(); allRefunds[`${d.userName}_${d.date}`] = true; });
-
-                // 2.5. All Not Ordered
-                const notOrderedSnap = await getDocs(collection(db, "not_ordered"));
-                allNotOrdered = {};
-                notOrderedSnap.forEach(doc => { const d = doc.data(); allNotOrdered[`${d.userName}_${d.date}`] = true; });
-
-                // NEW: Fetch Dapur Checklist Data
+                // Ambil checklist dapur (ID dokumen biasanya sudah format tanggal_ID)
                 const checklistSnap = await getDocs(collection(db, "dapurChecklist"));
                 dapurChecklistData = new Set();
                 checklistSnap.forEach(doc => dapurChecklistData.add(doc.id));
-
-
-
-                // 3. Get All Students for status/jenjang info
-                const userSnap = await getDocs(query(collection(db, "users"), where("role", "==", "Murid")));
-                allStudents = []; // Re-use global allStudents
-                userSnap.forEach(doc => allStudents.push({ id: doc.id, ...doc.data() }));
 
                 renderDapurOrders();
             } catch(e) { console.error(e); }
         }
 
-        window.changeDapurMonth = function(offset) {
-            dapurDate.setMonth(dapurDate.getMonth() + offset);
-            renderDapurOrders();
-        }
-
-        window.renderDapurOrders = function() {
+        window.renderDapurOrders = async function() {
             const container = document.getElementById('dapurOrderList');
-            const label = document.getElementById('dapurMonthLabel');
             const dateDisplay = document.getElementById('dapurDateDisplay');
+            const dateStr = document.getElementById('dapurTargetDate').value;
+
+            if (!dateStr) {
+                container.innerHTML = '<div class="text-center py-10 text-gray-400">Silakan pilih tanggal.</div>';
+                return;
+            }
+
+            const selectedDate = new Date(dateStr);
+            dateDisplay.innerText = "Tanggal Terpilih: " + selectedDate.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
             
-            label.innerText = dapurDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-            dateDisplay.innerText = "Hari ini: " + new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' });
-            
-            container.innerHTML = "";
-
-            const year = dapurDate.getFullYear();
-            const month = dapurDate.getMonth();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-            for(let day=1; day<=daysInMonth; day++) {
-                const dateObj = new Date(year, month, day);
-                const dayOfWeek = dateObj.getDay();
-                if(dayOfWeek === 0 || dayOfWeek === 6 || dayOfWeek === 5) continue; // Skip Fri-Sun
-
-                const mStr = (month + 1).toString().padStart(2, '0');
-                const dStr = day.toString().padStart(2, '0');
-                const dateStr = `${year}-${mStr}-${dStr}`;
-                
-                let totalCount = 0;
-                let baruCount = 0;
-                let lamaCount = 0;
-                let qonuniCount = 0;
-
-                const studentMap = Object.fromEntries(allStudents.map(s => [s.name, s]));
-                const ordersForDate = new Set(allOrders.filter(o => o.dates.includes(dateStr)).map(o => o.userName));
-
-                allStudents.forEach(student => {
-                    const isRefund = allRefunds[`${student.name}_${dateStr}`];
-                    const isNotOrdered = allNotOrdered[`${student.name}_${dateStr}`];
-                    const isPaid = ordersForDate.has(student.name);
-
-                    let shouldCount = false;
-
-                    if (student.status === 'Santri Baru') {
-                        // Untuk Santri Baru, hitung porsi KECUALI statusnya 'Refund' atau 'Tidak Pesan'.
-                        // Status 'Kosong' (belum bayar) tetap dihitung.
-                        if (!isRefund && !isNotOrdered) {
-                            shouldCount = true;
-                        }
-                    } else { // Untuk Santri Lama (dan status lainnya)
-                        // Logika lama: hitung porsi HANYA JIKA 'Lunas' dan tidak 'Refund'.
-                        if (isPaid && !isRefund) {
-                            shouldCount = true;
-                        }
-                    }
-
-                    if (shouldCount) {
-                        totalCount++;
-                        if (student.status === 'Santri Baru') baruCount++;
-                        if (student.status === 'Santri Lama') lamaCount++;
-                        if (student.jenjang === 'Qonuni') {
-                            qonuniCount++;
-                        }
-                    }
-                });
-
-                // Check menu
-                const item = dbMenus[dateStr];
-                const isHoliday = item ? item.isHoliday : false;
-
-                let detailHtml = `<div class="text-xs text-gray-500">Baru: <b>${baruCount}</b>, Lama: <b>${lamaCount}</b></div>`;
-                if (qonuniCount > 0) {
-                    detailHtml += `<div class="text-xs text-blue-600 font-semibold">Qonuni: <b>${qonuniCount}</b></div>`;
-                }
-
-                let cardClass = "bg-white border-gray-100";
-                let textClass = "text-gray-800";
-                
-                if(isHoliday) {
-                    cardClass = "bg-red-50 border-red-100";
-                    textClass = "text-red-500";
-                }
-
-                container.innerHTML += `
-                    <div class="${cardClass} p-4 rounded-xl shadow-sm border flex justify-between items-center">
-                        <div class="flex items-center gap-4">
-                            <div class="bg-gray-100 rounded-lg p-2 text-center min-w-[50px]">
-                                <div class="text-[10px] font-bold uppercase text-gray-500">${dateObj.toLocaleDateString('id-ID', { month: 'short' })}</div>
-                                <div class="text-xl font-bold leading-none text-gray-800">${day}</div>
+            // Cek jika hari Jumat, Sabtu, atau Minggu
+            const dayOfWeek = selectedDate.getDay(); // 0 = Minggu, 1 = Senin, ..., 6 = Sabtu
+            if (dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden animate-fade-in">
+                        <div class="bg-gradient-to-br from-gray-400 to-gray-500 p-6 text-white text-center">
+                            <div class="flex justify-center items-center mb-4">
+                                <i class="fas fa-mug-hot text-5xl opacity-70"></i>
                             </div>
-                            <div>
-                                <div class="text-xs font-bold uppercase text-gray-400 mb-1">${dateObj.toLocaleDateString('id-ID', { weekday: 'long' })}</div>
-                                ${isHoliday ? `<div class="font-semibold text-sm ${textClass}">LIBUR</div>` : detailHtml}
-                            </div>
+                            <h3 class="text-3xl font-black mb-2">TIDAK ADA KATERING</h3>
+                            <p class="text-sm opacity-90">Hari Jumat, Sabtu, dan Minggu katering libur.</p>
                         </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-bold text-slate-800">${isHoliday ? '-' : totalCount}</div>
-                            <div class="text-[10px] text-gray-400">Porsi</div>
+                        <div class="p-6 bg-gray-50/30 text-center text-gray-600">
+                            <p class="text-sm">Silakan pilih tanggal lain untuk melihat pesanan.</p>
                         </div>
                     </div>
                 `;
+                return; // Hentikan eksekusi fungsi
             }
+
+            container.innerHTML = '<div class="text-center py-10 text-gray-400"><div class="loader"></div> Menghitung porsi...</div>';
+
+            // OPTIMASI VITAL: Ambil data transaksi HANYA untuk tanggal yang dipilih
+            const qOrders = query(collection(db, "orders"), where("dates", "array-contains", dateStr));
+            const qRefunds = query(collection(db, "refunds"), where("date", "==", dateStr));
+            const qNotOrdered = query(collection(db, "not_ordered"), where("date", "==", dateStr));
+
+            const [snapOrders, snapRefunds, snapNotOrdered] = await Promise.all([
+                getDocs(qOrders),
+                getDocs(qRefunds),
+                getDocs(qNotOrdered)
+            ]);
+
+            const ordersForDate = new Set();
+            snapOrders.forEach(doc => ordersForDate.add(doc.data().userName));
+
+            const currentRefunds = new Set();
+            snapRefunds.forEach(doc => currentRefunds.add(doc.data().userName));
+
+            const currentNotOrdered = new Set();
+            snapNotOrdered.forEach(doc => currentNotOrdered.add(doc.data().userName));
+
+            let totalCount = 0;
+            let baruCount = 0;
+            let lamaCount = 0;
+            let qonuniCount = 0;
+
+            allStudents.forEach(student => {
+                const isRefund = currentRefunds.has(student.name);
+                const isNotOrdered = currentNotOrdered.has(student.name);
+                const isPaid = ordersForDate.has(student.name);
+
+                 let shouldCount = false;
+                if (student.status === 'Santri Baru') {
+                    if (!isRefund && !isNotOrdered) shouldCount = true;
+                } else { 
+                    if (isPaid && !isRefund) shouldCount = true;
+                }
+
+                if (shouldCount) {
+                    totalCount++;
+                    if (student.status === 'Santri Baru') baruCount++;
+                    if (student.status === 'Santri Lama') lamaCount++;
+                    if (student.jenjang === 'Qonuni') qonuniCount++;
+                }
+            });
+
+            const menu = dbMenus[dateStr];
+            const isHoliday = menu ? menu.isHoliday : false;
+            const menuName = menu ? menu.name : "Menu belum diisi";
+
+            container.innerHTML = `
+                <div class="bg-white rounded-3xl shadow-xl border border-orange-100 overflow-hidden animate-fade-in">
+                    <div class="bg-gradient-to-br from-orange-500 to-orange-600 p-6 text-white">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-orange-100 text-xs font-bold uppercase tracking-widest mb-1">Total Porsi Masak</p>
+                                <h3 class="text-5xl font-black">${isHoliday ? 'LIBUR' : totalCount}</h3>
+                            </div>
+                            <div class="bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
+                                <i class="fas fa-utensils text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-6 pt-6 border-t border-white/20">
+                            <p class="text-orange-100 text-xs uppercase font-bold mb-1">Menu Hari Ini</p>
+                            <p class="text-lg font-bold">${isHoliday ? 'Sekolah Libur / Tidak ada Katering' : menuName}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6 grid grid-cols-2 gap-4 bg-orange-50/30">
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-orange-100">
+                            <p class="text-gray-400 text-[10px] font-bold uppercase">Santri Baru</p>
+                            <p class="text-2xl font-black text-gray-800">${baruCount}</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-orange-100">
+                            <p class="text-gray-400 text-[10px] font-bold uppercase">Santri Lama</p>
+                            <p class="text-2xl font-black text-gray-800">${lamaCount}</p>
+                        </div>
+                        ${qonuniCount > 0 ? `
+                        <div class="bg-blue-600 p-4 rounded-2xl shadow-md border border-blue-700 col-span-2 flex justify-between items-center">
+                            <p class="text-blue-100 text-xs font-bold uppercase">Khusus Qonuni</p>
+                            <p class="text-2xl font-black text-white">${qonuniCount} <span class="text-xs font-normal opacity-80">Porsi</span></p>
+                        </div>` : ''}
+                    </div>
+                </div>
+            `;
         }
 
         window.switchDapurTab = function(tabName) {
@@ -1920,19 +1992,14 @@
 
         window.renderDapurAllergy = async function() {
             const container = document.getElementById('dapurAllergyList');
-            container.innerHTML = '<div class="text-center py-4"><div class="loader"></div></div>';
-            
-            try {
-                const q = query(collection(db, "users"), where("role", "==", "Murid"));
-                const snapshot = await getDocs(q);
-                container.innerHTML = "";
-                let count = 0;
+            container.innerHTML = "";
+            let count = 0;
 
-                snapshot.forEach(docSnap => {
-                    const u = docSnap.data();
-                    if(u.allergy && u.allergy.trim() !== "" && u.allergy.trim() !== "-") {
-                        count++;
-                        container.innerHTML += `
+            // Gunakan data allStudents yang sudah ada di memori, jangan getDocs lagi
+            allStudents.forEach(u => {
+                if(u.allergy && u.allergy.trim() !== "" && u.allergy.trim() !== "-") {
+                    count++;
+                    container.innerHTML += `
                             <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-red-500 flex justify-between items-start">
                                 <div>
                                     <div class="font-bold text-gray-800 text-lg">${u.name}</div>
@@ -1943,12 +2010,9 @@
                                 </div>
                             </div>
                         `;
-                    }
-                });
-
-                if(count === 0) container.innerHTML = `<div class="text-center py-10 text-gray-400">Tidak ada data santri dengan alergi.</div>`;
-
-            } catch(e) { console.error(e); }
+                }
+            });
+            if(count === 0) container.innerHTML = `<div class="text-center py-10 text-gray-400">Tidak ada data santri dengan alergi.</div>`;
         }
 
         // --- NEW: DAPUR NOTES ---
@@ -2024,16 +2088,22 @@
             container.innerHTML = '<div class="text-center py-4"><div class="loader"></div></div>';
 
             try {
-                // Pastikan data student, order, refund sudah ter-fetch
-                if (allStudents.length === 0) await fetchDapurData();
+                // Ambil data spesifik tanggal ini saja dari Firebase
+                const qOrders = query(collection(db, "orders"), where("dates", "array-contains", dateInput));
+                const qRefunds = query(collection(db, "refunds"), where("date", "==", dateInput));
+                
+                const [snapOrders, snapRefunds] = await Promise.all([getDocs(qOrders), getDocs(qRefunds)]);
+
+                const currentRefunds = new Set();
+                snapRefunds.forEach(doc => currentRefunds.add(doc.data().userName));
 
                 const santriLamaOrders = [];
                 const studentMap = Object.fromEntries(allStudents.map(s => [s.name, s])); // BUG: This was not being used
 
-                allOrders.forEach(order => {
+                snapOrders.forEach(doc => {
+                    const order = doc.data();
                     const student = studentMap[order.userName];
-                    // Cek jika santri lama, memesan di tanggal yg dipilih, dan tidak refund
-                    if (student && student.status === 'Santri Lama' && order.dates.includes(dateInput) && !allRefunds[`${order.userName}_${dateInput}`]) {
+                    if (student && student.status === 'Santri Lama' && !currentRefunds.has(order.userName)) {
                         santriLamaOrders.push(student);
                     }
                 });
@@ -2532,12 +2602,26 @@
         }
 
         // --- FINANCE PAGE LOGIC (PAGINATION & SEARCH) ---
+        window.changeFinanceMonth = function(offset) {
+            financeDate.setMonth(financeDate.getMonth() + offset);
+            fetchOrders();
+        }
+
         window.fetchOrders = async function() { 
             const tbody = document.getElementById('orderTableBody'); 
+            const label = document.getElementById('financeMonthLabel');
+            if(label) label.innerText = financeDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
             if(tbody) tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center"><div class="loader"></div></td></tr>'; 
             
             try { 
-                const snapshot = await getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc"))); 
+                const year = financeDate.getFullYear();
+                const month = financeDate.getMonth();
+                const start = new Date(year, month, 1);
+                const end = new Date(year, month + 1, 1);
+
+                const q = query(collection(db, "orders"), where("createdAt", ">=", start), where("createdAt", "<", end), orderBy("createdAt", "desc"));
+                const snapshot = await getDocs(q);
+
                 ordersDataMap = {}; // Reset data lokal
                 allFetchedOrders = []; // Reset all orders array
                 
