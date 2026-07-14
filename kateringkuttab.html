@@ -528,7 +528,7 @@
             <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-lg">Edit Profil Saya</h3><button onclick="document.getElementById('modalStudentEdit').classList.add('hidden')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button></div>
             <div class="space-y-4 mb-6">
                 <div><label class="block text-xs font-bold text-gray-500 mb-1">Nama Lengkap</label><input type="text" id="studEditName" class="w-full border p-2 rounded outline-none"></div>
-                <div><label class="block text-xs font-bold text-gray-500 mb-1">Kelas</label><input type="text" id="studEditClass" class="w-full border p-2 rounded outline-none"></div>
+                <div><label class="block text-xs font-bold text-gray-500 mb-1">Kelas</label><select id="studEditClass" class="w-full border p-2 rounded outline-none bg-white"></select></div>
                 <div><label class="block text-xs font-bold text-gray-500 mb-1">Alergi Makanan</label><input type="text" id="studEditAllergy" class="w-full border p-2 rounded outline-none" placeholder="Isi jika ada, kosongkan jika tidak"></div>
             </div>
             <div class="flex gap-2 justify-end pt-2 border-t"><button onclick="document.getElementById('modalStudentEdit').classList.add('hidden')" class="px-4 py-2 text-gray-600 text-sm hover:bg-gray-100 rounded">Batal</button><button onclick="saveStudentProfile()" id="btnSaveStudProfile" class="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 shadow">Update Profil</button></div>
@@ -1308,10 +1308,19 @@
         }
         
         // --- STUDENT PROFILE EDIT ---
-        window.openStudentEditModal = function() {
+        window.openStudentEditModal = async function() {
             document.getElementById('modalStudentEdit').classList.remove('hidden');
             document.getElementById('studEditName').value = currentUser.name;
-            document.getElementById('studEditClass').value = currentUser.class || "";
+            
+            // Populate class dropdown
+            await loadClassesGlobal();
+            const classSelect = document.getElementById('studEditClass');
+            classSelect.innerHTML = '<option value="">- Pilih Kelas -</option>';
+            allClasses.forEach(c => {
+                classSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+            });
+            classSelect.value = currentUser.class || "";
+
             document.getElementById('studEditAllergy').value = currentUser.allergy || "";
         }
         
