@@ -376,13 +376,17 @@
                                 <label for="closeReportTime" class="block text-sm font-medium text-gray-700 mb-1">Tutup Laporan (Jam)</label>
                                 <input type="time" id="closeReportTime" class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
                             </div>
+                            <div class="border-t pt-4 mt-4">
+                                <label for="newStudentStartDate" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai Pesan (Santri Baru)</label>
+                                <input type="date" id="newStudentStartDate" class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
                         </div>
                         <div class="mt-6 text-right">
                             <button onclick="saveReportSettings()" class="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm shadow hover:bg-blue-700">Simpan Pengaturan</button>
                         </div>
                         <div class="mt-6 text-xs text-gray-500 bg-gray-50 p-3 rounded-lg border">
                             <i class="fas fa-info-circle mr-1"></i> 
-                            Santri hanya bisa mengirim laporan di antara waktu buka dan tutup. Waktu menggunakan zona waktu Indonesia Barat (WIB/GMT+7).
+                            Santri hanya bisa mengirim laporan di antara waktu buka dan tutup. Tanggal mulai pesan hanya berlaku untuk <strong>Santri Baru</strong>.
                         </div>
                     </div>
                 </div>
@@ -930,18 +934,19 @@
             const btn = event.target;
             const openTime = document.getElementById('openReportTime').value;
             const closeTime = document.getElementById('closeReportTime').value;
+            const newStudentStartDate = document.getElementById('newStudentStartDate').value;
 
             if (!openTime || !closeTime) {
                 return alert("Harap isi waktu buka dan tutup laporan!");
             }
 
-            const settings = { open: openTime, close: closeTime };
+            const settings = { open: openTime, close: closeTime, newStudentStartDate: newStudentStartDate };
             btn.disabled = true;
             btn.innerText = "Menyimpan...";
 
             try {
                 await setDoc(doc(db, "settings", "reportTime"), settings);
-                REPORT_SETTINGS = settings; // Update local state
+                REPORT_SETTINGS = {...REPORT_SETTINGS, ...settings}; // Update local state
                 alert("Pengaturan waktu laporan berhasil disimpan.");
             } catch (e) {
                 alert("Gagal menyimpan pengaturan: " + e.message);
@@ -1069,6 +1074,7 @@
             if(tab === 'report-settings') {
                 document.getElementById('openReportTime').value = REPORT_SETTINGS.open;
                 document.getElementById('closeReportTime').value = REPORT_SETTINGS.close;
+                document.getElementById('newStudentStartDate').value = REPORT_SETTINGS.newStudentStartDate || "";
             }
         }
 
@@ -1156,7 +1162,13 @@
             
             // Sort to find range
             rawDates.sort();
-            const minStr = rawDates[0];
+            let minStr = rawDates[0];
+
+            // NEW: Adjust start date for new students based on settings
+            if (currentUser && currentUser.status === 'Santri Baru' && REPORT_SETTINGS.newStudentStartDate) {
+                minStr = REPORT_SETTINGS.newStudentStartDate;
+            }
+
             const maxStr = rawDates[rawDates.length - 1];
             
             const dates = [];
@@ -1198,6 +1210,13 @@
         }
 
         window.toggleDate = function(el, dateStr) {
+            // NEW: Check if santri baru is trying to order before the start date
+            if (currentUser && currentUser.status === 'Santri Baru' && REPORT_SETTINGS.newStudentStartDate) {
+                if (dateStr < REPORT_SETTINGS.newStudentStartDate) {
+                    alert(`Santri baru hanya dapat memesan mulai tanggal ${REPORT_SETTINGS.newStudentStartDate}.`);
+                    return;
+                }
+            }
             // Logic Check for Sequential Selection (Cross-Month) - ONLY FOR SANTRI BARU
             if (currentUser && currentUser.status === 'Santri Baru') {
                 const validDates = getGlobalValidDates(dateStr);
