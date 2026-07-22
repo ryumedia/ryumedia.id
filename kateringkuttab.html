@@ -450,9 +450,12 @@
 
                 <!-- Tab 5: Santri Lama -->
                 <div id="dapurContent-santriLama" class="hidden p-4 space-y-4 animate-fade-in">
-                    <div class="bg-white p-4 rounded-xl shadow-sm border">
-                        <label for="dapurSantriLamaDate" class="block text-xs font-bold text-gray-500 mb-1">Pilih Tanggal Pesanan</label>
-                        <input type="date" id="dapurSantriLamaDate" onchange="renderDapurSantriLama()" class="w-full border p-2 rounded outline-none">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border space-y-3">
+                        <div>
+                            <label for="dapurSantriLamaDate" class="block text-xs font-bold text-gray-500 mb-1">Pilih Tanggal Pesanan</label>
+                            <input type="date" id="dapurSantriLamaDate" onchange="renderDapurSantriLama()" class="w-full border p-2 rounded outline-none">
+                        </div>
+                        <input type="text" id="dapurSantriLamaSearch" onkeyup="renderDapurSantriLama()" class="w-full border p-2 rounded outline-none" placeholder="Cari nama santri...">
                     </div>
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
                         <i class="fas fa-info-circle mr-1"></i> Menampilkan daftar <strong>Santri Lama</strong> yang memesan pada tanggal yang dipilih.
@@ -2109,6 +2112,7 @@
         window.renderDapurSantriLama = async function() {
             const container = document.getElementById('dapurSantriLamaList');
             const dateInput = document.getElementById('dapurSantriLamaDate').value; // BUG: This was not being used
+            const searchInput = document.getElementById('dapurSantriLamaSearch').value.toLowerCase();
             if (!dateInput) {
                 container.innerHTML = '<div class="text-center py-10 text-gray-400">Pilih tanggal untuk melihat daftar.</div>';
                 return;
@@ -2131,7 +2135,10 @@
                 snapOrders.forEach(doc => {
                     const order = doc.data();
                     const student = studentMap[order.userName];
-                    if (student && student.status === 'Santri Lama' && !currentRefunds.has(order.userName)) {
+                    // Filter by search query
+                    const nameMatch = student && student.name.toLowerCase().includes(searchInput);
+
+                    if (student && student.status === 'Santri Lama' && !currentRefunds.has(order.userName) && nameMatch) {
                         santriLamaOrders.push(student);
                     }
                 });
