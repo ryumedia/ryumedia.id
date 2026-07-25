@@ -1338,10 +1338,53 @@
             
             // Order button click
             orderButton.addEventListener('click', function() {
-                // Populate modal
-                modalOrderItems.innerHTML = orderItems.innerHTML;
-                modalTotalPrice.textContent = totalPrice.textContent;
-                confirmationModal.classList.remove('hidden');
+                // Action: Directly send to WhatsApp
+                const name = customerName.value.trim();
+                const whatsapp = customerWhatsapp.value.trim();
+                const waNumber = '6285894541435'; // Nomor WA tujuan
+
+                // Build order details for WhatsApp message
+                let orderDetails = '';
+                let subtotal = 0;
+
+                quantityInputs.forEach(input => {
+                    const quantity = parseInt(input.value);
+                    if (quantity > 0) {
+                        const product = input.dataset.product;
+                        const price = parseInt(input.dataset.price);
+                        const itemSubtotal = price * quantity;
+                        subtotal += itemSubtotal;
+
+                        const productDisplayName = productNames[product];
+                        orderDetails += `- ${productDisplayName} x ${quantity}\n`;
+                    }
+                });
+
+                // Calculate discount and final total
+                let discount = 0;
+                let finalTotal = subtotal;
+                let promoText = '';
+
+                if (isPromoApplied && subtotal >= 50000) {
+                    discount = Math.floor(subtotal * discountPercentage / 100);
+                    finalTotal = subtotal - discount;
+                    promoText = `\n*Diskon (${discountPercentage}%):* -${formatCurrency(discount)}`;
+                }
+
+                // Get payment method text
+                const selectedPayment = paymentMethod.options[paymentMethod.selectedIndex].text;
+
+                // Construct the full WhatsApp message
+                const message = `Halo Roti Daiki, saya mau pesan:\n\n*Nama Pemesan:* ${name}\n*Nomor WhatsApp:* ${whatsapp}\n\n*Pesanan:*\n${orderDetails}\n*Subtotal:* ${formatCurrency(subtotal)}${promoText}\n*Total Pembayaran:* ${formatCurrency(finalTotal)}\n\n*Metode Pembayaran:* ${selectedPayment}\n\nTerima kasih!`;
+
+                // Encode the message for the URL
+                const encodedMessage = encodeURIComponent(message);
+
+                // Create the WhatsApp URL
+                const whatsappURL = `https://wa.me/${waNumber}?text=${encodedMessage}`;
+
+                // Open WhatsApp in a new tab
+                window.open(whatsappURL, '_blank');
             });
             
             // Cancel order
@@ -1349,12 +1392,11 @@
                 confirmationModal.classList.add('hidden');
             });
             
-            // Fill Google Form
-            fillGformBtn.addEventListener('click', function() {
+            // Fill Google Form (Now unused, but kept for reference or future use)
+            function sendToGoogleForm() {
+                // Build order details for Google Form
                 const name = customerName.value.trim();
                 const whatsapp = customerWhatsapp.value.trim();
-                
-                // Build order details for Google Form
                 let orderDetails = '';
                 let subtotal = 0;
                 
@@ -1417,7 +1459,8 @@
                 
                 // Hide modal
                 confirmationModal.classList.add('hidden');
-            });
+            }
+            fillGformBtn.addEventListener('click', sendToGoogleForm); // This button is in a hidden modal now
             
             // Admin event listeners
             adminBtn.addEventListener('click', function() {
