@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roti Daiki | Premium Quality</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
@@ -130,298 +132,126 @@
                 <div class="mb-8">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Pilih Produk</h3>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- Product 1 -->
-                        <div class="product-card">
-                            <div class="h-48 overflow-hidden">
-                                <img src="https://blogger.googleusercontent.com/img/a/AVvXsEhN5tuEXjZ7FEvun8aL0UJZA2t6DXq5PQm3KNdS8-Os-_M4X2vyQneSZE2jQ7srdcLWX7YYSzWUkeWHBkT1RdqodUf5EuLEnCanMU_l7m4TbVkF7M30oHpY12Bh2h1NCOqcRfVDvy8JyqTvuaBhC_WRbOi4GQ1C5dT4r0ysLSB1Ds9UBJRFmzPDm7hIK6g" alt="Paket Happiness" class="product-image">
-                            </div>
-                            <div class="p-4">
-                                <h4 class="font-semibold text-lg mb-1">Paket Happiness</h4>
-                                <p class="text-gray-500 text-sm mb-3">Paket spesial dengan berbagai varian roti</p>
-                                <div class="flex justify-between items-center">
-                                    <p class="font-bold text-gray-800">Rp 29.000</p>
-                                    <div class="flex items-center">
-                                        <span class="quantity-btn minus" data-product="paket-happiness">-</span>
-                                        <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="paket-happiness" data-price="29000">
-                                        <span class="quantity-btn plus" data-product="paket-happiness">+</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Product 2 -->
-                        <div class="product-card">
-                            <div class="h-48 overflow-hidden">
-                                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhBj_iDCJDtI14sEnNU9d7nIfixwyCqplkBrl6zCf2Bv20uyFMoTgXHNZ8Hpf_7iTDhWk7Jo2XusKrGxRiQSd_YWaziOzDI9FU8RrNyHqJtZ-wTsYHg5mlptVwU5pbXip0PTJdCCpU7-EpNFI_UnXZZpBbOiFsmZQ05k_ApO4dXwCZuhmDv1WELt082BUE/s320/Gambar%20WhatsApp%202025-06-26%20pukul%2011.30.25_c28fe79f.jpg" alt="Cranberry Cheese" class="product-image">
-                            </div>
-                            <div class="p-4">
-                                <h4 class="font-semibold text-lg mb-1">Cranberry Cheese</h4>
-                                <p class="text-gray-500 text-sm mb-3">Roti lembut dengan keju dan cranberry</p>
-                                <div class="flex justify-between items-center">
-                                    <p class="font-bold text-gray-800">Rp 18.000</p>
-                                    <div class="flex items-center">
-                                        <span class="quantity-btn minus" data-product="cranberry-cheese">-</span>
-                                        <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="cranberry-cheese" data-price="18000">
-                                        <span class="quantity-btn plus" data-product="cranberry-cheese">+</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Product 2 -->
-                        <div class="product-card">
-                            <div class="h-48 overflow-hidden">
-                                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj7BHCClOA0F-p6yhD5Hhp8Orn7vso2FN0vM6hWOXY7mOnOf7zycEEyEVkBP7a7JX5RACrsEX0UE_XAU-dWvrPWATM79rc_lRz6AK_xnQCpIw9x2tVZHxA_hDErgAEbSiSQKMVenfDvGq-RBpxlAAUVPYWCIzkHLujR3AmleGOEA9f9DAJEehsYelZu0R4/s320/Gambar%20WhatsApp%202025-06-26%20pukul%2011.30.25_1ccb6dd3.jpg" alt="Double Choco" class="product-image">
-                            </div>
-                            <div class="p-4">
-                                <h4 class="font-semibold text-lg mb-1">Double Choco</h4>
-                                <p class="text-gray-500 text-sm mb-3">Roti dengan double cokelat yang lezat</p>
-                                <div class="flex justify-between items-center">
-                                    <p class="font-bold text-gray-800">Rp 20.000</p>
-                                    <div class="flex items-center">
-                                        <span class="quantity-btn minus" data-product="double-choco">-</span>
-                                        <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="double-choco" data-price="20000">
-                                        <span class="quantity-btn plus" data-product="double-choco">+</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Product 3 -->
-                        <div class="product-card">
-                            <div class="h-48 overflow-hidden">
-                                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEil3QJ8yrStTgJ8iw9MZls6XRBnWEA2v549Pnd5hgKf3VZPagrL0tVX06ZP23aM1EWp97cltACWHeC17tc3unc-GxY2bND_PZqVDul3CjUmCjg2iuj1AfE0a-jPad2HNIBG2Qh1K3hQzUiZovJke6Yg_JQZeU3zVV3cy3_HhWCl5Uq0RRfln0z2HUlAOrk/s320/Gambar%20WhatsApp%202025-05-18%20pukul%2016.12.27_628ca8c2.jpg" alt="Mini Cranberry" class="product-image">
-                            </div>
-                            <div class="p-4">
-                                <h4 class="font-semibold text-lg mb-1">Mini Cranberry</h4>
-                                <p class="text-gray-500 text-sm mb-3">10 pcs roti mini dengan cranberry</p>
-                                <div class="flex justify-between items-center">
-                                    <p class="font-bold text-gray-800">Rp 55.000</p>
-                                    <div class="flex items-center">
-                                        <span class="quantity-btn minus" data-product="mini-cranberry">-</span>
-                                        <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="mini-cranberry" data-price="55000">
-                                        <span class="quantity-btn plus" data-product="mini-cranberry">+</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Product 4 -->
-                        <div class="product-card">
-                            <div class="h-48 overflow-hidden">
-                                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhHSyr0lSisX1jrFkEAo4rNCBqH0_WG3Ltj1UAK48zeCXcuQXwsHQZ87WpzjIK8z71km3xWB40la3cRfmCEYKnctJ7KfV_h3IN-CT9nJzwFZbPryG3T1_irBlRgSGI4prRImtN_wPiLGMafOat7yZD6_vJRP64NDrDus4brT2Hrg_EQCOSQITVwmBRzTwI/s320/Gambar%20WhatsApp%202025-05-18%20pukul%2016.12.26_f15a5ac9.jpg" alt="Mini Double Choco" class="product-image">
-                            </div>
-                            <div class="p-4">
-                                <h4 class="font-semibold text-lg mb-1">Mini Double Choco</h4>
-                                <p class="text-gray-500 text-sm mb-3">10 pcs roti mini dengan double cokelat</p>
-                                <div class="flex justify-between items-center">
-                                    <p class="font-bold text-gray-800">Rp 60.000</p>
-                                    <div class="flex items-center">
-                                        <span class="quantity-btn minus" data-product="mini-double-choco">-</span>
-                                        <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="mini-double-choco" data-price="60000">
-                                        <span class="quantity-btn plus" data-product="mini-double-choco">+</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Product 5 -->
-                        <div class="product-card">
-                            <div class="h-48 overflow-hidden">
-                                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi3LonZ85JjVMxDtQM6OOTXnB_tAKtfPPhinRv0vcv02djyIHy7aBKEwTP8fSrqte-tQxTrGHYfUOrcKQDS9d-kJfJoveXgu1DRxUzad3s14xaiSEYwT5Xg8L-ALOrVo34lIaz_nLHDGf7lcEwybahVA1WyitQ3VFEaEHcDQLTjMEWjiAtpqofGOwOJSoY/s320/Gambar%20WhatsApp%202025-05-18%20pukul%2016.12.26_14926ae4.jpg" alt="Mini Mix" class="product-image">
-                            </div>
-                            <div class="p-4">
-                                <h4 class="font-semibold text-lg mb-1">Mini Mix</h4>
-                                <p class="text-gray-500 text-sm mb-3">10 pcs roti mini campuran varian</p>
-                                <div class="flex justify-between items-center">
-                                    <p class="font-bold text-gray-800">Rp 65.000</p>
-                                    <div class="flex items-center">
-                                        <span class="quantity-btn minus" data-product="mini-mix">-</span>
-                                        <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="mini-mix" data-price="65000">
-                                        <span class="quantity-btn plus" data-product="mini-mix">+</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Product 7 - NEW -->
-                        <div class="product-card">
-                            <div class="h-48 overflow-hidden">
-                                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjflJLkUYjjIYF0WrPeLP_vCbGSQdfkOSAHextDm1J1jaBMPx7FcaDouZy9Q5LPXemTEFnJ5QGLlXTgl40sZ0KOICsmXD9t1rxc2iVZm5BadYaspPATLyE_ohZ2V1t6pKlV5w1ThlrNWhkxAPO65b-N05lLVQ5j_dBdiHlott67qNeMG1QzAecvAipt458/s600/sosis%20keju.png" alt="Roti Sosis Keju" class="product-image">
-                            </div>
-                            <div class="p-4">
-                                <h4 class="font-semibold text-lg mb-1">Roti Sosis Keju</h4>
-                                <p class="text-gray-500 text-sm mb-3">Roti lembut dengan toping Keju dan Sosis Premium</p>
-                                
-                                <!-- Reguler Variant -->
-                                <div class="mb-3 pb-3 border-b border-gray-200">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <div>
-                                            <span class="text-sm font-medium text-gray-700">Reguler</span>
-                                            <span class="text-sm font-bold text-gray-800 ml-2">Rp 10.000</span>
-                                        </div>
-                                        <div class="flex items-center">
-                                            <span class="quantity-btn minus" data-product="roti-sosis-keju-small">-</span>
-                                            <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="roti-sosis-keju-small" data-price="10000">
-                                            <span class="quantity-btn plus" data-product="roti-sosis-keju-small">+</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Jumbo Variant -->
-                                <div class="mb-3">
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <span class="text-sm font-medium text-gray-700">Jumbo</span>
-                                            <span class="text-sm font-bold text-gray-800 ml-2">Rp 22.000</span>
-                                        </div>
-                                        <div class="flex items-center">
-                                            <span class="quantity-btn minus" data-product="roti-sosis-keju-jumbo">-</span>
-                                            <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="roti-sosis-keju-jumbo" data-price="22000">
-                                            <span class="quantity-btn plus" data-product="roti-sosis-keju-jumbo">+</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Product 8 - NEW -->
-                        <div class="product-card">
-                            <div class="h-48 overflow-hidden">
-                                <img src="https://blogger.googleusercontent.com/img/a/AVvXsEgrzwbHEiUAuKIaLfFscXIkgyfBjFKAQdddHhTQCWJnzDCCJ8pIcMFQdAT6xMVS5Gd1kQWqWBreZPPNez-g6HaZ2Uuo-kXFzVrah_ThovG1bad6EfAhfHsaWnIOpC9hYnddt1do-GFY33kjm8hhzNDYQf9EXKMxx1LCxjX2lnegtU6fnCTFAQeMueCJjI0">
-                            </div>
-                            <div class="p-4">
-                                <h4 class="font-semibold text-lg mb-1">Salt Bread Isi 2 buah</h4>
-                                <p class="text-gray-500 text-sm mb-3">Roti Asin dengan isi Butter yang lembut dan wangi</p>
-                                <div class="flex justify-between items-center">
-                                    <p class="font-bold text-gray-800">Rp 18.000</p>
-                                    <div class="flex items-center">
-                                        <span class="quantity-btn minus" data-product="salt-bread">-</span>
-                                        <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="salt-bread" data-price="18000">
-                                        <span class="quantity-btn plus" data-product="salt-bread">+</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Product 9 - Iceberg Cheese Cake Choco -->
-                        <div class="product-card">
-                            <div class="h-48 overflow-hidden">
-                                <img src="https://blogger.googleusercontent.com/img/a/AVvXsEhxSCH6_nahjXiphiVefmr4vhHrgMahgWKygCIMe3BGw1XAKWvWmKKJF0WGd2Skxh7XH42tmxSy83LvNFtRQuFK1sIhTFuN_ZOsDKIr-yt-UnHKOpubpj3PuF2KwMC_qd_EBxLN3N5w93O9yODGskXJm8lPtm-6AmwUUIN45vSmuHg73REnw2qP8xDQm1I" alt="Iceberg Cheese Cake Choco" class="product-image">
-                            </div>
-                            <div class="p-4">
-                                <h4 class="font-semibold text-lg mb-1">Iceberg Cheese Cake Choco</h4>
-                                <p class="text-gray-500 text-sm mb-3">Cheese cake cokelat premium yang lembut dan dingin. Kecil (220g) Besar (800g)</p>
-                                
-                                <!-- Kecil Variant -->
-                                <div class="mb-3 pb-3 border-b border-gray-200">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <div>
-                                            <span class="text-sm font-medium text-gray-700">Kecil</span>
-                                            <span class="text-sm font-bold text-gray-800 ml-2">Rp 50.000</span>
-                                        </div>
-                                        <div class="flex items-center">
-                                            <span class="quantity-btn minus" data-product="iceberg-choco-kecil">-</span>
-                                            <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="iceberg-choco-kecil" data-price="50000">
-                                            <span class="quantity-btn plus" data-product="iceberg-choco-kecil">+</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Besar Variant -->
-                                <div class="mb-3">
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <span class="text-sm font-medium text-gray-700">Besar</span>
-                                            <span class="text-sm font-bold text-gray-800 ml-2">Rp 190.000</span>
-                                        </div>
-                                        <div class="flex items-center">
-                                            <span class="quantity-btn minus" data-product="iceberg-choco-besar">-</span>
-                                            <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="iceberg-choco-besar" data-price="190000">
-                                            <span class="quantity-btn plus" data-product="iceberg-choco-besar">+</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Product 10 - Iceberg Cheese Cake Strawberry -->
-                        <div class="product-card">
-                            <div class="h-48 overflow-hidden">
-                                <img src="https://blogger.googleusercontent.com/img/a/AVvXsEjbmomz9jXscPHnaQFLdQpj3mE-Qv4CaMBuVXfQt7_u8kH8ShiPTZ0GH8jPpDRX57CsgEZ0gFuwcaWM_eU8d7RER7pASrEP8VyeQmC0-5fMjOafy8PmILdX5rFh6jhQRL0rXbBuAVkuHoUlCzA9RxyD3s-YTjtwdYF1akmaE_1Xn5SlI3eoaOFX3LnkXwI" alt="Iceberg Cheese Cake Strawberry" class="product-image">
-                            </div>
-                            <div class="p-4">
-                                <h4 class="font-semibold text-lg mb-1">Iceberg Cheese Cake Strawberry</h4>
-                                <p class="text-gray-500 text-sm mb-3">Cheese cake strawberry segar yang lembut dan dingin. Kecil (220g) Besar (800g)</p>
-                                
-                                <!-- Kecil Variant -->
-                                <div class="mb-3 pb-3 border-b border-gray-200">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <div>
-                                            <span class="text-sm font-medium text-gray-700">Kecil</span>
-                                            <span class="text-sm font-bold text-gray-800 ml-2">Rp 55.000</span>
-                                        </div>
-                                        <div class="flex items-center">
-                                            <span class="quantity-btn minus" data-product="iceberg-strawberry-kecil">-</span>
-                                            <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="iceberg-strawberry-kecil" data-price="55000">
-                                            <span class="quantity-btn plus" data-product="iceberg-strawberry-kecil">+</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Besar Variant -->
-                                <div class="mb-3">
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <span class="text-sm font-medium text-gray-700">Besar</span>
-                                            <span class="text-sm font-bold text-gray-800 ml-2">Rp 200.000</span>
-                                        </div>
-                                        <div class="flex items-center">
-                                            <span class="quantity-btn minus" data-product="iceberg-strawberry-besar">-</span>
-                                            <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-product="iceberg-strawberry-besar" data-price="200000">
-                                            <span class="quantity-btn plus" data-product="iceberg-strawberry-besar">+</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Kartu produk dirender oleh ProductCatalogView dari data PRODUCTS -->
+                    <div id="product-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                    
                 </div>
                 
-                <!-- Customer Info - MOVED HERE -->
+                <!-- Customer Info: akun sederhana (login nomor HP tanpa password) -->
                 <div class="mb-8">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Informasi Pemesan</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label for="customer-name" class="block text-gray-600 mb-2">Nama</label>
-                            <input type="text" id="customer-name" class="w-full input-style" placeholder="Masukkan nama Anda">
+
+                    <!-- Panel Akun -->
+                    <div id="account-section" class="bg-amber-50 rounded-lg p-4 border border-amber-200 mb-4">
+                        <!-- Status: Belum Login -->
+                        <div id="account-logged-out">
+                            <p class="text-sm text-amber-800 font-medium mb-3">🔐 Masukkan Nomor HP dan Klik Login.</p>
+                            <div class="flex gap-3">
+                                <input type="tel" id="login-phone" class="flex-1 input-style" placeholder="Contoh: 08123456789">
+                                <button id="login-btn" class="px-6 py-2 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 transition duration-300">
+                                    Login
+                                </button>
+                            </div>
+                            <div id="login-message" class="mt-2 text-sm hidden"></div>
                         </div>
-                        <div>
-                            <label for="customer-whatsapp" class="block text-gray-600 mb-2">Nomor WhatsApp</label>
-                            <input type="tel" id="customer-whatsapp" class="w-full input-style" placeholder="Contoh: 08123456789">
+
+                        <!-- Status: Registrasi (nomor HP belum terdaftar) -->
+                        <div id="account-register" class="hidden">
+                            <p class="text-sm text-amber-800 font-medium mb-3">📝 Nomor HP Anda belum terdaftar. Lengkapi data berikut untuk membuat akun:</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                                <div>
+                                    <label for="register-name" class="block text-gray-600 mb-2">Nama Lengkap</label>
+                                    <input type="text" id="register-name" class="w-full input-style" placeholder="Masukkan nama Anda">
+                                </div>
+                                <div>
+                                    <label for="register-phone" class="block text-gray-600 mb-2">Nomor HP</label>
+                                    <input type="tel" id="register-phone" class="w-full input-style bg-gray-100" readonly>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="register-address" class="block text-gray-600 mb-2">Alamat</label>
+                                <textarea id="register-address" rows="2" class="w-full input-style" placeholder="Masukkan alamat lengkap Anda"></textarea>
+                            </div>
+                            <div class="flex gap-3">
+                                <button id="register-save-btn" class="px-6 py-2 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 transition duration-300">
+                                    Simpan & Lanjutkan
+                                </button>
+                                <button id="register-cancel-btn" class="px-6 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition duration-300">
+                                    Batal
+                                </button>
+                            </div>
+                            <div id="register-message" class="mt-2 text-sm hidden"></div>
+                        </div>
+
+                        <!-- Status: Sudah Login -->
+                        <div id="account-logged-in" class="hidden">
+                            <div class="flex justify-between items-start">
+                                <div class="text-sm text-gray-700 space-y-1">
+                                    <p><span class="font-semibold">👤 <span id="account-name">-</span></span></p>
+                                    <p>📱 <span id="account-phone">-</span></p>
+                                    <p>🏠 <span id="account-address">-</span></p>
+                                </div>
+                                <button id="account-logout-btn" class="text-sm text-red-600 hover:text-red-700 font-medium">
+                                    <i class="fas fa-sign-out-alt mr-1"></i>Keluar
+                                </button>
+                            </div>
+                            <p class="text-xs text-green-600 mt-2" id="account-status">✅ Anda sudah login. Silakan lanjutkan pemesanan.</p>
                         </div>
                     </div>
+
+                    <!-- Data pelanggan disimpan di hidden input (diisi otomatis dari akun, tidak ditampilkan) -->
+                    <div class="hidden">
+                        <input type="text" id="customer-name">
+                        <input type="tel" id="customer-whatsapp">
+                        <textarea id="customer-address"></textarea>
+                    </div>
                     
-                    <!-- Promo Code Section -->
+                    <!-- Promo Code Section: tiga panel status (aktif / belum mulai / berakhir) diatur PromoView -->
                     <div id="promo-section" class="bg-green-50 rounded-lg p-4 border border-green-200">
-                        <div class="flex justify-between items-center mb-3">
-                            <h4 class="text-lg font-semibold text-green-800">🎉 Kode Promo</h4>
-                            <div class="text-right">
-                                <div class="text-xs text-green-600">Promo berakhir dalam:</div>
-                                <div id="countdown-promo" class="font-bold text-sm text-green-800">--:--:--</div>
+                        <!-- Status: Aktif -->
+                        <div id="promo-active">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="text-lg font-semibold text-green-800">🎉 Kode Promo</h4>
+                                <div class="text-right">
+                                    <div class="text-xs text-green-600">Promo berakhir dalam:</div>
+                                    <div id="promo-countdown-active" class="font-bold text-sm text-green-800">--:--:--</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="flex-1">
+                                    <input type="text" id="promo-code" class="w-full input-style" placeholder="Masukkan kode promo (opsional)" style="border-color: #10B981;">
+                                    <p class="text-xs text-green-600 mt-1">*Pembelian minimal Rp 50.000</p>
+                                </div>
+                                <button id="apply-promo" class="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-300">
+                                    Terapkan
+                                </button>
+                            </div>
+                            <div id="promo-message" class="mt-2 text-sm hidden"></div>
+                        </div>
+
+                        <!-- Status: Belum Dimulai -->
+                        <div id="promo-upcoming" class="hidden">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="text-lg font-semibold text-yellow-800">🎉 Kode Promo</h4>
+                                <div class="text-right">
+                                    <div class="text-xs text-yellow-600">Promo dimulai dalam:</div>
+                                    <div id="promo-countdown-upcoming" class="font-bold text-sm text-yellow-800">--:--:--</div>
+                                </div>
+                            </div>
+                            <div class="text-center py-4">
+                                <p class="text-yellow-700 font-medium">Promo Belum Dimulai</p>
+                                <p class="text-xs text-yellow-600 mt-1">Tunggu hingga waktu promo dimulai</p>
                             </div>
                         </div>
-                        <div class="flex gap-3">
-                            <div class="flex-1">
-                                <input type="text" id="promo-code" class="w-full input-style" placeholder="Masukkan kode promo (opsional)" style="border-color: #10B981;">
-                                <p class="text-xs text-green-600 mt-1">*Pembelian minimal Rp 50.000</p>
+
+                        <!-- Status: Berakhir -->
+                        <div id="promo-expired" class="hidden">
+                            <div class="text-center py-4">
+                                <h4 class="text-lg font-semibold text-gray-600 mb-2">🎉 Kode Promo</h4>
+                                <p class="text-gray-500 font-medium">Promo Telah Berakhir</p>
+                                <p class="text-xs text-gray-400 mt-1">Tunggu promo berikutnya</p>
                             </div>
-                            <button id="apply-promo" class="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-300">
-                                Terapkan
-                            </button>
                         </div>
-                        <div id="promo-message" class="mt-2 text-sm hidden"></div>
                     </div>
                 </div>
                 
@@ -453,7 +283,6 @@
                     <div class="mb-4">
                         <select id="payment-method" class="w-full input-style">
                             <option value="">Pilih metode pembayaran</option>
-                            <option value="cash">CASH / COD</option>
                             <option value="transfer">Transfer Rekening</option>
                             <option value="qris">QRIS</option>
                         </select>
@@ -475,7 +304,7 @@
                     <div id="qris-details" class="hidden bg-purple-50 rounded-lg p-4 border border-purple-200">
                         <h4 class="text-lg font-semibold text-purple-800 mb-3">📱 Scan QRIS</h4>
                         <div class="flex justify-center">
-                            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEghe9PP0_GXWOdEPWYs6rTc3vFvpvZT1vznK5kRWbAUWgWga4vF9u_aRxDrAch9m74_6Ha_smwKuiwfRTORM1fty-dCFJ8I654SSbWIidpSroENprWhYD_i0YhP3GbsWgIiDOvzp31iV6usQdzMGzkEUUkwZVonraBwMkUl2Kkp2rtU1El3khN9mTUVjZA/s1280/QRIS%20Gopay.jpg" 
+                            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjQ81o27V5p5KV5dw9emuA8xjw8qi-3JsDzY71epwNDVdc6iXBks20VHgx_kjATtsXyOWU419O4ovaCsPDkO7WLb_ZuUjCPYID_hssWvxjrau8e4u1Gyj9nKqsV1wKJIdjvipbxFL6MX6tVrh4SwylUQRY7y_neovmC4Vq4u4TuwNxWDZ-eMZJZnUxuBsI/s1600/QRIS_DAIKI.jpeg" 
                                  alt="QRIS Roti Daiki" 
                                  class="w-64 h-64 object-contain rounded-lg border border-purple-200 bg-white p-2"
                                  onerror="this.src=''; this.alt='QRIS gagal dimuat'; this.style.display='none';">
@@ -489,6 +318,7 @@
                     <button id="order-button" class="btn-primary py-3 px-8 rounded-full text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                         Pesan Sekarang
                     </button>
+                    <p id="order-hint" class="mt-2 text-sm text-gray-500"></p>
                 </div>
             </div>
             
@@ -619,33 +449,33 @@
                     <div class="text-center">
                         <h4 class="text-sm font-semibold text-blue-800 mb-2">📋 Informasi Sistem</h4>
                         <div class="text-xs text-blue-700 space-y-1">
-                            <p><strong>Load Data:</strong> ✅ Dari Google Sheets (otomatis)</p>
-                            <p><strong>Save Data:</strong> 💾 Lokal saja (keterbatasan Canva)</p>
-                            <p><strong>Sync:</strong> Manual update Google Sheets diperlukan</p>
+                            <p><strong>Load Data:</strong> ✅ Real-time dari Firebase Firestore</p>
+                            <p><strong>Save Data:</strong> 💾 Tersimpan ke Firebase (langsung sinkron ke semua perangkat)</p>
+                            <p><strong>Sync:</strong> Otomatis via onSnapshot</p>
                         </div>
                         <div class="mt-3 p-2 bg-yellow-50 rounded border border-yellow-200">
                             <p class="text-xs text-yellow-700">
-                                <strong>Catatan:</strong> Pengaturan disimpan lokal. Untuk sync ke perangkat lain, update manual Google Sheets diperlukan.
+                                <strong>Catatan:</strong> Setiap perubahan pengaturan promo langsung tersimpan di Firebase dan tersinkron otomatis ke semua perangkat pelanggan.
                             </p>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Save Button -->
                 <div class="text-center">
                     <button id="save-promo-btn" class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
                         Simpan Pengaturan
                     </button>
                 </div>
-                
+
                 <!-- Success Message -->
                 <div id="save-success" class="hidden mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
                     <p class="text-sm text-green-600 text-center font-medium">✅ Pengaturan promo berhasil disimpan!</p>
                 </div>
-                
+
                 <!-- Error Message -->
                 <div id="save-error" class="hidden mt-4 p-3 bg-red-50 rounded-lg border border-red-200">
-                    <p class="text-sm text-red-600 text-center font-medium">❌ Gagal menyimpan ke Google Sheets. Data tersimpan secara lokal.</p>
+                    <p class="text-sm text-red-600 text-center font-medium">❌ Gagal menyimpan ke Firebase. Periksa koneksi internet Anda.</p>
                 </div>
             </div>
         </main>
@@ -709,894 +539,1527 @@
     </div>
     
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Google Sheets API URL
-            const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyy8Fg-GYA8KlRpXsT45B7RkQNQjBciKkxAiJ4216zuCuHE_LjLTLhyMh8irGKM150/exec';
-            
-            // Elements
-            const quantityInputs = document.querySelectorAll('.product-quantity');
-            const plusButtons = document.querySelectorAll('.plus');
-            const minusButtons = document.querySelectorAll('.minus');
-            const orderItems = document.getElementById('order-items');
-            const totalPrice = document.getElementById('total-price');
-            const orderButton = document.getElementById('order-button');
-            const customerName = document.getElementById('customer-name');
-            const customerWhatsapp = document.getElementById('customer-whatsapp');
-            const paymentMethod = document.getElementById('payment-method');
-            const transferDetails = document.getElementById('transfer-details');
-            const qrisDetails = document.getElementById('qris-details');
-            
-            const confirmationModal = document.getElementById('confirmation-modal');
-            const modalOrderItems = document.getElementById('modal-order-items');
-            const modalTotalPrice = document.getElementById('modal-total-price');
-            const fillGformBtn = document.getElementById('fill-gform');
-            const cancelOrderBtn = document.getElementById('cancel-order');
-            
-            // Admin elements
-            const adminBtn = document.getElementById('admin-btn');
-            const adminLoginModal = document.getElementById('admin-login-modal');
-            const adminCodeInput = document.getElementById('admin-code');
-            const adminLoginBtn = document.getElementById('admin-login-btn');
-            const cancelAdminLoginBtn = document.getElementById('cancel-admin-login');
-            const adminError = document.getElementById('admin-error');
-            const salesPage = document.getElementById('sales-page');
-            const adminPage = document.getElementById('admin-page');
-            const logoutBtn = document.getElementById('logout-btn');
-            
-            // Admin form elements
-            const promoStartDate = document.getElementById('promo-start-date');
-            const promoStartTime = document.getElementById('promo-start-time');
-            const promoEndDate = document.getElementById('promo-end-date');
-            const promoEndTime = document.getElementById('promo-end-time');
-            const savePromoBtn = document.getElementById('save-promo-btn');
-            const saveSuccess = document.getElementById('save-success');
-            const saveError = document.getElementById('save-error');
-            const currentStart = document.getElementById('current-start');
-            const currentEnd = document.getElementById('current-end');
-            const currentStatus = document.getElementById('current-status');
-            const currentRemaining = document.getElementById('current-remaining');
-            const connectionIndicator = document.getElementById('connection-indicator');
-            const testConnectionBtn = document.getElementById('test-connection-btn');
-            
-            // Promo code elements
-            let promoCodeInput = document.getElementById('promo-code');
-            let applyPromoBtn = document.getElementById('apply-promo');
-            const promoMessage = document.getElementById('promo-message');
-            const discountSection = document.getElementById('discount-section');
-            const discountAmount = document.getElementById('discount-amount');
-            
-            // Admin constants
-            const ADMIN_CODE = '020202';
-            
-            // Promo code state
-            let isPromoApplied = false;
-            const validPromoCode = 'BAROKALLAH';
-            const discountPercentage = 10;
-            
-            // Promo dates - will be loaded from Google Sheets
-            let promoStartDateTime = new Date('2025-01-01T00:00:00');
-            let promoEndDateTime = new Date('2025-08-18T23:59:59');
-            let isPromoExpired = false;
-            let isLoadingPromoSettings = false;
-            
-            // Load promo settings from Google Sheets (read-only, Canva limitation)
-            async function loadPromoSettings(retryCount = 0) {
-                if (isLoadingPromoSettings) return;
-                isLoadingPromoSettings = true;
-                
-                const maxRetries = 2;
-                const retryDelay = 1500; // 1.5 seconds
-                
-                try {
-                    console.log(`Loading promo settings from Google Sheets... (attempt ${retryCount + 1})`);
-                    updateConnectionStatus('connecting');
-                    
-                    // Add action parameter to specify we want to load data
-                    const loadUrl = `${GOOGLE_SHEETS_URL}?action=load&t=${Date.now()}`;
-                    
-                    const response = await fetch(loadUrl, {
-                        method: 'GET',
-                        mode: 'cors',
-                        cache: 'no-cache'
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    console.log('Received data from Google Sheets:', data);
-                    
-                    // Handle different response formats
-                    let startDate = data.promo_start || data.start || data.promoStart;
-                    let endDate = data.promo_end || data.end || data.promoEnd;
-                    
-                    if (startDate) {
-                        promoStartDateTime = new Date(startDate);
-                        console.log('Loaded start date:', promoStartDateTime);
-                        // Save to localStorage as backup
-                        localStorage.setItem('promoStartDateTime', promoStartDateTime.toISOString());
-                    }
-                    if (endDate) {
-                        promoEndDateTime = new Date(endDate);
-                        console.log('Loaded end date:', promoEndDateTime);
-                        // Save to localStorage as backup
-                        localStorage.setItem('promoEndDateTime', promoEndDateTime.toISOString());
-                    }
-                    
-                    updateConnectionStatus('connected');
-                    
-                    // Update countdown immediately after loading
-                    updateCountdown();
-                    updateAdminStatus();
-                    
-                } catch (error) {
-                    console.error(`Error loading promo settings (attempt ${retryCount + 1}):`, error);
-                    
-                    // Retry if we haven't exceeded max retries
-                    if (retryCount < maxRetries) {
-                        console.log(`Retrying load in ${retryDelay}ms...`);
-                        isLoadingPromoSettings = false; // Reset flag for retry
-                        await new Promise(resolve => setTimeout(resolve, retryDelay));
-                        return loadPromoSettings(retryCount + 1);
-                    }
-                    
-                    // All retries failed, use localStorage
-                    updateConnectionStatus('error');
-                    console.log('All load attempts failed. Using localStorage data.');
-                    loadPromoSettingsFromLocalStorage();
-                } finally {
-                    isLoadingPromoSettings = false;
-                }
-            }
-            
-            // Update connection status indicator - simplified for Canva limitations
-            function updateConnectionStatus(status) {
-                // Since Canva can only read from Google Sheets, we don't need complex status updates
-                console.log(`Connection status: ${status}`);
-            }
-            
-            // Fallback: Load from localStorage
-            function loadPromoSettingsFromLocalStorage() {
-                const savedStart = localStorage.getItem('promoStartDateTime');
-                const savedEnd = localStorage.getItem('promoEndDateTime');
-                
-                if (savedStart) {
-                    promoStartDateTime = new Date(savedStart);
-                }
-                if (savedEnd) {
-                    promoEndDateTime = new Date(savedEnd);
-                }
-            }
-            
-            // Save promo settings - Canva can't send to Google Sheets, so we use localStorage only
-            async function savePromoSettings() {
-                try {
-                    console.log('Saving promo settings to localStorage...');
-                    
-                    // Save to localStorage
-                    localStorage.setItem('promoStartDateTime', promoStartDateTime.toISOString());
-                    localStorage.setItem('promoEndDateTime', promoEndDateTime.toISOString());
-                    
-                    console.log('Promo settings saved successfully to localStorage');
-                    return true;
-                } catch (error) {
-                    console.error('Error saving promo settings:', error);
-                    throw new Error(`Failed to save promo settings: ${error.message}`);
-                }
-            }
-            
-            // Format date for display
-            function formatDateTime(date) {
+        'use strict';
+
+        /* ============================================================
+         * KONFIGURASI
+         * ============================================================ */
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCWyyjgAiyvjS_myLB9nDEswVk1Ms7K00",
+            authDomain: "roti-daiki.firebaseapp.com",
+            projectId: "roti-daiki",
+            storageBucket: "roti-daiki.firebasestorage.app",
+            messagingSenderId: "204837579136",
+            appId: "1:204837579136:web:ec2274d56585cae8c7f965"
+        };
+
+        const CONFIG = Object.freeze({
+            whatsappNumber: '6285894541435',
+            adminCode: '020202',
+            promoCode: 'BAROKALLAH',
+            discountPercent: 10,
+            minSubtotalForDiscount: 50000,
+            countdownRefreshMs: 1000,
+            settingsSyncIntervalMs: 30000
+        });
+
+        // Koleksi Firestore
+        const COLLECTIONS = Object.freeze({
+            settings: 'settings',
+            orders: 'orders',
+            customers: 'customers'
+        });
+
+        /* ============================================================
+         * UTILITAS
+         * ============================================================ */
+        const Utils = Object.freeze({
+            formatCurrency(amount) {
+                return 'Rp ' + amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            },
+
+            formatDateTime(date) {
                 return date.toLocaleString('id-ID', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
+                    year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+            },
+
+            pad2(n) {
+                return n.toString().padStart(2, '0');
+            },
+
+            // Format countdown: "2h 5j 30m" / "05:20:10" / "20:10"
+            formatCountdown(timeMs) {
+                if (timeMs <= 0) return '';
+                const days = Math.floor(timeMs / 86400000);
+                const hours = Math.floor((timeMs % 86400000) / 3600000);
+                const minutes = Math.floor((timeMs % 3600000) / 60000);
+                const seconds = Math.floor((timeMs % 60000) / 1000);
+                if (days > 0) return `${days}h ${hours}j ${minutes}m`;
+                if (hours > 0) return `${hours}:${Utils.pad2(minutes)}:${Utils.pad2(seconds)}`;
+                return `${minutes}:${Utils.pad2(seconds)}`;
+            },
+
+            // Format sisa waktu untuk panel admin: "2 hari 5 jam"
+            formatTimeRemaining(timeMs) {
+                if (timeMs <= 0) return 'Berakhir';
+                const days = Math.floor(timeMs / 86400000);
+                const hours = Math.floor((timeMs % 86400000) / 3600000);
+                const minutes = Math.floor((timeMs % 3600000) / 60000);
+                if (days > 0) return `${days} hari ${hours} jam`;
+                if (hours > 0) return `${hours} jam ${minutes} menit`;
+                return `${minutes} menit`;
+            }
+        });
+
+        /* ============================================================
+         * DATA PRODUK (sumber tunggal untuk render kartu & nama pesanan)
+         * ============================================================ */
+        const PRODUCTS = Object.freeze([
+            {
+                name: 'Paket Happiness',
+                description: 'Paket spesial dengan berbagai varian roti',
+                image: 'https://blogger.googleusercontent.com/img/a/AVvXsEhN5tuEXjZ7FEvun8aL0UJZA2t6DXq5PQm3KNdS8-Os-_M4X2vyQneSZE2jQ7srdcLWX7YYSzWUkeWHBkT1RdqodUf5EuLEnCanMU_l7m4TbVkF7M30oHpY12Bh2h1NCOqcRfVDvy8JyqTvuaBhC_WRbOi4GQ1C5dT4r0ysLSB1Ds9UBJRFmzPDm7hIK6g',
+                alt: 'Paket Happiness',
+                variants: [{ sku: 'paket-happiness', label: null, price: 29000, orderName: 'Paket Happiness' }]
+            },
+            {
+                name: 'Cranberry Cheese',
+                description: 'Roti lembut dengan keju dan cranberry',
+                image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhBj_iDCJDtI14sEnNU9d7nIfixwyCqplkBrl6zCf2Bv20uyFMoTgXHNZ8Hpf_7iTDhWk7Jo2XusKrGxRiQSd_YWaziOzDI9FU8RrNyHqJtZ-wTsYHg5mlptVwU5pbXip0PTJdCCpU7-EpNFI_UnXZZpBbOiFsmZQ05k_ApO4dXwCZuhmDv1WELt082BUE/s320/Gambar%20WhatsApp%202025-06-26%20pukul%2011.30.25_c28fe79f.jpg',
+                alt: 'Cranberry Cheese',
+                variants: [{ sku: 'cranberry-cheese', label: null, price: 18000, orderName: 'Cranberry Cheese' }]
+            },
+            {
+                name: 'Double Choco',
+                description: 'Roti dengan double cokelat yang lezat',
+                image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj7BHCClOA0F-p6yhD5Hhp8Orn7vso2FN0vM6hWOXY7mOnOf7zycEEyEVkBP7a7JX5RACrsEX0UE_XAU-dWvrPWATM79rc_lRz6AK_xnQCpIw9x2tVZHxA_hDErgAEbSiSQKMVenfDvGq-RBpxlAAUVPYWCIzkHLujR3AmleGOEA9f9DAJEehsYelZu0R4/s320/Gambar%20WhatsApp%202025-06-26%20pukul%2011.30.25_1ccb6dd3.jpg',
+                alt: 'Double Choco',
+                variants: [{ sku: 'double-choco', label: null, price: 20000, orderName: 'Double Choco' }]
+            },
+            {
+                name: 'Mini Cranberry',
+                description: '10 pcs roti mini dengan cranberry',
+                image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEil3QJ8yrStTgJ8iw9MZls6XRBnWEA2v549Pnd5hgKf3VZPagrL0tVX06ZP23aM1EWp97cltACWHeC17tc3unc-GxY2bND_PZqVDul3CjUmCjg2iuj1AfE0a-jPad2HNIBG2Qh1K3hQzUiZovJke6Yg_JQZeU3zVV3cy3_HhWCl5Uq0RRfln0z2HUlAOrk/s320/Gambar%20WhatsApp%202025-05-18%20pukul%2016.12.27_628ca8c2.jpg',
+                alt: 'Mini Cranberry',
+                variants: [{ sku: 'mini-cranberry', label: null, price: 55000, orderName: 'Mini Cranberry (isi 10)' }]
+            },
+            {
+                name: 'Mini Double Choco',
+                description: '10 pcs roti mini dengan double cokelat',
+                image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhHSyr0lSisX1jrFkEAo4rNCBqH0_WG3Ltj1UAK48zeCXcuQXwsHQZ87WpzjIK8z71km3xWB40la3cRfmCEYKnctJ7KfV_h3IN-CT9nJzwFZbPryG3T1_irBlRgSGI4prRImtN_wPiLGMafOat7yZD6_vJRP64NDrDus4brT2Hrg_EQCOSQITVwmBRzTwI/s320/Gambar%20WhatsApp%202025-05-18%20pukul%2016.12.26_f15a5ac9.jpg',
+                alt: 'Mini Double Choco',
+                variants: [{ sku: 'mini-double-choco', label: null, price: 60000, orderName: 'Mini Double Choco (isi 10)' }]
+            },
+            {
+                name: 'Mini Mix',
+                description: '10 pcs roti mini campuran varian',
+                image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi3LonZ85JjVMxDtQM6OOTXnB_tAKtfPPhinRv0vcv02djyIHy7aBKEwTP8fSrqte-tQxTrGHYfUOrcKQDS9d-kJfJoveXgu1DRxUzad3s14xaiSEYwT5Xg8L-ALOrVo34lIaz_nLHDGf7lcEwybahVA1WyitQ3VFEaEHcDQLTjMEWjiAtpqofGOwOJSoY/s320/Gambar%20WhatsApp%202025-05-18%20pukul%2016.12.26_14926ae4.jpg',
+                alt: 'Mini Mix',
+                variants: [{ sku: 'mini-mix', label: null, price: 65000, orderName: 'Mini Mix (isi 10)' }]
+            },
+            {
+                name: 'Roti Sosis Keju',
+                description: 'Roti lembut dengan toping Keju dan Sosis Premium',
+                image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjflJLkUYjjIYF0WrPeLP_vCbGSQdfkOSAHextDm1J1jaBMPx7FcaDouZy9Q5LPXemTEFnJ5QGLlXTgl40sZ0KOICsmXD9t1rxc2iVZm5BadYaspPATLyE_ohZ2V1t6pKlV5w1ThlrNWhkxAPO65b-N05lLVQ5j_dBdiHlott67qNeMG1QzAecvAipt458/s600/sosis%20keju.png',
+                alt: 'Roti Sosis Keju',
+                variants: [
+                    { sku: 'roti-sosis-keju-small', label: 'Reguler', price: 10000, orderName: 'Roti Sosis Keju (Reguler)' },
+                    { sku: 'roti-sosis-keju-jumbo', label: 'Jumbo', price: 22000, orderName: 'Roti Sosis Keju (Jumbo)' }
+                ]
+            },
+            {
+                name: 'Salt Bread Isi 2 buah',
+                description: 'Roti Asin dengan isi Butter yang lembut dan wangi',
+                image: 'https://blogger.googleusercontent.com/img/a/AVvXsEgrzwbHEiUAuKIaLfFscXIkgyfBjFKAQdddHhTQCWJnzDCCJ8pIcMFQdAT6xMVS5Gd1kQWqWBreZPPNez-g6HaZ2Uuo-kXFzVrah_ThovG1bad6EfAhfHsaWnIOpC9hYnddt1do-GFY33kjm8hhzNDYQf9EXKMxx1LCxjX2lnegtU6fnCTFAQeMueCJjI0',
+                alt: 'Salt Bread Isi 2 buah',
+                variants: [{ sku: 'salt-bread', label: null, price: 18000, orderName: 'Salt Bread Isi 2 buah' }]
+            },
+            {
+                name: 'Iceberg Cheese Cake Choco',
+                description: 'Cheese cake cokelat premium yang lembut dan dingin. Kecil (220g) Besar (800g)',
+                image: 'https://blogger.googleusercontent.com/img/a/AVvXsEhxSCH6_nahjXiphiVefmr4vhHrgMahgWKygCIMe3BGw1XAKWvWmKKJF0WGd2Skxh7XH42tmxSy83LvNFtRQuFK1sIhTFuN_ZOsDKIr-yt-UnHKOpubpj3PuF2KwMC_qd_EBxLN3N5w93O9yODGskXJm8lPtm-6AmwUUIN45vSmuHg73REnw2qP8xDQm1I',
+                alt: 'Iceberg Cheese Cake Choco',
+                variants: [
+                    { sku: 'iceberg-choco-kecil', label: 'Kecil', price: 50000, orderName: 'Iceberg Cheese Cake Choco (Kecil)' },
+                    { sku: 'iceberg-choco-besar', label: 'Besar', price: 190000, orderName: 'Iceberg Cheese Cake Choco (Besar)' }
+                ]
+            },
+            {
+                name: 'Iceberg Cheese Cake Strawberry',
+                description: 'Cheese cake strawberry segar yang lembut dan dingin. Kecil (220g) Besar (800g)',
+                image: 'https://blogger.googleusercontent.com/img/a/AVvXsEjbmomz9jXscPHnaQFLdQpj3mE-Qv4CaMBuVXfQt7_u8kH8ShiPTZ0GH8jPpDRX57CsgEZ0gFuwcaWM_eU8d7RER7pASrEP8VyeQmC0-5fMjOafy8PmILdX5rFh6jhQRL0rXbBuAVkuHoUlCzA9RxyD3s-YTjtwdYF1akmaE_1Xn5SlI3eoaOFX3LnkXwI',
+                alt: 'Iceberg Cheese Cake Strawberry',
+                variants: [
+                    { sku: 'iceberg-strawberry-kecil', label: 'Kecil', price: 55000, orderName: 'Iceberg Cheese Cake Strawberry (Kecil)' },
+                    { sku: 'iceberg-strawberry-besar', label: 'Besar', price: 200000, orderName: 'Iceberg Cheese Cake Strawberry (Besar)' }
+                ]
+            }
+        ]);
+
+        // Indeks SKU -> { sku, price, orderName }
+        const PRODUCT_INDEX = new Map(
+            PRODUCTS.flatMap(p => p.variants).map(v => [v.sku, v])
+        );
+
+        /* ============================================================
+         * LAYER AKSES DATA (Firebase Firestore)
+         * ============================================================ */
+        class PromoSettingsRepository {
+            constructor(db, path, callbacks) {
+                this._db = db;
+                this._doc = db.collection(path).doc('promo');
+                this._onLoaded = callbacks.onLoaded;      // ({start, end}|null)
+                this._onError = callbacks.onError;        // (Error)
+            }
+
+            // Real-time listener: sinkron otomatis antar perangkat
+            listen() {
+                this._doc.onSnapshot(
+                    doc => {
+                        if (doc.exists) {
+                            const d = doc.data();
+                            this._onLoaded({
+                                start: this._toMillisOrIso(d.promoStart),
+                                end: this._toMillisOrIso(d.promoEnd)
+                            });
+                        } else {
+                            this._onLoaded(null); // dokumen belum dibuat: pakai default
+                        }
+                    },
+                    err => this._onError(err)
+                );
+            }
+
+            // Ubah nilai tanggal dari Firestore (Timestamp/Date/string/number) menjadi ISO string
+            _toMillisOrIso(value) {
+                if (!value) return null;
+                // Timestamp Firestore memiliki metode toDate()
+                if (typeof value.toDate === 'function') return value.toDate().toISOString();
+                if (value instanceof Date) return value.toISOString();
+                if (typeof value === 'number') return new Date(value).toISOString();
+                return value; // string ISO atau format lain, biarkan _applyRemote yang memvalidasi
+            }
+
+            // Simpan (Timestamp Firestore) — dipakai tombol Simpan admin
+            save(start, end) {
+                return this._doc.set({
+                    promoStart: start,
+                    promoEnd: end,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            }
+        }
+
+        class OrderRepository {
+            constructor(db, path) {
+                this._collection = db.collection(path);
+            }
+
+            save(order) {
+                return this._collection.add({
+                    ...order,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
             }
-            
-            // Update admin panel current status
-            function updateAdminStatus() {
+        }
+
+        // Akun sederhana: dokumen customers/{nomorHP-tanpa-awalan-0}, tanpa password
+        class CustomerRepository {
+            constructor(db, path) {
+                this._collection = db.collection(path);
+            }
+
+            // 08123456789 -> "628123456789"
+            static normalizePhone(raw) {
+                let p = (raw || '').replace(/\D/g, '');
+                if (p.startsWith('0')) p = '62' + p.slice(1);
+                return p;
+            }
+
+            _docRef(phone) {
+                return this._collection.doc(CustomerRepository.normalizePhone(phone));
+            }
+
+            // Mengembalikan { found, data } — data null jika belum terdaftar
+            async findByPhone(phone) {
+                const snap = await this._docRef(phone).get();
+                return { found: snap.exists, data: snap.exists ? snap.data() : null };
+            }
+
+            async create(phone, name, address) {
+                const ref = this._docRef(phone);
+                await ref.set({
+                    phone: CustomerRepository.normalizePhone(phone),
+                    name: name,
+                    address: address,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                return (await ref.get()).data();
+            }
+        }
+
+        /* ============================================================
+         * OBJEK NILAI: Periode Promo
+         * ============================================================ */
+        class PromoPeriod {
+            constructor(start, end) {
+                this.start = start;
+                this.end = end;
+            }
+
+            static default() {
+                return new PromoPeriod(new Date('2025-01-01T00:00:00'), new Date('2025-08-18T23:59:59'));
+            }
+
+            merge(start, end) {
+                return new PromoPeriod(start || this.start, end || this.end);
+            }
+
+            statusAt(now = new Date()) {
+                if (now < this.start) return 'upcoming';
+                if (now > this.end) return 'expired';
+                return 'active';
+            }
+
+            remainingUntilEnd(now = new Date()) {
+                return Math.max(0, this.end - now);
+            }
+        }
+
+        /* ============================================================
+         * MODEL KERANJANG
+         * ============================================================ */
+        class Cart {
+            constructor() {
+                this._qty = new Map(); // sku -> jumlah
+                this._listeners = [];
+            }
+
+            subscribe(fn) {
+                this._listeners.push(fn);
+                fn(this);
+                return this;
+            }
+
+            _changed() {
+                this._listeners.forEach(fn => fn(this));
+            }
+
+            setQty(sku, qty) {
+                const valid = Math.max(0, Math.round(Number(qty) || 0));
+                const prev = this._qty.get(sku) || 0;
+                if (prev === valid) return;
+                this._qty.set(sku, valid);
+                this._changed();
+            }
+
+            increment(sku) {
+                this.setQty(sku, (this._qty.get(sku) || 0) + 1);
+            }
+
+            decrement(sku) {
+                this.setQty(sku, (this._qty.get(sku) || 0) - 1);
+            }
+
+            getQty(sku) {
+                return this._qty.get(sku) || 0;
+            }
+
+            get items() {
+                const out = [];
+                this._qty.forEach((qty, sku) => {
+                    if (qty > 0 && PRODUCT_INDEX.has(sku)) {
+                        const p = PRODUCT_INDEX.get(sku);
+                        out.push({ sku, quantity: qty, price: p.price, name: p.orderName, subtotal: p.price * qty });
+                    }
+                });
+                return out;
+            }
+
+            get subtotal() {
+                return this.items.reduce((s, it) => s + it.subtotal, 0);
+            }
+
+            get isEmpty() {
+                return this.items.length === 0;
+            }
+        }
+
+        /* ============================================================
+         * MODEL HARGA (subtotal, diskon, total)
+         * ============================================================ */
+        class PricingService {
+            constructor(cart) {
+                this._cart = cart;
+            }
+
+            quote({ discountApplied }) {
+                const subtotal = this._cart.subtotal;
+                const eligible = discountApplied && subtotal >= CONFIG.minSubtotalForDiscount;
+                const discount = eligible
+                    ? Math.floor(subtotal * CONFIG.discountPercent / 100)
+                    : 0;
+                return Object.freeze({ subtotal, discount, total: subtotal - discount, eligible });
+            }
+        }
+
+        /* ============================================================
+         * MODEL STATUS KODE PROMO
+         * ============================================================ */
+        class PromoCodeService {
+            constructor() {
+                this._applied = false;
+                this._listeners = [];
+            }
+
+            subscribe(fn) {
+                this._listeners.push(fn);
+                fn(this);
+                return this;
+            }
+
+            _changed() {
+                this._listeners.forEach(fn => fn(this));
+            }
+
+            get applied() {
+                return this._applied;
+            }
+
+            apply(code, subtotal, promoStatus) {
+                if (promoStatus !== 'active') {
+                    return { type: 'inactive' };
+                }
+                const entered = (code || '').trim().toUpperCase();
+                if (entered === '') return { type: 'empty' };
+                if (entered !== CONFIG.promoCode) return { type: 'invalid' };
+                if (subtotal < CONFIG.minSubtotalForDiscount) {
+                    return { type: 'belowMinimum', shortfall: CONFIG.minSubtotalForDiscount - subtotal };
+                }
+                this._setApplied(true);
+                return { type: 'applied' };
+            }
+
+            revokeIfBelowMinimum(subtotal) {
+                if (this._applied && subtotal < CONFIG.minSubtotalForDiscount) {
+                    this._setApplied(false);
+                    return true;
+                }
+                return false;
+            }
+
+            revokeIfInactive(promoStatus) {
+                if (this._applied && promoStatus !== 'active') {
+                    this._setApplied(false);
+                    return true;
+                }
+                return false;
+            }
+
+            reset() {
+                this._setApplied(false);
+            }
+
+            _setApplied(v) {
+                if (this._applied === v) return;
+                this._applied = v;
+                this._changed();
+            }
+        }
+
+        /* ============================================================
+         * VIEW: Katalog Produk
+         * ============================================================ */
+        class ProductCatalogView {
+            constructor(container, cart) {
+                this._container = container;
+                this._cart = cart;
+                this._inputs = new Map(); // sku -> <input>
+                this._render();
+                this._bind();
+                cart.subscribe(() => this._syncInputs());
+            }
+
+            _variantRow(variant) {
+                const labelHtml = variant.label
+                    ? `<span class="text-sm font-medium text-gray-700">${variant.label}</span>`
+                    : '';
+                return `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            ${labelHtml}
+                            <span class="text-sm font-bold text-gray-800">${Utils.formatCurrency(variant.price)}</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="quantity-btn minus" data-sku="${variant.sku}">-</span>
+                            <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-sku="${variant.sku}">
+                            <span class="quantity-btn plus" data-sku="${variant.sku}">+</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Produk tunggal: tampilkan label harga saja (tanpa baris varian yang menduplikasi harga)
+            _priceBlock(variant) {
+                return `
+                    <div class="flex justify-between items-center">
+                        <p class="font-bold text-gray-800">${Utils.formatCurrency(variant.price)}</p>
+                        <div class="flex items-center">
+                            <span class="quantity-btn minus" data-sku="${variant.sku}">-</span>
+                            <input type="number" min="0" value="0" class="w-12 text-center mx-2 input-style py-1 px-0 product-quantity" data-sku="${variant.sku}">
+                            <span class="quantity-btn plus" data-sku="${variant.sku}">+</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            _render() {
+                this._container.innerHTML = PRODUCTS.map((p, i) => `
+                    <div class="product-card">
+                        <div class="h-48 overflow-hidden">
+                            <img src="${p.image}" alt="${p.alt}" class="product-image">
+                        </div>
+                        <div class="p-4">
+                            <h4 class="font-semibold text-lg mb-1">${p.name}</h4>
+                            <p class="text-gray-500 text-sm mb-3">${p.description}</p>
+                            ${p.variants.length === 1
+                                ? this._priceBlock(p.variants[0])
+                                : p.variants.map((v, vi) => `
+                                    <div class="${vi < p.variants.length - 1 ? 'mb-3 pb-3 border-b border-gray-200' : 'mb-3'}">
+                                        ${this._variantRow(v)}
+                                    </div>
+                                `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+
+                this._container.querySelectorAll('.product-quantity').forEach(input => {
+                    this._inputs.set(input.dataset.sku, input);
+                });
+            }
+
+            _bind() {
+                this._container.addEventListener('click', e => {
+                    const btn = e.target.closest('.quantity-btn');
+                    if (!btn) return;
+                    const sku = btn.dataset.sku;
+                    if (btn.classList.contains('plus')) this._cart.increment(sku);
+                    else this._cart.decrement(sku);
+                });
+
+                this._container.addEventListener('change', e => {
+                    if (e.target.classList.contains('product-quantity')) {
+                        this._cart.setQty(e.target.dataset.sku, e.target.value);
+                    }
+                });
+            }
+
+            _syncInputs() {
+                this._inputs.forEach((input, sku) => {
+                    input.value = this._cart.getQty(sku);
+                });
+            }
+        }
+
+        /* ============================================================
+         * VIEW: Ringkasan Pesanan
+         * ============================================================ */
+        class OrderSummaryView {
+            constructor(els) {
+                this._items = els.orderItems;
+                this._discountSection = els.discountSection;
+                this._discountAmount = els.discountAmount;
+                this._total = els.totalPrice;
+            }
+
+            render(quote, items) {
+                this._items.innerHTML = items.length === 0
+                    ? '<p class="text-gray-500 italic text-center">Belum ada item yang dipilih</p>'
+                    : items.map(it => `
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="font-medium">${it.name}</span>
+                                <span class="text-gray-500 text-sm"> x ${it.quantity}</span>
+                            </div>
+                            <span>${Utils.formatCurrency(it.subtotal)}</span>
+                        </div>
+                    `).join('');
+
+                if (quote.discount > 0) {
+                    this._discountSection.classList.remove('hidden');
+                    this._discountAmount.textContent = '- ' + Utils.formatCurrency(quote.discount);
+                } else {
+                    this._discountSection.classList.add('hidden');
+                }
+
+                this._total.textContent = Utils.formatCurrency(quote.total);
+            }
+        }
+
+        /* ============================================================
+         * VIEW: Panel Promo (status: aktif / belum mulai / berakhir)
+         * ============================================================ */
+        class PromoView {
+            constructor(els) {
+                this._section = els.promoSection;
+                this._panels = {
+                    active: els.promoActive,
+                    upcoming: els.promoUpcoming,
+                    expired: els.promoExpired
+                };
+                this._countdowns = {
+                    active: els.promoCountdownActive,
+                    upcoming: els.promoCountdownUpcoming
+                };
+                this._message = els.promoMessage;
+                this._codeInput = els.promoCodeInput;
+                this._applyBtn = els.applyPromoBtn;
+            }
+
+            showStatus(status) {
+                this._section.className = {
+                    active: 'bg-green-50 rounded-lg p-4 border border-green-200',
+                    upcoming: 'bg-yellow-50 rounded-lg p-4 border border-yellow-200',
+                    expired: 'bg-gray-100 rounded-lg p-4 border border-gray-300'
+                }[status];
+                Object.entries(this._panels).forEach(([key, el]) => {
+                    el.classList.toggle('hidden', key !== status);
+                });
+            }
+
+            setCountdown(status, text) {
+                const el = this._countdowns[status];
+                if (el) el.textContent = text;
+            }
+
+            setApplied(applied) {
+                this._applyBtn.textContent = applied ? 'Diterapkan' : 'Terapkan';
+                this._applyBtn.disabled = applied;
+                this._applyBtn.classList.toggle('opacity-50', applied);
+                this._applyBtn.classList.toggle('cursor-not-allowed', applied);
+                this._codeInput.disabled = applied;
+                this._codeInput.classList.toggle('opacity-50', applied);
+            }
+
+            resetForActiveState() {
+                this._codeInput.disabled = false;
+                this._codeInput.classList.remove('opacity-50');
+                this._message.classList.add('hidden');
+            }
+
+            showMessage(kind, text) {
+                const cls = {
+                    success: 'mt-2 text-sm text-green-600 font-medium',
+                    warning: 'mt-2 text-sm text-yellow-600 font-medium',
+                    error: 'mt-2 text-sm text-red-600 font-medium'
+                }[kind] || 'mt-2 text-sm text-gray-600 font-medium';
+                this._message.textContent = text;
+                this._message.className = cls;
+                this._message.classList.remove('hidden');
+            }
+
+            hideMessage() {
+                this._message.classList.add('hidden');
+            }
+        }
+
+        /* ============================================================
+         * CONTROLLER: Promo
+         * ============================================================ */
+        class PromoController {
+            constructor(promoView, promoCode, cart, settings, els) {
+                this._view = promoView;
+                this._code = promoCode;
+                this._cart = cart;
+                this._settings = settings;
+                this._codeInput = els.promoCodeInput;
+
+                els.applyPromoBtn.addEventListener('click', () => this.applyCode());
+                this._codeInput.addEventListener('keypress', e => {
+                    if (e.key === 'Enter') this.applyCode();
+                });
+
+                this._code.subscribe(service => this._view.setApplied(service.applied));
+                cart.subscribe(() => this.enforceMinimum());
+                settings.subscribe(() => this.tick());
+            }
+
+            // Dipanggil setiap detik oleh App
+            tick() {
+                const status = this._settings.period.statusAt();
+                this._view.showStatus(status);
+                if (status === 'active') {
+                    this._view.setCountdown('active', Utils.formatCountdown(this._settings.period.remainingUntilEnd()));
+                    this._code.revokeIfInactive(status);
+                } else if (status === 'upcoming') {
+                    this._view.setCountdown('upcoming', Utils.formatCountdown(this._settings.period.start - new Date()));
+                    this._code.revokeIfInactive(status);
+                } else {
+                    this._code.revokeIfInactive(status);
+                }
+            }
+
+            applyCode() {
+                const status = this._settings.period.statusAt();
+                const result = this._code.apply(this._codeInput.value, this._cart.subtotal, status);
+                this.showOutcome(result);
+            }
+
+            // Batalkan promo otomatis jika subtotal turun di bawah minimal
+            enforceMinimum() {
+                const revoked = this._code.revokeIfBelowMinimum(this._cart.subtotal);
+                if (revoked && this._cart.subtotal > 0) {
+                    this._view.showMessage('warning',
+                        `⚠️ Pembelian minimal ${Utils.formatCurrency(CONFIG.minSubtotalForDiscount)}. Tambah ${Utils.formatCurrency(CONFIG.minSubtotalForDiscount - this._cart.subtotal)} lagi untuk mendapat diskon`);
+                } else if (revoked) {
+                    this._view.hideMessage();
+                }
+            }
+
+            showOutcome(result) {
+                switch (result.type) {
+                    case 'applied':
+                        this._view.showMessage('success', '✅ Kode promo berhasil diterapkan! Anda mendapat diskon 10%');
+                        break;
+                    case 'belowMinimum':
+                        this._view.showMessage('warning',
+                            `⚠️ Pembelian minimal ${Utils.formatCurrency(CONFIG.minSubtotalForDiscount)}. Tambah ${Utils.formatCurrency(result.shortfall)} lagi untuk mendapat diskon`);
+                        break;
+                    case 'empty':
+                        this._view.showMessage('warning', '⚠️ Silakan masukkan kode promo terlebih dahulu');
+                        break;
+                    case 'invalid':
+                        this._view.showMessage('error', `❌ Kode promo tidak valid. Gunakan kode: ${CONFIG.promoCode}`);
+                        break;
+                    case 'inactive':
+                        this._view.showMessage('error', '❌ Promo sudah berakhir');
+                        break;
+                }
+            }
+        }
+
+        /* ============================================================
+         * CONTROLLER: Form Checkout (validasi + panel pembayaran)
+         * ============================================================ */
+        class CheckoutFormController {
+            constructor(els) {
+                this._name = els.customerName;
+                this._whatsapp = els.customerWhatsapp;
+                this._address = els.customerAddress;
+                this._payment = els.paymentMethod;
+                this._transfer = els.transferDetails;
+                this._qris = els.qrisDetails;
+            }
+
+            bind(onChange) {
+                this._payment.addEventListener('change', () => {
+                    this._transfer.classList.toggle('hidden', this._payment.value !== 'transfer');
+                    this._qris.classList.toggle('hidden', this._payment.value !== 'qris');
+                    onChange();
+                });
+            }
+
+            // Isi otomatis dari akun pelanggan (field tersembunyi) + nilai ulang validasi
+            setCustomer({ name, phone, address }) {
+                this._name.value = name;
+                this._whatsapp.value = phone;
+                this._address.value = address;
+                if (this._onChangeCustomer) this._onChangeCustomer();
+            }
+
+            // Callback untuk menilai ulang tombol pesan saat data pelanggan berubah
+            setCustomerChangeHandler(fn) {
+                this._onChangeCustomer = fn;
+            }
+
+            get isLoggedIn() {
+                return this._name.value.trim() !== '' && this._whatsapp.value.trim() !== '';
+            }
+
+            get paymentValue() {
+                return this._payment.value;
+            }
+
+            isValid() {
+                const name = this._name.value.trim() !== '';
+                const wa = this._whatsapp.value.trim() !== '' && /^\d+$/.test(this._whatsapp.value.trim());
+                const pay = this._payment.value !== '';
+                return name && wa && pay;
+            }
+
+            snapshot() {
+                return Object.freeze({
+                    name: this._name.value.trim(),
+                    whatsapp: this._whatsapp.value.trim(),
+                    address: this._address.value.trim(),
+                    paymentValue: this._payment.value,
+                    paymentLabel: this._payment.selectedOptions[0] ? this._payment.selectedOptions[0].text : ''
+                });
+            }
+        }
+
+        /* ============================================================
+         * CHANNEL PENGIRIMAN PESANAN (Strategy Pattern)
+         * ============================================================ */
+        class WhatsAppOrderChannel {
+            constructor(pricing, form, orderRepo) {
+                this._pricing = pricing;
+                this._form = form;
+                this._orderRepo = orderRepo;
+            }
+
+            buildMessage(quote, items, form) {
+                const lines = items.map(it => `- ${it.name} x ${it.quantity}`).join('\n');
+                const promoLine = quote.discount > 0
+                    ? `\n*Diskon (${CONFIG.discountPercent}%):* -${Utils.formatCurrency(quote.discount)}`
+                    : '';
+                return `Halo Roti Daiki, saya mau pesan:\n\n` +
+                    `*Nama Pemesan:* ${form.name}\n` +
+                    `*Nomor WhatsApp:* ${form.whatsapp}\n` +
+                    `*Alamat:* ${form.address || '-'}\n\n` +
+                    `*Pesanan:*\n${lines}\n` +
+                    `*Subtotal:* ${Utils.formatCurrency(quote.subtotal)}${promoLine}\n` +
+                    `*Total Pembayaran:* ${Utils.formatCurrency(quote.total)}\n\n` +
+                    `*Metode Pembayaran:* ${form.paymentLabel}\n\n` +
+                    `Terima kasih!`;
+            }
+
+            submit(quote, items, form) {
+                const message = this.buildMessage(quote, items, form);
+                window.open(`https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank');
+                return this._orderRepo.save(this._buildOrderRecord(quote, items, form, message));
+            }
+
+            _buildOrderRecord(quote, items, form, message) {
+                return {
+                    name: form.name,
+                    whatsapp: form.whatsapp,
+                    address: form.address,
+                    paymentMethod: form.paymentValue,
+                    paymentLabel: form.paymentLabel,
+                    items: items.map(it => ({ sku: it.sku, name: it.name, price: it.price, quantity: it.quantity, subtotal: it.subtotal })),
+                    subtotal: quote.subtotal,
+                    discount: quote.discount,
+                    total: quote.total,
+                    promoApplied: quote.discount > 0,
+                    promoCode: quote.discount > 0 ? CONFIG.promoCode : '',
+                    message: message
+                };
+            }
+        }
+
+        class GoogleFormOrderChannel {
+            constructor(pricing, form) {
+                this._pricing = pricing;
+                this._form = form;
+            }
+
+            _paymentText(value) {
+                return { cash: 'CASH / COD', transfer: 'Transfer Rekening', qris: 'QRIS' }[value] || '';
+            }
+
+            buildPrefilledUrl(quote, items, form) {
+                let details = items.map(it =>
+                    `${it.name} x ${it.quantity}: ${Utils.formatCurrency(it.subtotal)}`
+                ).join('\n');
+
+                if (quote.discount > 0) {
+                    details += `\nSubtotal: ${Utils.formatCurrency(quote.subtotal)}`;
+                    details += `\nDiskon (${CONFIG.discountPercent}%): -${Utils.formatCurrency(quote.discount)}`;
+                    details += `\nTotal: ${Utils.formatCurrency(quote.total)}`;
+                } else {
+                    details += `\nTotal: ${Utils.formatCurrency(quote.total)}`;
+                }
+
+                const params = new URLSearchParams({
+                    'entry.880240482': form.name,
+                    'entry.1628457902': form.whatsapp,
+                    'entry.450821238': details,
+                    'entry.1050174281': Utils.formatCurrency(quote.total),
+                    'entry.1982006760': this._paymentText(form.paymentValue)
+                });
+                return 'https://docs.google.com/forms/d/e/1FAIpQLSdma1dCuS_CEuY8jwP0f-Sj6OKIOdrQe0I4oZtcUUAx6HQ5WA/viewform?' + params.toString();
+            }
+
+            submit(quote, items, form) {
+                window.open(this.buildPrefilledUrl(quote, items, form), '_blank');
+                return Promise.resolve();
+            }
+        }
+
+        /* ============================================================
+         * CONTROLLER: Ringkasan Pesanan + Tombol Pesan
+         * ============================================================ */
+        class OrderController {
+            constructor({ cart, pricing, promoCode, form, summaryView, orderButton, orderHint, channel, onChange }) {
+                this._cart = cart;
+                this._pricing = pricing;
+                this._promoCode = promoCode;
+                this._form = form;
+                this._view = summaryView;
+                this._button = orderButton;
+                this._hint = orderHint;
+                this._channel = channel;
+                this._onChange = onChange || (() => {});
+
+                this.refresh();
+                cart.subscribe(() => this.refresh());
+                promoCode.subscribe(() => this.refresh());
+                form.bind(() => this.refresh());
+                this._onChange();
+                orderButton.addEventListener('click', () => this.submit());
+            }
+
+            // Dipanggil saat state eksternal berubah (mis. login/logout akun)
+            onExternalChange() {
+                this.refresh();
+            }
+
+            // Cari alasan pertama mengapa tombol tidak bisa diklik
+            _getDisabledReason() {
+                if (this._cart.isEmpty) {
+                    return '🛒 Pilih produk terlebih dahulu untuk melakukan pemesanan';
+                }
+                if (!this._form.isLoggedIn) {
+                    return '🔐 Login terlebih dahulu untuk melakukan pemesanan';
+                }
+                if (!this._form.paymentValue) {
+                    return '💳 Harap pilih metode pembayaran terlebih dahulu';
+                }
+                return '';
+            }
+
+            refresh() {
+                const quote = this._pricing.quote({ discountApplied: this._promoCode.applied });
+                this._view.render(quote, this._cart.items);
+                const reason = this._getDisabledReason();
+                this._button.disabled = reason !== '';
+                this._hint.textContent = reason;
+                this._hint.classList.toggle('text-amber-600', reason !== '');
+                this._hint.classList.toggle('text-gray-500', reason === '');
+            }
+
+            submit() {
+                const quote = this._pricing.quote({ discountApplied: this._promoCode.applied });
+                const items = this._cart.items;
+                const form = this._form.snapshot();
+                this._channel.submit(quote, items, form)
+                    .catch(err => console.error('Gagal menyimpan pesanan:', err));
+            }
+        }
+
+        /* ============================================================
+         * CONTROLLER: Admin
+         * ============================================================ */
+        class AdminController {
+            constructor({ settings, orderRepo, els }) {
+                this._settings = settings;
+                this._orderRepo = orderRepo;
+                this._els = els;
+
+                els.adminBtn.addEventListener('click', () => {
+                    els.adminLoginModal.classList.remove('hidden');
+                    els.adminCodeInput.value = '';
+                    els.adminError.classList.add('hidden');
+                });
+                els.cancelAdminLoginBtn.addEventListener('click', () => {
+                    els.adminLoginModal.classList.add('hidden');
+                });
+                els.adminLoginBtn.addEventListener('click', () => this._login());
+                els.adminCodeInput.addEventListener('keypress', e => {
+                    if (e.key === 'Enter') els.adminLoginBtn.click();
+                });
+                els.logoutBtn.addEventListener('click', () => {
+                    els.adminPage.classList.add('hidden');
+                    els.salesPage.classList.remove('hidden');
+                });
+                els.savePromoBtn.addEventListener('click', () => this._save());
+            }
+
+            _login() {
+                if (this._els.adminCodeInput.value.trim() === CONFIG.adminCode) {
+                    this._els.adminLoginModal.classList.add('hidden');
+                    this._els.salesPage.classList.add('hidden');
+                    this._els.adminPage.classList.remove('hidden');
+                    this._loadForm();
+                    this.renderStatus();
+                } else {
+                    this._els.adminError.classList.remove('hidden');
+                    this._els.adminCodeInput.value = '';
+                }
+            }
+
+            _loadForm() {
+                // Gunakan waktu LOKAL (bukan UTC) agar sesuai input date/time
+                const p = this._settings.period;
+                this._els.promoStartDate.value = this._localDate(p.start);
+                this._els.promoStartTime.value = this._localTime(p.start);
+                this._els.promoEndDate.value = this._localDate(p.end);
+                this._els.promoEndTime.value = this._localTime(p.end);
+            }
+
+            _localDate(d) {
+                return `${d.getFullYear()}-${Utils.pad2(d.getMonth() + 1)}-${Utils.pad2(d.getDate())}`;
+            }
+
+            _localTime(d) {
+                return `${Utils.pad2(d.getHours())}:${Utils.pad2(d.getMinutes())}`;
+            }
+
+            async _save() {
+                const { promoStartDate, promoStartTime, promoEndDate, promoEndTime, savePromoBtn, saveSuccess, saveError } = this._els;
+                const vals = [promoStartDate.value, promoStartTime.value, promoEndDate.value, promoEndTime.value];
+                if (vals.some(v => !v)) {
+                    alert('Harap isi semua field tanggal dan waktu!');
+                    return;
+                }
+
+                const newStart = new Date(`${vals[0]}T${vals[1]}:00`);
+                const newEnd = new Date(`${vals[2]}T${vals[3]}:00`);
+                if (isNaN(newStart) || isNaN(newEnd)) {
+                    alert('Format tanggal atau waktu tidak valid!');
+                    return;
+                }
+                if (newStart >= newEnd) {
+                    alert('Tanggal mulai harus lebih awal dari tanggal berakhir!');
+                    return;
+                }
+
+                savePromoBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
+                savePromoBtn.disabled = true;
+                saveSuccess.classList.add('hidden');
+                saveError.classList.add('hidden');
+
+                try {
+                    // Timestamp Firestore: zona waktu disimpan otomatis & konsisten antar perangkat
+                    await this._settings.save(newStart, newEnd);
+                    saveSuccess.innerHTML = '<p class="text-sm text-green-600 text-center font-medium">✅ Pengaturan promo berhasil disimpan ke Firebase!</p>';
+                    saveSuccess.classList.remove('hidden');
+                    setTimeout(() => saveSuccess.classList.add('hidden'), 5000);
+                } catch (error) {
+                    saveError.innerHTML = `<p class="text-sm text-red-600 text-center font-medium">❌ Gagal menyimpan: ${error.message}</p>`;
+                    saveError.classList.remove('hidden');
+                    setTimeout(() => saveError.classList.add('hidden'), 8000);
+                    console.error('Gagal menyimpan pengaturan promo:', error);
+                } finally {
+                    savePromoBtn.innerHTML = 'Simpan Pengaturan';
+                    savePromoBtn.disabled = false;
+                }
+            }
+
+            renderStatus() {
                 const now = new Date();
-                
-                currentStart.textContent = formatDateTime(promoStartDateTime);
-                currentEnd.textContent = formatDateTime(promoEndDateTime);
-                
-                if (now < promoStartDateTime) {
+                const p = this._settings.period;
+                const { currentStart, currentEnd, currentStatus, currentRemaining } = this._els;
+
+                currentStart.textContent = Utils.formatDateTime(p.start);
+                currentEnd.textContent = Utils.formatDateTime(p.end);
+
+                const status = p.statusAt(now);
+                if (status === 'upcoming') {
                     currentStatus.textContent = 'Belum Dimulai';
                     currentStatus.className = 'text-yellow-600 font-semibold';
-                    const timeToStart = promoStartDateTime - now;
-                    currentRemaining.textContent = formatTimeRemaining(timeToStart);
-                } else if (now >= promoStartDateTime && now <= promoEndDateTime) {
+                    currentRemaining.textContent = Utils.formatTimeRemaining(p.start - now);
+                } else if (status === 'active') {
                     currentStatus.textContent = 'Aktif';
                     currentStatus.className = 'text-green-600 font-semibold';
-                    const timeLeft = promoEndDateTime - now;
-                    currentRemaining.textContent = formatTimeRemaining(timeLeft);
+                    currentRemaining.textContent = Utils.formatTimeRemaining(p.remainingUntilEnd(now));
                 } else {
                     currentStatus.textContent = 'Berakhir';
                     currentStatus.className = 'text-red-600 font-semibold';
                     currentRemaining.textContent = 'Promo telah berakhir';
                 }
             }
-            
-            // Format time remaining
-            function formatTimeRemaining(timeMs) {
-                if (timeMs <= 0) return 'Berakhir';
-                
-                const days = Math.floor(timeMs / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((timeMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((timeMs % (1000 * 60 * 60)) / (1000 * 60));
-                
-                if (days > 0) {
-                    return `${days} hari ${hours} jam`;
-                } else if (hours > 0) {
-                    return `${hours} jam ${minutes} menit`;
-                } else {
-                    return `${minutes} menit`;
-                }
-            }
-            
-            // Product names mapping - UPDATED with new products
-            const productNames = {
-                'paket-happiness': 'Paket Happiness',
-                'cranberry-cheese': 'Cranberry Cheese',
-                'double-choco': 'Double Choco',
-                'mini-cranberry': 'Mini Cranberry (isi 10)',
-                'mini-double-choco': 'Mini Double Choco (isi 10)',
-                'mini-mix': 'Mini Mix (isi 10)',
-                'roti-sosis-keju-small': 'Roti Sosis Keju (Reguler)',
-                'roti-sosis-keju-jumbo': 'Roti Sosis Keju (Jumbo)',
-                'salt-bread': 'Salt Bread Isi 2 buah',
-                'iceberg-choco-kecil': 'Iceberg Cheese Cake Choco (Kecil)',
-                'iceberg-choco-besar': 'Iceberg Cheese Cake Choco (Besar)',
-                'iceberg-strawberry-kecil': 'Iceberg Cheese Cake Strawberry (Kecil)',
-                'iceberg-strawberry-besar': 'Iceberg Cheese Cake Strawberry (Besar)'
-            };
-            
-            // Format currency
-            function formatCurrency(amount) {
-                return 'Rp ' + amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-            }
-            
-            // Update countdown timer and promo section
-            function updateCountdown() {
-                const now = new Date();
-                const promoSection = document.getElementById('promo-section');
-                const countdownElement = document.getElementById('countdown-promo');
-                
-                // Check if promo hasn't started yet
-                if (now < promoStartDateTime) {
-                    isPromoExpired = true; // Treat as expired if not started
-                    
-                    // Show "not started" state
-                    promoSection.className = 'bg-yellow-50 rounded-lg p-4 border border-yellow-200';
-                    promoSection.innerHTML = `
-                        <div class="flex justify-between items-center mb-3">
-                            <h4 class="text-lg font-semibold text-yellow-800">🎉 Kode Promo</h4>
-                            <div class="text-right">
-                                <div class="text-xs text-yellow-600">Promo dimulai dalam:</div>
-                                <div id="countdown-promo" class="font-bold text-sm text-yellow-800">--:--:--</div>
-                            </div>
-                        </div>
-                        <div class="text-center py-4">
-                            <p class="text-yellow-700 font-medium">Promo Belum Dimulai</p>
-                            <p class="text-xs text-yellow-600 mt-1">Tunggu hingga waktu promo dimulai</p>
-                        </div>
-                    `;
-                    
-                    // Calculate time until start
-                    const timeToStart = promoStartDateTime - now;
-                    const days = Math.floor(timeToStart / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((timeToStart % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const minutes = Math.floor((timeToStart % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((timeToStart % (1000 * 60)) / 1000);
-                    
-                    let countdownText = '';
-                    if (days > 0) {
-                        countdownText = `${days}h ${hours}j ${minutes}m`;
-                    } else if (hours > 0) {
-                        countdownText = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                    } else {
-                        countdownText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                    }
-                    
-                    document.getElementById('countdown-promo').textContent = countdownText;
-                    
-                    // Remove promo if applied
-                    if (isPromoApplied) {
-                        isPromoApplied = false;
-                        updateOrderSummary();
-                    }
-                    
-                    return;
-                }
-                
-                const timeLeft = promoEndDateTime - now;
-                
-                if (timeLeft <= 0) {
-                    // Promo expired
-                    isPromoExpired = true;
-                    
-                    // Show "expired" state
-                    promoSection.className = 'bg-gray-100 rounded-lg p-4 border border-gray-300';
-                    promoSection.innerHTML = `
-                        <div class="text-center py-4">
-                            <h4 class="text-lg font-semibold text-gray-600 mb-2">🎉 Kode Promo</h4>
-                            <p class="text-gray-500 font-medium">Promo Telah Berakhir</p>
-                            <p class="text-xs text-gray-400 mt-1">Tunggu promo berikutnya</p>
-                        </div>
-                    `;
-                    
-                    // Remove promo if applied
-                    if (isPromoApplied) {
-                        isPromoApplied = false;
-                        updateOrderSummary();
-                    }
-                    
-                    return;
-                }
-                
-                // Promo is active - restore full promo section
-                isPromoExpired = false;
-                
-                // Only restore if section is not in active state
-                if (!promoSection.innerHTML.includes('Masukkan kode promo')) {
-                    promoSection.className = 'bg-green-50 rounded-lg p-4 border border-green-200';
-                    promoSection.innerHTML = `
-                        <div class="flex justify-between items-center mb-3">
-                            <h4 class="text-lg font-semibold text-green-800">🎉 Kode Promo</h4>
-                            <div class="text-right">
-                                <div class="text-xs text-green-600">Promo berakhir dalam:</div>
-                                <div id="countdown-promo" class="font-bold text-sm text-green-800">--:--:--</div>
-                            </div>
-                        </div>
-                        <div class="flex gap-3">
-                            <div class="flex-1">
-                                <input type="text" id="promo-code" class="w-full input-style" placeholder="Masukkan kode promo (opsional)" style="border-color: #10B981;" value="${promoCodeInput ? promoCodeInput.value : ''}">
-                                <p class="text-xs text-green-600 mt-1">*Pembelian minimal Rp 50.000</p>
-                            </div>
-                            <button id="apply-promo" class="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-300 ${isPromoApplied ? 'opacity-50 cursor-not-allowed' : ''}" ${isPromoApplied ? 'disabled' : ''}>
-                                ${isPromoApplied ? 'Diterapkan' : 'Terapkan'}
-                            </button>
-                        </div>
-                        <div id="promo-message" class="mt-2 text-sm hidden"></div>
-                    `;
-                    
-                    // Re-attach event listeners for new elements
-                    attachPromoEventListeners();
-                }
-                
-                // Calculate time components
-                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-                
-                // Format countdown display
-                let countdownText = '';
-                if (days > 0) {
-                    countdownText = `${days}h ${hours}j ${minutes}m`;
-                } else if (hours > 0) {
-                    countdownText = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                } else {
-                    countdownText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                }
-                
-                const currentCountdownElement = document.getElementById('countdown-promo');
-                if (currentCountdownElement) {
-                    currentCountdownElement.textContent = countdownText;
-                }
-            }
-            
-            // Update order summary
-            function updateOrderSummary() {
-                let hasItems = false;
-                let subtotal = 0;
-                let orderHTML = '';
-                
-                quantityInputs.forEach(input => {
-                    const quantity = parseInt(input.value);
-                    if (quantity > 0) {
-                        hasItems = true;
-                        const product = input.dataset.product;
-                        const price = parseInt(input.dataset.price);
-                        const itemSubtotal = price * quantity;
-                        subtotal += itemSubtotal;
-                        
-                        const productDisplayName = productNames[product];
-                        
-                        orderHTML += `
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <span class="font-medium">${productDisplayName}</span>
-                                    <span class="text-gray-500 text-sm"> x ${quantity}</span>
-                                </div>
-                                <span>${formatCurrency(itemSubtotal)}</span>
-                            </div>
-                        `;
-                    }
-                });
-                
-                if (hasItems) {
-                    orderItems.innerHTML = orderHTML;
-                } else {
-                    orderItems.innerHTML = '<p class="text-gray-500 italic text-center">Belum ada item yang dipilih</p>';
-                }
-                
-                // Check if promo should be automatically removed
-                if (isPromoApplied && subtotal < 50000) {
-                    isPromoApplied = false;
-                    const currentApplyPromoBtn = document.getElementById('apply-promo');
-                    const currentPromoCodeInput = document.getElementById('promo-code');
-                    const currentPromoMessage = document.getElementById('promo-message');
-                    
-                    if (currentApplyPromoBtn) {
-                        currentApplyPromoBtn.textContent = 'Terapkan';
-                        currentApplyPromoBtn.disabled = false;
-                        currentApplyPromoBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    }
-                    if (currentPromoCodeInput) {
-                        currentPromoCodeInput.disabled = false;
-                        currentPromoCodeInput.classList.remove('opacity-50');
-                    }
-                    
-                    if (subtotal > 0 && currentPromoMessage) {
-                        const needed = 50000 - subtotal;
-                        currentPromoMessage.textContent = `⚠️ Pembelian minimal Rp 50.000. Tambah ${formatCurrency(needed)} lagi untuk mendapat diskon`;
-                        currentPromoMessage.className = 'mt-2 text-sm text-yellow-600 font-medium';
-                        currentPromoMessage.classList.remove('hidden');
-                    } else if (currentPromoMessage) {
-                        currentPromoMessage.classList.add('hidden');
-                    }
-                }
-                
-                // Calculate discount and final total
-                let discount = 0;
-                let finalTotal = subtotal;
-                
-                if (isPromoApplied && subtotal >= 50000) {
-                    discount = Math.floor(subtotal * discountPercentage / 100);
-                    finalTotal = subtotal - discount;
-                    discountSection.classList.remove('hidden');
-                    discountAmount.textContent = '- ' + formatCurrency(discount);
-                } else {
-                    discountSection.classList.add('hidden');
-                }
-                
-                totalPrice.textContent = formatCurrency(finalTotal);
-                
-                // Enable/disable order button
-                const nameValid = customerName.value.trim() !== '';
-                const whatsappValid = customerWhatsapp.value.trim() !== '' && /^\d+$/.test(customerWhatsapp.value.trim());
-                const paymentValid = paymentMethod.value !== '';
-                
-                orderButton.disabled = !hasItems || !nameValid || !whatsappValid || !paymentValid;
+        }
+
+        /* ============================================================
+         * MODEL: AKUN PELANGGAN (login nomor HP tanpa password)
+         * ============================================================ */
+        class CustomerAccount {
+            constructor() {
+                this._customer = null; // { phone, name, address }
+                this._listeners = [];
             }
 
-            // Event listeners for quantity buttons
-            plusButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const product = this.dataset.product;
-                    const input = document.querySelector(`.product-quantity[data-product="${product}"]`);
-                    input.value = parseInt(input.value) + 1;
-                    updateOrderSummary();
-                });
-            });
-            
-            minusButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const product = this.dataset.product;
-                    const input = document.querySelector(`.product-quantity[data-product="${product}"]`);
-                    if (parseInt(input.value) > 0) {
-                        input.value = parseInt(input.value) - 1;
-                        updateOrderSummary();
-                    }
-                });
-            });
-            
-            // Event listeners for quantity inputs
-            quantityInputs.forEach(input => {
-                input.addEventListener('change', function() {
-                    if (parseInt(this.value) < 0) {
-                        this.value = 0;
-                    }
-                    updateOrderSummary();
-                });
-            });
-            
-            // Event listeners for customer info
-            customerName.addEventListener('input', updateOrderSummary);
-            customerWhatsapp.addEventListener('input', updateOrderSummary);
-            paymentMethod.addEventListener('change', function() {
-                // Hide all payment details first
-                transferDetails.classList.add('hidden');
-                qrisDetails.classList.add('hidden');
-                
-                // Show relevant payment details
-                if (this.value === 'transfer') {
-                    transferDetails.classList.remove('hidden');
-                } else if (this.value === 'qris') {
-                    qrisDetails.classList.remove('hidden');
-                }
-                
-                updateOrderSummary();
-            });
-            
-            // Function to attach promo event listeners
-            function attachPromoEventListeners() {
-                const newPromoCodeInput = document.getElementById('promo-code');
-                const newApplyPromoBtn = document.getElementById('apply-promo');
-                
-                if (newPromoCodeInput && newApplyPromoBtn) {
-                    // Update global references
-                    promoCodeInput = newPromoCodeInput;
-                    applyPromoBtn = newApplyPromoBtn;
-                    
-                    // Attach event listeners
-                    newApplyPromoBtn.addEventListener('click', applyPromoCode);
-                    newPromoCodeInput.addEventListener('keypress', function(e) {
-                        if (e.key === 'Enter') {
-                            applyPromoCode();
-                        }
-                    });
-                }
+            subscribe(fn) {
+                this._listeners.push(fn);
+                fn(this);
+                return this;
             }
-            
-            // Promo code functionality - FIXED WITH DEBUG LOGGING
-            function applyPromoCode() {
-                console.log('🔍 Apply promo code function called');
-                
-                // Get current promo elements (they might be recreated)
-                const currentPromoCodeInput = document.getElementById('promo-code');
-                const currentApplyPromoBtn = document.getElementById('apply-promo');
-                const currentPromoMessage = document.getElementById('promo-message');
-                
-                console.log('📋 Promo elements found:', {
-                    input: !!currentPromoCodeInput,
-                    button: !!currentApplyPromoBtn,
-                    message: !!currentPromoMessage
-                });
-                
-                if (!currentPromoCodeInput || !currentApplyPromoBtn || !currentPromoMessage) {
-                    console.error('❌ Promo elements not found');
-                    return;
-                }
-                
-                // Check if promo is expired
-                if (isPromoExpired) {
-                    console.log('⏰ Promo is expired');
-                    currentPromoMessage.textContent = '❌ Promo sudah berakhir';
-                    currentPromoMessage.className = 'mt-2 text-sm text-red-600 font-medium';
-                    currentPromoMessage.classList.remove('hidden');
-                    return;
-                }
-                
-                const enteredCode = currentPromoCodeInput.value.trim().toUpperCase();
-                console.log('🔤 Entered code:', enteredCode);
-                console.log('🎯 Valid code:', validPromoCode);
-                
-                // Calculate current subtotal
-                let currentSubtotal = 0;
-                quantityInputs.forEach(input => {
-                    const quantity = parseInt(input.value);
-                    if (quantity > 0) {
-                        const price = parseInt(input.dataset.price);
-                        currentSubtotal += price * quantity;
-                        console.log(`📦 Product: ${input.dataset.product}, Qty: ${quantity}, Price: ${price}`);
-                    }
-                });
-                
-                console.log('💰 Current subtotal:', currentSubtotal);
-                console.log('✅ Minimum required:', 50000);
-                
-                if (enteredCode === validPromoCode) {
-                    console.log('🎉 Promo code matches!');
-                    if (currentSubtotal >= 50000) {
-                        console.log('✅ Subtotal meets minimum requirement');
-                        isPromoApplied = true;
-                        currentPromoMessage.textContent = '✅ Kode promo berhasil diterapkan! Anda mendapat diskon 10%';
-                        currentPromoMessage.className = 'mt-2 text-sm text-green-600 font-medium';
-                        currentPromoMessage.classList.remove('hidden');
-                        currentApplyPromoBtn.textContent = 'Diterapkan';
-                        currentApplyPromoBtn.disabled = true;
-                        currentApplyPromoBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                        currentPromoCodeInput.disabled = true;
-                        currentPromoCodeInput.classList.add('opacity-50');
-                    } else {
-                        console.log('⚠️ Subtotal below minimum');
-                        const needed = 50000 - currentSubtotal;
-                        currentPromoMessage.textContent = `⚠️ Pembelian minimal Rp 50.000. Tambah ${formatCurrency(needed)} lagi untuk mendapat diskon`;
-                        currentPromoMessage.className = 'mt-2 text-sm text-yellow-600 font-medium';
-                        currentPromoMessage.classList.remove('hidden');
-                    }
-                } else if (enteredCode === '') {
-                    console.log('⚠️ Empty promo code');
-                    currentPromoMessage.textContent = '⚠️ Silakan masukkan kode promo terlebih dahulu';
-                    currentPromoMessage.className = 'mt-2 text-sm text-yellow-600 font-medium';
-                    currentPromoMessage.classList.remove('hidden');
-                } else {
-                    console.log('❌ Invalid promo code');
-                    currentPromoMessage.textContent = `❌ Kode promo tidak valid. Gunakan kode: ${validPromoCode}`;
-                    currentPromoMessage.className = 'mt-2 text-sm text-red-600 font-medium';
-                    currentPromoMessage.classList.remove('hidden');
-                }
-                
-                updateOrderSummary();
+
+            _changed() {
+                this._listeners.forEach(fn => fn(this));
             }
-            
-            // Initial event listeners for promo code
-            if (applyPromoBtn && promoCodeInput) {
-                applyPromoBtn.addEventListener('click', applyPromoCode);
-                promoCodeInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        applyPromoCode();
-                    }
+
+            get customer() {
+                return this._customer;
+            }
+
+            get isLoggedIn() {
+                return !!this._customer;
+            }
+
+            login(customer) {
+                this._customer = Object.freeze({ ...customer });
+                localStorage.setItem('rotiDaikiSessionPhone', customer.phone);
+                this._changed();
+            }
+            restoreSession() {
+                const phone = localStorage.getItem('rotiDaikiSessionPhone');
+                return phone || null;
+            }
+
+            logout() {
+                this._customer = null;
+                localStorage.removeItem('rotiDaikiSessionPhone');
+                this._changed();
+            }
+        }
+
+        /* ============================================================
+         * VIEW: Panel Akun
+         * ============================================================ */
+        class AccountView {
+            constructor(els) {
+                this._loggedOut = els.accountLoggedOut;
+                this._register = els.accountRegister;
+                this._loggedIn = els.accountLoggedIn;
+                this._statusText = els.accountStatus;
+                this._loginInput = els.loginPhone;
+                this._loginBtn = els.loginBtn;
+                this._loginMessage = els.loginMessage;
+                this._registerPhone = els.registerPhone;
+                this._registerName = els.registerName;
+                this._registerAddress = els.registerAddress;
+                this._registerSave = els.registerSaveBtn;
+                this._registerCancel = els.registerCancelBtn;
+                this._registerMessage = els.registerMessage;
+                this._nameLabel = els.accountName;
+                this._phoneLabel = els.accountPhone;
+                this._addressLabel = els.accountAddress;
+            }
+
+            showPanel(panel) {
+                this._loggedOut.classList.toggle('hidden', panel !== 'logged-out');
+                this._register.classList.toggle('hidden', panel !== 'register');
+                this._loggedIn.classList.toggle('hidden', panel !== 'logged-in');
+            }
+
+            setLoginLoading(loading) {
+                this._loginBtn.disabled = loading;
+                this._loginBtn.innerHTML = loading
+                    ? '<i class="fas fa-spinner fa-spin mr-1"></i>Memeriksa...'
+                    : 'Login';
+            }
+
+            setRegisterLoading(loading) {
+                this._registerSave.disabled = loading;
+                this._registerSave.innerHTML = loading
+                    ? '<i class="fas fa-spinner fa-spin mr-1"></i>Menyimpan...'
+                    : 'Simpan & Lanjutkan';
+            }
+
+            showRegister(phone) {
+                this._registerPhone.value = phone;
+                this._registerName.value = '';
+                this._registerAddress.value = '';
+                this.showPanel('register');
+            }
+
+            showProfile(customer) {
+                this._nameLabel.textContent = customer.name;
+                this._phoneLabel.textContent = customer.phone;
+                this._addressLabel.textContent = customer.address || '-';
+                this._statusText.textContent = '✅ Anda sudah login. Silakan lanjutkan pemesanan.';
+                this.showPanel('logged-in');
+            }
+
+            showMessage(target, kind, text) {
+                const el = target === 'login' ? this._loginMessage : this._registerMessage;
+                const cls = {
+                    success: 'mt-2 text-sm text-green-600 font-medium',
+                    warning: 'mt-2 text-sm text-yellow-600 font-medium',
+                    error: 'mt-2 text-sm text-red-600 font-medium'
+                }[kind] || 'mt-2 text-sm text-gray-600 font-medium';
+                el.textContent = text;
+                el.className = cls;
+                el.classList.remove('hidden');
+            }
+
+            hideMessages() {
+                this._loginMessage.classList.add('hidden');
+                this._registerMessage.classList.add('hidden');
+            }
+
+            bind({ onLogin, onRegister, onCancel }) {
+                this._loginBtn.addEventListener('click', () => onLogin(this._loginInput.value));
+                this._loginInput.addEventListener('keypress', e => {
+                    if (e.key === 'Enter') onLogin(this._loginInput.value);
+                });
+                this._registerSave.addEventListener('click', () =>
+                    onRegister(this._registerPhone.value, this._registerName.value, this._registerAddress.value));
+                this._registerCancel.addEventListener('click', onCancel);
+            }
+        }
+
+        /* ============================================================
+         * CONTROLLER: Akun Pelanggan
+         * ============================================================ */
+        class AccountController {
+            constructor(account, accountView, customerRepo, checkoutForm) {
+                this._account = account;
+                this._view = accountView;
+                this._repo = customerRepo;
+                this._form = checkoutForm;
+
+                accountView.bind({
+                    onLogin: phone => this.login(phone),
+                    onRegister: (phone, name, address) => this.register(phone, name, address),
+                    onCancel: () => this._view.showPanel('logged-out')
                 });
             }
-            
-            // Order button click
-            orderButton.addEventListener('click', function() {
-                // Action: Directly send to WhatsApp
-                const name = customerName.value.trim();
-                const whatsapp = customerWhatsapp.value.trim();
-                const waNumber = '6285894541435'; // Nomor WA tujuan
 
-                // Build order details for WhatsApp message
-                let orderDetails = '';
-                let subtotal = 0;
-
-                quantityInputs.forEach(input => {
-                    const quantity = parseInt(input.value);
-                    if (quantity > 0) {
-                        const product = input.dataset.product;
-                        const price = parseInt(input.dataset.price);
-                        const itemSubtotal = price * quantity;
-                        subtotal += itemSubtotal;
-
-                        const productDisplayName = productNames[product];
-                        orderDetails += `- ${productDisplayName} x ${quantity}\n`;
-                    }
-                });
-
-                // Calculate discount and final total
-                let discount = 0;
-                let finalTotal = subtotal;
-                let promoText = '';
-
-                if (isPromoApplied && subtotal >= 50000) {
-                    discount = Math.floor(subtotal * discountPercentage / 100);
-                    finalTotal = subtotal - discount;
-                    promoText = `\n*Diskon (${discountPercentage}%):* -${formatCurrency(discount)}`;
-                }
-
-                // Get payment method text
-                const selectedPayment = paymentMethod.options[paymentMethod.selectedIndex].text;
-
-                // Construct the full WhatsApp message
-                const message = `Halo Roti Daiki, saya mau pesan:\n\n*Nama Pemesan:* ${name}\n*Nomor WhatsApp:* ${whatsapp}\n\n*Pesanan:*\n${orderDetails}\n*Subtotal:* ${formatCurrency(subtotal)}${promoText}\n*Total Pembayaran:* ${formatCurrency(finalTotal)}\n\n*Metode Pembayaran:* ${selectedPayment}\n\nTerima kasih!`;
-
-                // Encode the message for the URL
-                const encodedMessage = encodeURIComponent(message);
-
-                // Create the WhatsApp URL
-                const whatsappURL = `https://wa.me/${waNumber}?text=${encodedMessage}`;
-
-                // Open WhatsApp in a new tab
-                window.open(whatsappURL, '_blank');
-            });
-            
-            // Cancel order
-            cancelOrderBtn.addEventListener('click', function() {
-                confirmationModal.classList.add('hidden');
-            });
-            
-            // Fill Google Form (Now unused, but kept for reference or future use)
-            function sendToGoogleForm() {
-                // Build order details for Google Form
-                const name = customerName.value.trim();
-                const whatsapp = customerWhatsapp.value.trim();
-                let orderDetails = '';
-                let subtotal = 0;
-                
-                quantityInputs.forEach(input => {
-                    const quantity = parseInt(input.value);
-                    if (quantity > 0) {
-                        const product = input.dataset.product;
-                        const price = parseInt(input.dataset.price);
-                        const itemSubtotal = price * quantity;
-                        subtotal += itemSubtotal;
-                        
-                        const productDisplayName = productNames[product];
-                        orderDetails += `${productDisplayName} x ${quantity}: ${formatCurrency(itemSubtotal)}\n`;
-                    }
-                });
-                
-                // Calculate discount and final total
-                let discount = 0;
-                let finalTotal = subtotal;
-                let promoCode = '';
-                
-                if (isPromoApplied && subtotal > 0) {
-                    discount = Math.floor(subtotal * discountPercentage / 100);
-                    finalTotal = subtotal - discount;
-                    promoCode = validPromoCode;
-                    orderDetails += `\nSubtotal: ${formatCurrency(subtotal)}`;
-                    orderDetails += `\nDiskon (${discountPercentage}%): -${formatCurrency(discount)}`;
-                    orderDetails += `\nTotal: ${formatCurrency(finalTotal)}`;
-                } else {
-                    orderDetails += `\nTotal: ${formatCurrency(finalTotal)}`;
-                }
-                
-                // Google Form URL
-                const baseGformURL = 'https://docs.google.com/forms/d/e/1FAIpQLSdma1dCuS_CEuY8jwP0f-Sj6OKIOdrQe0I4oZtcUUAx6HQ5WA/viewform';
-                
-                // Get payment method text - match exactly with Google Form options
-                const selectedPayment = paymentMethod.value;
-                let paymentText = '';
-                if (selectedPayment === 'cash') {
-                    paymentText = 'CASH / COD';
-                } else if (selectedPayment === 'transfer') {
-                    paymentText = 'Transfer Rekening';
-                } else if (selectedPayment === 'qris') {
-                    paymentText = 'QRIS';
-                }
-                
-                // Build URL with pre-filled parameters
-                const gformParams = new URLSearchParams({
-                    'entry.880240482': name,           // Nama
-                    'entry.1628457902': whatsapp,      // Nomor WhatsApp
-                    'entry.450821238': orderDetails,   // Detail pemesanan
-                    'entry.1050174281': formatCurrency(finalTotal), // Total Pembayaran
-                    'entry.1982006760': paymentText    // Metode Pembayaran
-                });
-                
-                const gformURL = `${baseGformURL}?${gformParams.toString()}`;
-                
-                // Open Google Form in new tab
-                window.open(gformURL, '_blank');
-                
-                // Hide modal
-                confirmationModal.classList.add('hidden');
+            // Dipanggil dari App setelah elemen tersedia
+            bindLogout(els) {
+                els.accountLogoutBtn.addEventListener('click', () => this.logout());
             }
-            fillGformBtn.addEventListener('click', sendToGoogleForm); // This button is in a hidden modal now
-            
-            // Admin event listeners
-            adminBtn.addEventListener('click', function() {
-                adminLoginModal.classList.remove('hidden');
-                adminCodeInput.value = '';
-                adminError.classList.add('hidden');
-            });
-            
-            cancelAdminLoginBtn.addEventListener('click', function() {
-                adminLoginModal.classList.add('hidden');
-            });
-            
-            adminLoginBtn.addEventListener('click', function() {
-                const enteredCode = adminCodeInput.value.trim();
-                if (enteredCode === ADMIN_CODE) {
-                    adminLoginModal.classList.add('hidden');
-                    salesPage.classList.add('hidden');
-                    adminPage.classList.remove('hidden');
-                    loadAdminForm();
-                    updateAdminStatus();
-                } else {
-                    adminError.classList.remove('hidden');
-                    adminCodeInput.value = '';
-                }
-            });
-            
-            adminCodeInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    adminLoginBtn.click();
-                }
-            });
-            
-            logoutBtn.addEventListener('click', function() {
-                adminPage.classList.add('hidden');
-                salesPage.classList.remove('hidden');
-            });
-            
-            // Load admin form with current values
-            function loadAdminForm() {
-                // Format dates for input fields
-                const startDate = promoStartDateTime.toISOString().split('T')[0];
-                const startTime = promoStartDateTime.toTimeString().slice(0, 5);
-                const endDate = promoEndDateTime.toISOString().split('T')[0];
-                const endTime = promoEndDateTime.toTimeString().slice(0, 5);
-                
-                promoStartDate.value = startDate;
-                promoStartTime.value = startTime;
-                promoEndDate.value = endDate;
-                promoEndTime.value = endTime;
-            }
-            
-            // Save promo settings
-            savePromoBtn.addEventListener('click', async function() {
-                const startDateValue = promoStartDate.value;
-                const startTimeValue = promoStartTime.value;
-                const endDateValue = promoEndDate.value;
-                const endTimeValue = promoEndTime.value;
-                
-                if (!startDateValue || !startTimeValue || !endDateValue || !endTimeValue) {
-                    alert('Harap isi semua field tanggal dan waktu!');
-                    return;
-                }
-                
-                // Create new datetime objects
-                const newStartDateTime = new Date(`${startDateValue}T${startTimeValue}:00`);
-                const newEndDateTime = new Date(`${endDateValue}T${endTimeValue}:00`);
-                
-                // Validate dates
-                if (newStartDateTime >= newEndDateTime) {
-                    alert('Tanggal mulai harus lebih awal dari tanggal berakhir!');
-                    return;
-                }
-                
-                // Show loading state
-                savePromoBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
-                savePromoBtn.disabled = true;
-                saveSuccess.classList.add('hidden');
-                saveError.classList.add('hidden');
-                
+
+            // Coba pulihkan sesi sebelumnya dari localStorage
+            async restoreSession() {
+                const phone = this._account.restoreSession();
+                if (!phone) return;
                 try {
-                    // Update global variables
-                    promoStartDateTime = newStartDateTime;
-                    promoEndDateTime = newEndDateTime;
-                    
-                    // Save to Google Sheets with retry
-                    await savePromoSettings();
-                    
-                    // Update admin status display
-                    updateAdminStatus();
-                    
-                    // Show success message
-                    saveSuccess.innerHTML = '<p class="text-sm text-green-600 text-center font-medium">✅ Pengaturan promo berhasil disimpan secara lokal!</p>';
-                    saveSuccess.classList.remove('hidden');
-                    setTimeout(() => {
-                        saveSuccess.classList.add('hidden');
-                    }, 5000);
-                    
-                    // Force immediate update of sales page promo section
-                    updateCountdown();
-                    
-                    // Reset promo applied state if promo becomes inactive
-                    const now = new Date();
-                    if (now < promoStartDateTime || now > promoEndDateTime) {
-                        if (isPromoApplied) {
-                            isPromoApplied = false;
-                            updateOrderSummary();
-                        }
+                    const { found, data } = await this._repo.findByPhone(phone);
+                    if (found && data && data.name) {
+                        this._account.login(data);
+                        this._fillCheckoutForm(data);
+                        this._view.showProfile(data);
                     }
-                    
-                } catch (error) {
-                    // Show detailed error message
-                    saveError.innerHTML = `<p class="text-sm text-red-600 text-center font-medium">❌ ${error.message}</p>`;
-                    saveError.classList.remove('hidden');
-                    setTimeout(() => {
-                        saveError.classList.add('hidden');
-                    }, 8000);
-                    console.error('Save error:', error);
-                } finally {
-                    // Reset button state
-                    savePromoBtn.innerHTML = 'Simpan Pengaturan';
-                    savePromoBtn.disabled = false;
+                } catch (err) {
+                    console.error('Gagal memulihkan sesi:', err);
                 }
-            });
-            
-            // Test connection button - removed since Canva can't send data to Google Sheets
-            
-            // Initialize
-            loadPromoSettings();
-            updateCountdown();
-            setInterval(updateCountdown, 1000);
-            setInterval(updateAdminStatus, 1000); // Update admin status every second
-            
-            // Reload promo settings every 30 seconds to sync with other devices
-            setInterval(loadPromoSettings, 30000);
-            
-            updateOrderSummary();
+            }
+
+            async login(rawPhone) {
+                const phone = (rawPhone || '').trim();
+                if (!phone || !/^\d+$/.test(phone.replace(/\D/g, ''))) {
+                    this._view.showMessage('login', 'warning', '⚠️ Masukkan nomor HP yang valid (hanya angka)');
+                    return;
+                }
+                this._view.hideMessages();
+                this._view.setLoginLoading(true);
+                try {
+                    const { found, data } = await this._repo.findByPhone(phone);
+                    if (found && data && data.name) {
+                        // Akun ditemukan: isi otomatis Nama, No HP, dan Alamat
+                        this._account.login(data);
+                        this._fillCheckoutForm(data);
+                        this._view.showProfile(data);
+                    } else {
+                        // Belum terdaftar: minta nama + alamat
+                        this._view.showRegister(phone);
+                    }
+                } catch (err) {
+                    console.error('Gagal memeriksa akun:', err);
+                    this._view.showMessage('login', 'error', '❌ Gagal menghubungi server. Periksa koneksi internet Anda.');
+                } finally {
+                    this._view.setLoginLoading(false);
+                }
+            }
+
+            async register(phone, name, address) {
+                if (!name.trim()) {
+                    this._view.showMessage('register', 'warning', '⚠️ Nama lengkap wajib diisi');
+                    return;
+                }
+                if (!address.trim()) {
+                    this._view.showMessage('register', 'warning', '⚠️ Alamat wajib diisi');
+                    return;
+                }
+                this._view.hideMessages();
+                this._view.setRegisterLoading(true);
+                try {
+                    const customer = await this._repo.create(phone, name.trim(), address.trim());
+                    this._account.login(customer);
+                    this._fillCheckoutForm(customer);
+                    this._view.showProfile(customer);
+                } catch (err) {
+                    console.error('Gagal menyimpan akun:', err);
+                    this._view.showMessage('register', 'error', '❌ Gagal menyimpan akun. Periksa koneksi internet Anda.');
+                } finally {
+                    this._view.setRegisterLoading(false);
+                }
+            }
+
+            logout() {
+                // Kosongkan form dulu, lalu logout agar tombol pesan dinilai ulang dengan data kosong
+                this._clearCheckoutForm();
+                this._account.logout();
+                this._view.showPanel('logged-out');
+            }
+
+            // Isi otomatis form checkout dari data akun
+            _fillCheckoutForm(customer) {
+                this._form.setCustomer({
+                    name: customer.name || '',
+                    phone: customer.phone || '',
+                    address: customer.address || ''
+                });
+            }
+
+            _clearCheckoutForm() {
+                this._form.setCustomer({ name: '', phone: '', address: '' });
+            }
+        }
+        class ConfirmationModalController {
+            constructor({ modal, fillGformBtn, cancelOrderBtn, onSubmit }) {
+                this._modal = modal;
+                fillGformBtn.addEventListener('click', () => onSubmit());
+                cancelOrderBtn.addEventListener('click', () => this.hide());
+            }
+
+            hide() {
+                this._modal.classList.add('hidden');
+            }
+        }
+
+        /* ============================================================
+         * LAYANAN PENGATURAN PROMO (dengan sinkronisasi Firestore)
+         * ============================================================ */
+        class PromoSettingsService {
+            constructor(repository) {
+                this._repo = repository;
+                this._period = PromoPeriod.default();
+                this._listeners = [];
+                this._synced = false;
+            }
+
+            subscribe(fn) {
+                this._listeners.push(fn);
+                return this;
+            }
+
+            _changed() {
+                this._listeners.forEach(fn => fn(this));
+            }
+
+            get period() {
+                return this._period;
+            }
+
+            get isSynced() {
+                return this._synced;
+            }
+
+            start() {
+                this._repo.listen();
+            }
+
+            _applyRemote(data) {
+                const start = data && data.start ? data.start : null;
+                const end = data && data.end ? data.end : null;
+                const startMs = start ? new Date(start).getTime() : NaN;
+                const endMs = end ? new Date(end).getTime() : NaN;
+
+                if (!isNaN(startMs) && !isNaN(endMs)) {
+                    this._period = new PromoPeriod(new Date(startMs), new Date(endMs));
+                    this._synced = true;
+                    this._changed();
+                } else if (!this._synced) {
+                    // Dokumen belum ada / data belum lengkap: tetap pakai default
+                    this._synced = true;
+                }
+            }
+
+            _onError(err) {
+                console.error('Gagal memuat pengaturan promo dari Firestore:', err);
+            }
+
+            save(start, end) {
+                return this._repo.save(start, end).then(() => {
+                    // onSnapshot akan memicu _applyRemote, tapi perbarui lokal juga agar instan
+                    this._period = new PromoPeriod(start, end);
+                    this._synced = true;
+                    this._changed();
+                });
+            }
+        }
+
+        /* ============================================================
+         * APLIKASI (Composition Root)
+         * ============================================================ */
+        class App {
+            constructor() {
+                firebase.initializeApp(firebaseConfig);
+                const db = firebase.firestore();
+
+                // --- Data layer
+                const settingsRepo = new PromoSettingsRepository(db, COLLECTIONS.settings, {
+                    onLoaded: data => this._settingsService._applyRemote(data),
+                    onError: err => this._settingsService._onError(err)
+                });
+                const orderRepo = new OrderRepository(db, COLLECTIONS.orders);
+                const customerRepo = new CustomerRepository(db, COLLECTIONS.customers);
+                this._settingsService = new PromoSettingsService(settingsRepo);
+
+                // --- Model
+                const cart = new Cart();
+                const pricing = new PricingService(cart);
+                const promoCode = new PromoCodeService();
+
+                // --- View
+                const els = this._collectElements();
+                new ProductCatalogView(els['product-grid'], cart);
+                const summaryView = new OrderSummaryView(els);
+                const promoView = new PromoView(els);
+                const form = new CheckoutFormController(els);
+
+                // --- Controller
+                const promoController = new PromoController(promoView, promoCode, cart, this._settingsService, els);
+                const adminController = new AdminController({ settings: this._settingsService, orderRepo, els });
+
+                // --- Akun pelanggan (login nomor HP, tanpa password)
+                const account = new CustomerAccount();
+                const accountView = new AccountView(els);
+                const accountController = new AccountController(account, accountView, customerRepo, form);
+                accountController.bindLogout(els);
+
+                const whatsappChannel = new WhatsAppOrderChannel(pricing, form, orderRepo);
+                const gformChannel = new GoogleFormOrderChannel(pricing, form);
+                const orderController = new OrderController({
+                    cart, pricing, promoCode, form, summaryView,
+                    orderButton: els.orderButton,
+                    orderHint: els.orderHint,
+                    channel: whatsappChannel
+                });
+
+                // Setiap perubahan data pelanggan (login/logout) -> tombol pesan dinilai ulang
+                form.setCustomerChangeHandler(() => orderController.onExternalChange());
+                // Setelah login/logout akun, ringkasan & tombol pesan juga perlu dinilai ulang
+                account.subscribe(() => orderController.onExternalChange());
+
+                // Pulihkan sesi tersimpan (isi otomatis data akun jika ada)
+                accountController.restoreSession();
+                this._confirmation = new ConfirmationModalController({
+                    modal: els.confirmationModal,
+                    fillGformBtn: els.fillGformBtn,
+                    cancelOrderBtn: els.cancelOrderBtn,
+                    onSubmit: () => {
+                        const quote = pricing.quote({ discountApplied: promoCode.applied });
+                        gformChannel.submit(quote, cart.items, form.snapshot());
+                        this._confirmation.hide();
+                    }
+                });
+
+                // --- Mulai sinkronisasi + timer
+                this._settingsService.start();
+                this._settingsService.subscribe(() => {
+                    promoCode.revokeIfInactive(this._settingsService.period.statusAt());
+                });
+                setInterval(() => {
+                    promoController.tick();
+                    adminController.renderStatus();
+                }, CONFIG.countdownRefreshMs);
+            }
+
+            _collectElements() {
+                const ids = [
+                    'product-grid', 'order-items', 'discount-section', 'discount-amount', 'total-price',
+                    'promo-section', 'promo-active', 'promo-upcoming', 'promo-expired',
+                    'promo-countdown-active', 'promo-countdown-upcoming',
+                    'promo-message', 'promo-code', 'apply-promo',
+                    'account-section', 'account-logged-out', 'account-register', 'account-logged-in',
+                    'login-phone', 'login-btn', 'login-message',
+                    'register-name', 'register-phone', 'register-address',
+                    'register-save-btn', 'register-cancel-btn', 'register-message',
+                    'account-name', 'account-phone', 'account-address', 'account-logout-btn',
+                    'account-status',
+                    'customer-name', 'customer-whatsapp', 'customer-address', 'payment-method',
+                    'transfer-details', 'qris-details', 'order-button', 'order-hint',
+                    'confirmation-modal', 'modal-order-items', 'modal-total-price',
+                    'fill-gform', 'cancel-order',
+                    'admin-btn', 'admin-login-modal', 'admin-code', 'admin-login-btn',
+                    'cancel-admin-login', 'admin-error', 'sales-page', 'admin-page', 'logout-btn',
+                    'promo-start-date', 'promo-start-time', 'promo-end-date', 'promo-end-time',
+                    'save-promo-btn', 'save-success', 'save-error',
+                    'current-start', 'current-end', 'current-status', 'current-remaining'
+                ];
+                const els = {};
+                const camel = id => id.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase());
+                ids.forEach(id => {
+                    const el = document.getElementById(id);
+                    els[id] = el;
+                    els[camel(id)] = el;
+                });
+                // Alias khusus
+                els.promoCodeInput = els['promo-code'];
+                els.applyPromoBtn = els['apply-promo'];
+                els.fillGformBtn = els['fill-gform'];
+                els.adminCodeInput = els['admin-code'];
+                els.cancelAdminLoginBtn = els['cancel-admin-login'];
+                els.customerName = els['customer-name'];
+                els.customerWhatsapp = els['customer-whatsapp'];
+                els.paymentMethod = els['payment-method'];
+                els.transferDetails = els['transfer-details'];
+                els.qrisDetails = els['qris-details'];
+                els.orderButton = els['order-button'];
+                els.orderHint = els['order-hint'];
+                els.confirmationModal = els['confirmation-modal'];
+                els.cancelOrderBtn = els['cancel-order'];
+                els.adminLoginModal = els['admin-login-modal'];
+                els.adminLoginBtn = els['admin-login-btn'];
+                els.adminError = els['admin-error'];
+                els.salesPage = els['sales-page'];
+                els.adminPage = els['admin-page'];
+                els.logoutBtn = els['logout-btn'];
+                els.promoStartDate = els['promo-start-date'];
+                els.promoStartTime = els['promo-start-time'];
+                els.promoEndDate = els['promo-end-date'];
+                els.promoEndTime = els['promo-end-time'];
+                els.savePromoBtn = els['save-promo-btn'];
+                els.saveSuccess = els['save-success'];
+                els.saveError = els['save-error'];
+                els.currentStart = els['current-start'];
+                els.currentEnd = els['current-end'];
+                els.currentStatus = els['current-status'];
+                els.currentRemaining = els['current-remaining'];
+                els.discountSection = els['discount-section'];
+                els.discountAmount = els['discount-amount'];
+                els.totalPrice = els['total-price'];
+                els.orderItems = els['order-items'];
+                els.promoSection = els['promo-section'];
+                els.promoActive = els['promo-active'];
+                els.promoUpcoming = els['promo-upcoming'];
+                els.promoExpired = els['promo-expired'];
+                els.promoCountdownActive = els['promo-countdown-active'];
+                els.promoCountdownUpcoming = els['promo-countdown-upcoming'];
+                els.promoMessage = els['promo-message'];
+                els.accountLoggedOut = els['account-logged-out'];
+                els.accountRegister = els['account-register'];
+                els.accountLoggedIn = els['account-logged-in'];
+                els.loginPhone = els['login-phone'];
+                els.loginBtn = els['login-btn'];
+                els.loginMessage = els['login-message'];
+                els.registerName = els['register-name'];
+                els.registerPhone = els['register-phone'];
+                els.registerAddress = els['register-address'];
+                els.registerSaveBtn = els['register-save-btn'];
+                els.registerCancelBtn = els['register-cancel-btn'];
+                els.registerMessage = els['register-message'];
+                els.accountName = els['account-name'];
+                els.accountPhone = els['account-phone'];
+                els.accountAddress = els['account-address'];
+                els.accountLogoutBtn = els['account-logout-btn'];
+                els.accountStatus = els['account-status'];
+                els.customerAddress = els['customer-address'];
+                return els;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            window.__app = new App();
         });
     </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'979660d5c7a45fd9',t:'MTc1NjkxNDM2OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
