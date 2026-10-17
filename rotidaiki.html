@@ -380,7 +380,7 @@
                         <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiPWTOigXHC4s2Jq1aJTWEPS-nTLyKot0alhBN4VtQCl-tmV7F29iXZuDoPXxX-mxVXBrzTa36G5xXzg4ZarWWegUAuN7QkfEBnEeJjl-IrE93CPvs5dAljCocRHbYhBZP4lcHSzyPEdRM6J3GXbTfl8a3SGNHm-vzYjZznVjzuZHAL0j7spYcvTrCO2Vg/s500/Roti%20Daiki%20Kotak%20(500%20x%20500%20px)%20(3).png" alt="Logo Roti Daiki" class="h-12 w-12 rounded-full bg-white p-1 mr-4">
                         <div>
                             <h1 class="text-2xl font-bold">Admin Panel</h1>
-                            <p class="text-gray-300">Pengaturan Promo</p>
+                            <p class="text-gray-300">Kelola Produk, Pesanan, Pelanggan & Promo</p>
                         </div>
                     </div>
                     <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-semibold transition duration-300">
@@ -389,10 +389,113 @@
                 </div>
             </div>
         </header>
-        
+
         <!-- Admin Content -->
-        <main class="container mx-auto px-4 py-8 max-w-4xl">
-            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+        <main class="container mx-auto px-4 py-8 max-w-5xl">
+            <!-- Tab Navigation -->
+            <div id="admin-tabs" class="flex flex-wrap gap-2 mb-6">
+                <button data-tab="products" class="admin-tab-btn px-5 py-2 rounded-lg font-semibold transition duration-300 bg-amber-600 text-white shadow">🧺 Produk</button>
+                <button data-tab="orders" class="admin-tab-btn px-5 py-2 rounded-lg font-semibold transition duration-300 bg-white text-gray-700 border border-gray-200 hover:bg-gray-50">📦 Pesanan</button>
+                <button data-tab="customers" class="admin-tab-btn px-5 py-2 rounded-lg font-semibold transition duration-300 bg-white text-gray-700 border border-gray-200 hover:bg-gray-50">👥 Pelanggan</button>
+                <button data-tab="promo" class="admin-tab-btn px-5 py-2 rounded-lg font-semibold transition duration-300 bg-white text-gray-700 border border-gray-200 hover:bg-gray-50">🎉 Promo</button>
+            </div>
+
+            <!-- TAB: PRODUK -->
+            <div id="tab-products" class="admin-tab-panel bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Daftar Produk</h2>
+
+                <!-- Form Tambah/Edit Produk -->
+                <div class="border-2 border-dashed border-amber-200 rounded-xl p-4 md:p-5 mb-8 bg-amber-50/40">
+                    <h3 id="product-form-title" class="text-lg font-semibold text-gray-700 mb-4">➕ Tambah Produk Baru</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="product-name" class="block text-gray-600 mb-2 font-semibold">Nama Produk <span class="text-red-500">*</span></label>
+                            <input type="text" id="product-name" class="w-full input-style" placeholder="Contoh: Roti Sosis Keju">
+                        </div>
+                        <div>
+                            <label for="product-image" class="block text-gray-600 mb-2 font-semibold">URL Gambar</label>
+                            <input type="text" id="product-image" class="w-full input-style" placeholder="https://... (opsional)">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="product-description" class="block text-gray-600 mb-2 font-semibold">Deskripsi <span class="text-red-500">*</span></label>
+                        <textarea id="product-description" rows="2" class="w-full input-style" placeholder="Deskripsi singkat produk"></textarea>
+                    </div>
+
+                    <!-- Varian -->
+                    <div class="mb-4">
+                        <label class="block text-gray-600 mb-2 font-semibold">Varian & Harga <span class="text-red-500">*</span></label>
+                        <p class="text-xs text-gray-500 mb-2">Nama varian boleh dikosongkan jika produk hanya memiliki satu harga. Contoh varian: Reguler, Jumbo, Kecil, Besar.</p>
+                        <div id="product-variants" class="space-y-2"></div>
+                        <button id="add-variant-btn" class="mt-2 px-4 py-2 bg-white text-amber-700 border border-amber-300 rounded-lg text-sm font-semibold hover:bg-amber-50 transition duration-300">
+                            <i class="fas fa-plus mr-1"></i>Tambah Varian
+                        </button>
+                    </div>
+
+                    <div id="product-message" class="hidden mb-3 p-3 rounded-lg border"></div>
+
+                    <div class="flex gap-3">
+                        <button id="save-product-btn" class="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-300">
+                            Simpan Produk
+                        </button>
+                        <button id="cancel-edit-btn" class="hidden px-6 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition duration-300">
+                            Batal Edit
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Daftar Produk -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3">Produk Tersimpan <span class="text-sm font-normal text-gray-400">(tampil di katalog pelanggan)</span></h3>
+                    <div id="admin-product-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <p class="text-gray-500 italic">Memuat produk...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: PESANAN -->
+            <div id="tab-orders" class="admin-tab-panel bg-white rounded-2xl shadow-lg p-6 md:p-8 hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Daftar Pesanan</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                            <tr>
+                                <th class="px-4 py-3">Waktu</th>
+                                <th class="px-4 py-3">Pemesan</th>
+                                <th class="px-4 py-3">Item</th>
+                                <th class="px-4 py-3">Total</th>
+                                <th class="px-4 py-3">Pembayaran</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-orders-list" class="divide-y divide-gray-100">
+                            <tr><td colspan="5" class="px-4 py-4 text-gray-500 italic">Memuat pesanan...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB: PELANGGAN -->
+            <div id="tab-customers" class="admin-tab-panel bg-white rounded-2xl shadow-lg p-6 md:p-8 hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Daftar Pelanggan</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                            <tr>
+                                <th class="px-4 py-3">Nama</th>
+                                <th class="px-4 py-3">No. HP</th>
+                                <th class="px-4 py-3">Alamat</th>
+                                <th class="px-4 py-3">Terdaftar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-customers-list" class="divide-y divide-gray-100">
+                            <tr><td colspan="4" class="px-4 py-4 text-gray-500 italic">Memuat pelanggan...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB: PROMO -->
+            <div id="tab-promo" class="admin-tab-panel bg-white rounded-2xl shadow-lg p-6 md:p-8 hidden">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6">Pengaturan Masa Promo</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -480,7 +583,7 @@
             </div>
         </main>
     </div>
-    
+
     <!-- Confirmation Modal -->
     <div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
@@ -567,7 +670,8 @@
         const COLLECTIONS = Object.freeze({
             settings: 'settings',
             orders: 'orders',
-            customers: 'customers'
+            customers: 'customers',
+            products: 'products'
         });
 
         /* ============================================================
@@ -614,9 +718,40 @@
         });
 
         /* ============================================================
-         * DATA PRODUK (sumber tunggal untuk render kartu & nama pesanan)
+         * DATA PRODUK (dinamis dari Firestore koleksi 'products')
          * ============================================================ */
-        const PRODUCTS = Object.freeze([
+        let PRODUCTS = []; // diisi oleh ProductStore (dinamis)
+
+        class ProductStore {
+            constructor(repository) {
+                this._repo = repository;
+                this._listeners = [];
+            }
+
+            subscribe(fn) {
+                this._listeners.push(fn);
+                fn(this);
+                return this;
+            }
+
+            _changed() {
+                this._listeners.forEach(fn => fn(this));
+            }
+
+            start() {
+                this._repo.listen({
+                    onLoaded: list => {
+                        PRODUCTS = list.filter(p => p && p.name);
+                        _rebuildProductIndex();
+                        this._changed();
+                    },
+                    onError: err => console.error('Gagal memuat produk dari Firestore:', err)
+                });
+            }
+        }
+
+        function _makeDefaultProducts() {
+            return [
             {
                 name: 'Paket Happiness',
                 description: 'Paket spesial dengan berbagai varian roti',
@@ -696,12 +831,18 @@
                     { sku: 'iceberg-strawberry-besar', label: 'Besar', price: 200000, orderName: 'Iceberg Cheese Cake Strawberry (Besar)' }
                 ]
             }
-        ]);
+            ];
+        }
 
-        // Indeks SKU -> { sku, price, orderName }
-        const PRODUCT_INDEX = new Map(
-            PRODUCTS.flatMap(p => p.variants).map(v => [v.sku, v])
-        );
+        // Indeks SKU -> { sku, price, orderName } (dibangun ulang saat data produk berubah)
+        let PRODUCT_INDEX = new Map();
+
+        function _rebuildProductIndex() {
+            PRODUCT_INDEX = new Map(
+                PRODUCTS.flatMap(p => (p.variants || [])).map(v => [v.sku, v])
+            );
+        }
+        _rebuildProductIndex();
 
         /* ============================================================
          * LAYER AKSES DATA (Firebase Firestore)
@@ -763,6 +904,117 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
             }
+
+            // Listener admin: seluruh dokumen pesanan, terbaru lebih dulu
+            listenAdmin(callback) {
+                return this._collection.onSnapshot(
+                    snap => {
+                        const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                            .sort((a, b) => {
+                                const ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+                                const tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+                                return tb - ta;
+                            });
+                        callback(docs);
+                    },
+                    err => {
+                        console.error('Gagal memuat pesanan:', err);
+                        callback([{ _error: 'Gagal memuat pesanan: ' + err.code }]);
+                    }
+                );
+            }
+        }
+
+        // Koleksi products: { name, description, image, alt, variants: [{sku,label,price,orderName}] }
+        class ProductRepository {
+            constructor(db, path) {
+                this._collection = db.collection(path);
+            }
+
+            // Listener real-time; urutan disortir di client berdasarkan field 'order'
+            // (fallback: produk tanpa field 'order' ditaruh paling bawah)
+            listen(callbacks) {
+                return this._collection.onSnapshot(
+                    snap => {
+                        const products = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                            .sort((a, b) => {
+                                const oa = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
+                                const ob = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
+                                return oa - ob;
+                            });
+                        callbacks.onLoaded(products);
+                    },
+                    err => callbacks.onError(err)
+                );
+            }
+
+            // Simpan urutan beberapa produk sekaligus (list = array produk dengan id)
+            saveOrder(list) {
+                return Promise.all(list.map(p =>
+                    this._collection.doc(p.id).update({ order: p.order })
+                ));
+            }
+
+            _slug(name) {
+                return (name || 'produk').toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-+|-+$/g, '');
+            }
+
+            _normalizeVariant(v, productName, idx) {
+                const label = (v.label || '').trim() || null;
+                const base = this._slug(productName);
+                const sku = (v.sku || '').trim() || `${base}${label ? '-' + this._slug(label) : ''}${idx > 0 ? '-' + idx : ''}`;
+                return {
+                    sku: sku,
+                    label: label,
+                    price: Math.max(0, Math.round(Number(v.price) || 0)),
+                    orderName: label ? `${productName} (${label})` : productName
+                };
+            }
+
+            normalize(data) {
+                const name = (data.name || '').trim();
+                const variantsRaw = Array.isArray(data.variants) ? data.variants : [];
+                return {
+                    name: name,
+                    description: (data.description || '').trim(),
+                    image: (data.image || '').trim(),
+                    alt: name,
+                    variants: variantsRaw
+                        .filter(v => Number(v.price) > 0)
+                        .map((v, i) => this._normalizeVariant(v, name, i))
+                };
+            }
+
+            add(data) {
+                // Produk baru ditaruh paling atas (order 0) dan menggeser yang lain,
+                // kecuali bila order eksplisit diberikan (mis. saat seeding)
+                const explicit = typeof data.order === 'number';
+                const current = PRODUCTS;
+                const shift = explicit ? [] : current.map(p => ({ id: p.id, order: (p.order || 0) + 1 }));
+                const self = this;
+                return this._collection.add({
+                    ...this.normalize(data),
+                    order: explicit ? data.order : 0,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(function () {
+                    return Promise.all(shift.map(p =>
+                        self._collection.doc(p.id).update({ order: p.order })
+                    ));
+                });
+            }
+
+            update(id, data) {
+                return this._collection.doc(id).set({
+                    ...this.normalize(data),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            }
+
+            remove(id) {
+                return this._collection.doc(id).delete();
+            }
         }
 
         // Akun sederhana: dokumen customers/{nomorHP-tanpa-awalan-0}, tanpa password
@@ -797,6 +1049,22 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 return (await ref.get()).data();
+            }
+
+            // Listener admin: seluruh dokumen pelanggan
+            listenAdmin(callback) {
+                return this._collection.onSnapshot(
+                    snap => {
+                        const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                            .sort((a, b) => {
+                                const ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+                                const tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+                                return tb - ta;
+                            });
+                        callback(docs);
+                    },
+                    err => console.error('Gagal memuat pelanggan:', err)
+                );
             }
         }
 
@@ -982,6 +1250,12 @@
                 cart.subscribe(() => this._syncInputs());
             }
 
+            // Re-render saat daftar produk dari Firestore berubah
+            refresh() {
+                this._render();
+                this._syncInputs();
+            }
+
             _variantRow(variant) {
                 const labelHtml = variant.label
                     ? `<span class="text-sm font-medium text-gray-700">${variant.label}</span>`
@@ -1016,17 +1290,22 @@
             }
 
             _render() {
+                if (!PRODUCTS.length) {
+                    this._container.innerHTML = '<p class="text-gray-500 italic text-center py-8">Belum ada produk tersedia.</p>';
+                    this._inputs.clear();
+                    return;
+                }
                 this._container.innerHTML = PRODUCTS.map((p, i) => `
                     <div class="product-card">
                         <div class="h-48 overflow-hidden">
-                            <img src="${p.image}" alt="${p.alt}" class="product-image">
+                            <img src="${p.image}" alt="${p.alt || p.name}" class="product-image" onerror="this.style.display='none'">
                         </div>
                         <div class="p-4">
                             <h4 class="font-semibold text-lg mb-1">${p.name}</h4>
                             <p class="text-gray-500 text-sm mb-3">${p.description}</p>
-                            ${p.variants.length === 1
+                            ${(p.variants || []).length === 1
                                 ? this._priceBlock(p.variants[0])
-                                : p.variants.map((v, vi) => `
+                                : (p.variants || []).map((v, vi) => `
                                     <div class="${vi < p.variants.length - 1 ? 'mb-3 pb-3 border-b border-gray-200' : 'mb-3'}">
                                         ${this._variantRow(v)}
                                     </div>
@@ -1454,10 +1733,16 @@
          * CONTROLLER: Admin
          * ============================================================ */
         class AdminController {
-            constructor({ settings, orderRepo, els }) {
+            constructor({ settings, orderRepo, customerRepo, productRepo, productStore, els }) {
                 this._settings = settings;
                 this._orderRepo = orderRepo;
+                this._customerRepo = customerRepo;
+                this._productRepo = productRepo;
+                this._productStore = productStore;
                 this._els = els;
+                this._editingProductId = null; // id produk yang sedang diedit
+                this._ordersUnsub = null;
+                this._customersUnsub = null;
 
                 els.adminBtn.addEventListener('click', () => {
                     els.adminLoginModal.classList.remove('hidden');
@@ -1471,11 +1756,325 @@
                 els.adminCodeInput.addEventListener('keypress', e => {
                     if (e.key === 'Enter') els.adminLoginBtn.click();
                 });
-                els.logoutBtn.addEventListener('click', () => {
-                    els.adminPage.classList.add('hidden');
-                    els.salesPage.classList.remove('hidden');
-                });
+                els.logoutBtn.addEventListener('click', () => this._logout());
                 els.savePromoBtn.addEventListener('click', () => this._save());
+
+                // --- Tab navigasi
+                els.adminTabBtns.forEach(btn => {
+                    btn.addEventListener('click', () => this._switchTab(btn.dataset.tab));
+                });
+
+                // --- Form produk: varian dinamis
+                els.addVariantBtn.addEventListener('click', () => this._addVariantRow('', ''));
+                els.cancelEditBtn.addEventListener('click', () => this._resetProductForm());
+                els.saveProductBtn.addEventListener('click', () => this._saveProduct());
+                this._addVariantRow('', '');
+
+                // --- Delegasi klik edit/hapus pada daftar produk
+                this._els.adminProductList.addEventListener('click', e => {
+                    const editBtn = e.target.closest('.edit-product-btn');
+                    const delBtn = e.target.closest('.delete-product-btn');
+                    if (editBtn) this._startEditProduct(editBtn.dataset.editId);
+                    if (delBtn) this._deleteProduct(delBtn.dataset.deleteId);
+                    const moveBtn = e.target.closest('.move-product-btn');
+                    if (moveBtn && !moveBtn.classList.contains('opacity-30')) {
+                        this._moveProduct(moveBtn.dataset.moveId, moveBtn.dataset.dir);
+                    }
+                });
+
+                // --- Daftar produk (real-time)
+                productStore.subscribe(() => this.renderAdminProducts());
+            }
+
+            _logout() {
+                if (this._ordersUnsub) { this._ordersUnsub(); this._ordersUnsub = null; }
+                if (this._customersUnsub) { this._customersUnsub(); this._customersUnsub = null; }
+                this._resetProductForm();
+                this._els.adminPage.classList.add('hidden');
+                this._els.salesPage.classList.remove('hidden');
+            }
+
+            // Listener real-time untuk tab Pesanan & Pelanggan (aktif hanya saat admin login)
+            _startAdminListeners() {
+                if (this._ordersUnsub) return;
+                this._ordersUnsub = this._orderRepo.listenAdmin(docs => this.renderOrders(docs));
+                this._customersUnsub = this._customerRepo.listenAdmin(docs => this.renderCustomers(docs));
+            }
+
+            _switchTab(name) {
+                // Tombol
+                this._els.adminTabBtns.forEach(btn => {
+                    const active = btn.dataset.tab === name;
+                    btn.className = active
+                        ? 'admin-tab-btn px-5 py-2 rounded-lg font-semibold transition duration-300 bg-amber-600 text-white shadow'
+                        : 'admin-tab-btn px-5 py-2 rounded-lg font-semibold transition duration-300 bg-white text-gray-700 border border-gray-200 hover:bg-gray-50';
+                });
+                // Panel
+                this._els.adminTabPanels.forEach(panel => {
+                    panel.classList.toggle('hidden', panel.id !== `tab-${name}`);
+                });
+            }
+
+            /* ---------------- TAB PRODUK ---------------- */
+            _addVariantRow(label, price) {
+                const row = document.createElement('div');
+                row.className = 'product-variant-row flex gap-2 items-center';
+                row.innerHTML = `
+                    <input type="text" class="variant-label flex-1 input-style" placeholder="Nama varian (opsional)" value="${label || ''}">
+                    <input type="number" min="0" class="variant-price w-36 input-style" placeholder="Harga" value="${price || ''}">
+                    <span class="variant-prefix text-sm text-gray-400">Rp</span>
+                    <button type="button" class="remove-variant-btn px-2 py-1 text-red-600 hover:text-red-700 font-bold" title="Hapus varian">✕</button>
+                `;
+                row.querySelector('.remove-variant-btn').addEventListener('click', () => {
+                    const rows = this._els.productVariants.querySelectorAll('.product-variant-row');
+                    if (rows.length > 1) row.remove();
+                });
+                this._els.productVariants.appendChild(row);
+            }
+
+            _collectVariants() {
+                return Array.from(this._els.productVariants.querySelectorAll('.product-variant-row')).map(row => ({
+                    label: row.querySelector('.variant-label').value,
+                    price: row.querySelector('.variant-price').value
+                }));
+            }
+
+            _resetProductForm() {
+                this._editingProductId = null;
+                this._els.productFormTitle.textContent = '➕ Tambah Produk Baru';
+                this._els.productName.value = '';
+                this._els.productDescription.value = '';
+                this._els.productImage.value = '';
+                this._els.productVariants.innerHTML = '';
+                this._addVariantRow('', '');
+                this._els.cancelEditBtn.classList.add('hidden');
+                this._hideProductMessage();
+            }
+
+            _startEditProduct(id) {
+                const p = PRODUCTS.find(x => x.id === id);
+                if (!p) return;
+                this._editingProductId = id;
+                this._els.productFormTitle.textContent = '✏️ Edit Produk: ' + p.name;
+                this._els.productName.value = p.name || '';
+                this._els.productDescription.value = p.description || '';
+                this._els.productImage.value = p.image || '';
+                this._els.productVariants.innerHTML = '';
+                const variants = p.variants && p.variants.length ? p.variants : [{ label: '', price: '' }];
+                variants.forEach(v => this._addVariantRow(v.label || '', v.price || ''));
+                this._els.cancelEditBtn.classList.remove('hidden');
+                this._els.productFormTitle.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            _showProductMessage(kind, text) {
+                const el = this._els.productMessage;
+                el.className = 'mb-3 p-3 rounded-lg border text-sm font-medium ' + ({
+                    success: 'bg-green-50 border-green-200 text-green-700',
+                    error: 'bg-red-50 border-red-200 text-red-700'
+                })[kind];
+                el.textContent = text;
+            }
+
+            _hideProductMessage() {
+                this._els.productMessage.classList.add('hidden');
+            }
+
+            async _saveProduct() {
+                const data = {
+                    name: this._els.productName.value,
+                    description: this._els.productDescription.value,
+                    image: this._els.productImage.value,
+                    variants: this._collectVariants()
+                };
+                if (!data.name.trim()) {
+                    this._showProductMessage('error', '⚠️ Nama produk wajib diisi');
+                    return;
+                }
+                const validVariants = data.variants.filter(v => Number(v.price) > 0);
+                if (!validVariants.length) {
+                    this._showProductMessage('error', '⚠️ Isi minimal satu varian dengan harga lebih dari 0');
+                    return;
+                }
+
+                const btn = this._els.saveProductBtn;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Menyimpan...';
+                try {
+                    if (this._editingProductId) {
+                        await this._productRepo.update(this._editingProductId, data);
+                    } else {
+                        await this._productRepo.add(data);
+                    }
+                    this._showProductMessage('success',
+                        this._editingProductId ? '✅ Produk berhasil diperbarui!' : '✅ Produk berhasil ditambahkan ke katalog!');
+                    this._resetProductForm();
+                } catch (err) {
+                    console.error('Gagal menyimpan produk:', err);
+                    const code = err && err.code ? err.code : 'unknown';
+                    this._showProductMessage('error', '❌ Gagal menyimpan produk [' + code + '].' +
+                        (code === 'permission-denied' ? ' Security Rules Firestore belum mengizinkan penulisan ke koleksi "products".' : ' Periksa koneksi internet Anda.'));
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Simpan Produk';
+                }
+            }
+
+            async _deleteProduct(id) {
+                if (!confirm('Hapus produk ini? Produk akan hilang dari katalog pelanggan.')) return;
+                try {
+                    await this._productRepo.remove(id);
+                } catch (err) {
+                    console.error('Gagal menghapus produk:', err);
+                    const code = err && err.code ? err.code : 'unknown';
+                    alert('Gagal menghapus produk [' + code + '].' +
+                        (code === 'permission-denied' ? ' Security Rules Firestore belum mengizinkan penghapusan di koleksi "products".' : ' Periksa koneksi internet Anda.'));
+                }
+            }
+
+            // Naik-turunkan urutan produk (menyimpan field 'order' ke Firestore)
+            async _moveProduct(id, dir) {
+                const idx = PRODUCTS.findIndex(p => p.id === id);
+                if (idx < 0) return;
+                const swapIdx = dir === 'up' ? idx - 1 : idx + 1;
+                if (swapIdx < 0 || swapIdx >= PRODUCTS.length) return;
+
+                // Tukar nilai order dua produk
+                const a = PRODUCTS[idx];
+                const b = PRODUCTS[swapIdx];
+                const oa = typeof a.order === 'number' ? a.order : idx;
+                const ob = typeof b.order === 'number' ? b.order : swapIdx;
+                try {
+                    await this._productRepo.saveOrder([
+                        { id: a.id, order: ob },
+                        { id: b.id, order: oa }
+                    ]);
+                    // onSnapshot akan otomatis memicu re-render, tapi kita optimis update juga
+                    a.order = ob; b.order = oa;
+                    PRODUCTS.sort((x, y) => (typeof x.order === 'number' ? x.order : 9999) - (typeof y.order === 'number' ? y.order : 9999));
+                    this.renderAdminProducts();
+                } catch (err) {
+                    console.error('Gagal mengubah urutan:', err);
+                    const code = err && err.code ? err.code : 'unknown';
+                    alert('Gagal mengubah urutan produk [' + code + '].' +
+                        (code === 'permission-denied' ? ' Security Rules Firestore belum mengizinkan pembaruan di koleksi "products".' : ' Periksa koneksi internet Anda.'));
+                }
+            }
+
+            // Daftar produk di tab admin (kartu ringkas + tombol edit/hapus)
+            renderAdminProducts() {
+                const list = this._els.adminProductList;
+                if (!PRODUCTS.length) {
+                    list.innerHTML = `
+                        <div class="md:col-span-2 text-center p-6 bg-amber-50 rounded-xl border border-amber-200">
+                            <p class="text-gray-600 mb-3">Belum ada produk. Tambahkan produk pertama Anda di form di atas,</p>
+                            <p class="text-gray-500 text-sm mb-4">atau isi katalog dengan 10 produk awal Roti Daiki:</p>
+                            <button id="seed-products-btn" class="px-5 py-2 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 transition duration-300">
+                                <i class="fas fa-download mr-1"></i>Isi Produk Awal
+                            </button>
+                        </div>`;
+                    const seedBtn = document.getElementById('seed-products-btn');
+                    if (seedBtn) seedBtn.addEventListener('click', () => this._seedDefaultProducts());
+                    return;
+                }
+                list.innerHTML = PRODUCTS.map((p, idx) => {
+                    const priceText = (p.variants || []).map(v =>
+                        `${v.label ? v.label + ': ' : ''}${Utils.formatCurrency(v.price)}`
+                    ).join(' • ');
+                    return `
+                    <div class="border border-gray-200 rounded-xl p-3 flex gap-3 items-start">
+                        <div class="w-6 text-center flex-shrink-0 font-bold text-gray-400 text-sm pt-1">${idx + 1}</div>
+                        <img src="${p.image || ''}" alt="${p.alt || p.name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0" onerror="this.style.display='none'">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-semibold text-gray-800 truncate">${p.name}</h4>
+                            <p class="text-xs text-gray-500 truncate mb-1">${p.description || ''}</p>
+                            <p class="text-sm text-amber-700 font-medium">${priceText}</p>
+                        </div>
+                        <div class="flex flex-col gap-1 flex-shrink-0">
+                            <button data-edit-id="${p.id}" class="edit-product-btn px-3 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition">Edit</button>
+                            <button data-delete-id="${p.id}" class="delete-product-btn px-3 py-1 text-xs bg-red-50 text-red-700 rounded hover:bg-red-100 transition">Hapus</button>
+                            <button data-move-id="${p.id}" data-dir="up" class="move-product-btn px-3 py-1 text-xs bg-amber-50 text-amber-700 rounded hover:bg-amber-100 transition ${idx === 0 ? 'opacity-30 cursor-not-allowed' : ''}">▲ Naik</button>
+                            <button data-move-id="${p.id}" data-dir="down" class="move-product-btn px-3 py-1 text-xs bg-amber-50 text-amber-700 rounded hover:bg-amber-100 transition ${idx === PRODUCTS.length - 1 ? 'opacity-30 cursor-not-allowed' : ''}">▼ Turun</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+
+            async _seedDefaultProducts() {
+                const btn = document.getElementById('seed-products-btn');
+                if (!btn) return;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Mengisi...';
+                try {
+                    const defaults = _makeDefaultProducts();
+                    for (let i = 0; i < defaults.length; i++) {
+                        await this._productRepo.add({ ...defaults[i], order: i });
+                    }
+                } catch (err) {
+                    console.error('Gagal mengisi produk awal:', err);
+                    const code = err && err.code ? err.code : 'unknown';
+                    const hint = code === 'permission-denied'
+                        ? '\n\nPenyebab: Security Rules Firestore belum mengizinkan penulisan ke koleksi "products".\nTambahkan di Firebase Console → Firestore → Rules:\n\nmatch /products/{doc} {\n  allow read, write: if true;\n}'
+                        : '';
+                    alert('Gagal mengisi produk awal [' + code + '].' + hint);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-download mr-1"></i>Isi Produk Awal';
+                }
+            }
+
+            /* ---------------- TAB PESANAN ---------------- */
+            renderOrders(docs) {
+                const tbody = this._els.adminOrdersList;
+                if (docs.length === 1 && docs[0]._error) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-4 text-red-600">❌ ${docs[0]._error}</td></tr>`;
+                    return;
+                }
+                if (!docs.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-4 text-gray-500 italic">Belum ada pesanan.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = docs.map(o => {
+                    const items = (o.items || []).map(it =>
+                        `${it.name} x ${it.quantity}`).join(', ');
+                    const when = o.createdAt && typeof o.createdAt.toDate === 'function'
+                        ? Utils.formatDateTime(o.createdAt.toDate())
+                        : '-';
+                    const promo = o.discount > 0
+                        ? `<div class="text-green-600 text-xs">Diskon: -${Utils.formatCurrency(o.discount)}</div>`
+                        : '';
+                    return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 text-gray-600 whitespace-nowrap">${when}</td>
+                        <td class="px-4 py-3">
+                            <div class="font-semibold text-gray-800">${o.name || '-'}</div>
+                            <div class="text-xs text-gray-500">${o.whatsapp || '-'}</div>
+                            <div class="text-xs text-gray-400">${o.address || ''}</div>
+                        </td>
+                        <td class="px-4 py-3 text-gray-700 max-w-xs">${items}${promo}</td>
+                        <td class="px-4 py-3 font-semibold text-gray-800 whitespace-nowrap">${Utils.formatCurrency(o.total || 0)}</td>
+                        <td class="px-4 py-3 text-gray-600">${o.paymentLabel || o.paymentMethod || '-'}</td>
+                    </tr>`;
+                }).join('');
+            }
+
+            /* ---------------- TAB PELANGGAN ---------------- */
+            renderCustomers(docs) {
+                const tbody = this._els.adminCustomersList;
+                if (!docs.length) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-4 text-gray-500 italic">Belum ada pelanggan terdaftar.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = docs.map(c => {
+                    const when = c.createdAt && typeof c.createdAt.toDate === 'function'
+                        ? Utils.formatDateTime(c.createdAt.toDate())
+                        : '-';
+                    return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 font-semibold text-gray-800">${c.name || '-'}</td>
+                        <td class="px-4 py-3 text-gray-600">${c.phone || '-'}</td>
+                        <td class="px-4 py-3 text-gray-600 max-w-xs">${c.address || '-'}</td>
+                        <td class="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">${when}</td>
+                    </tr>`;
+                }).join('');
             }
 
             _login() {
@@ -1483,8 +2082,10 @@
                     this._els.adminLoginModal.classList.add('hidden');
                     this._els.salesPage.classList.add('hidden');
                     this._els.adminPage.classList.remove('hidden');
+                    this._switchTab('products');
                     this._loadForm();
                     this.renderStatus();
+                    this._startAdminListeners();
                 } else {
                     this._els.adminError.classList.remove('hidden');
                     this._els.adminCodeInput.value = '';
@@ -1902,6 +2503,8 @@
                 });
                 const orderRepo = new OrderRepository(db, COLLECTIONS.orders);
                 const customerRepo = new CustomerRepository(db, COLLECTIONS.customers);
+                const productRepo = new ProductRepository(db, COLLECTIONS.products);
+                const productStore = new ProductStore(productRepo);
                 this._settingsService = new PromoSettingsService(settingsRepo);
 
                 // --- Model
@@ -1911,14 +2514,25 @@
 
                 // --- View
                 const els = this._collectElements();
-                new ProductCatalogView(els['product-grid'], cart);
+                const catalogView = new ProductCatalogView(els['product-grid'], cart);
                 const summaryView = new OrderSummaryView(els);
                 const promoView = new PromoView(els);
                 const form = new CheckoutFormController(els);
 
                 // --- Controller
                 const promoController = new PromoController(promoView, promoCode, cart, this._settingsService, els);
-                const adminController = new AdminController({ settings: this._settingsService, orderRepo, els });
+                const adminController = new AdminController({
+                    settings: this._settingsService,
+                    orderRepo,
+                    customerRepo,
+                    productRepo,
+                    productStore,
+                    els
+                });
+
+                // --- Produk dinamis: listener Firestore + refresh katalog saat berubah
+                productStore.subscribe(() => catalogView.refresh());
+                productStore.start();
 
                 // --- Akun pelanggan (login nomor HP, tanpa password)
                 const account = new CustomerAccount();
@@ -1984,7 +2598,11 @@
                     'cancel-admin-login', 'admin-error', 'sales-page', 'admin-page', 'logout-btn',
                     'promo-start-date', 'promo-start-time', 'promo-end-date', 'promo-end-time',
                     'save-promo-btn', 'save-success', 'save-error',
-                    'current-start', 'current-end', 'current-status', 'current-remaining'
+                    'current-start', 'current-end', 'current-status', 'current-remaining',
+                    'product-name', 'product-description', 'product-image',
+                    'product-variants', 'add-variant-btn', 'save-product-btn', 'cancel-edit-btn',
+                    'product-form-title', 'product-message', 'admin-product-list',
+                    'admin-orders-list', 'admin-customers-list'
                 ];
                 const els = {};
                 const camel = id => id.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase());
@@ -2054,6 +2672,20 @@
                 els.accountLogoutBtn = els['account-logout-btn'];
                 els.accountStatus = els['account-status'];
                 els.customerAddress = els['customer-address'];
+                els.productName = els['product-name'];
+                els.productDescription = els['product-description'];
+                els.productImage = els['product-image'];
+                els.productVariants = els['product-variants'];
+                els.addVariantBtn = els['add-variant-btn'];
+                els.saveProductBtn = els['save-product-btn'];
+                els.cancelEditBtn = els['cancel-edit-btn'];
+                els.productFormTitle = els['product-form-title'];
+                els.productMessage = els['product-message'];
+                els.adminProductList = els['admin-product-list'];
+                els.adminOrdersList = els['admin-orders-list'];
+                els.adminCustomersList = els['admin-customers-list'];
+                els.adminTabBtns = Array.from(document.querySelectorAll('.admin-tab-btn'));
+                els.adminTabPanels = Array.from(document.querySelectorAll('.admin-tab-panel'));
                 return els;
             }
         }
