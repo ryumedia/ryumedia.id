@@ -504,6 +504,10 @@ service cloud.firestore {
                                     class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
                             </div>
                             <span id="filtered-count" aria-live="polite" class="shrink-0 px-2.5 py-2 bg-blue-50 text-blue-700 rounded-xl text-xs font-semibold whitespace-nowrap">Memuat...</span>
+                            <button onclick="exportCSV()" title="Unduh CSV" class="shrink-0 px-3 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                <span>CSV</span>
+                            </button>
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <select id="filter-dapil" class="min-w-0 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600">
@@ -521,10 +525,9 @@ service cloud.firestore {
                             <select id="filter-rt" class="min-w-0 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600">
                                 <option value="">Semua RT</option>
                             </select>
-                            <button onclick="exportCSV()" title="Unduh CSV" class="px-3 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
-                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                <span>CSV</span>
-                            </button>
+                            <select id="filter-peran" class="min-w-0 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                                <option value="">Semua Peran</option>
+                            </select>
                         </div>
                     </div>
 
@@ -856,6 +859,8 @@ service cloud.firestore {
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+        const accountCreatorApp = firebase.initializeApp(firebaseConfig, 'relawan-account-creator');
+        const accountCreatorAuth = accountCreatorApp.auth();
         // Set dipakai agar role bisa langsung dipakai Firestore Rules saat upaya login pertama
         db.enablePersistence({ synchronizeTabs: true }).catch(function (err) {
             console.warn('Persistence Firestore tidak aktif:', err.code || err.message);
@@ -2162,59 +2167,8 @@ service cloud.firestore {
             lucide.createIcons();
         }
 
-        // ==========================================
-        // AKUN LOGIN RELAWAN (dibuat dari form Input Data)
-        // ==========================================
-        // Alur: simpan biodata → createUserWithEmailAndPassword (sesi ikut berpindah ke akun baru)
-        //     → tulis users/{uid} (role relawan, relawanId) → pulihkan sesi admin semula.
+        // Akun relawan dibuat lewat Firebase Auth terpisah agar sesi admin tetap aktif.
         // Password TIDAK pernah ditulis ke Firestore.
-        const SESSION_EMAIL_KEY = 'pip_last_admin_email';
-
-        // Simpan email admin sebelum sesi berpindah, supaya bisa dipulihkan otomatis
-        function rememberAdminSession() {
-            adminSessionSnapshot = currentUser
-                ? { uid: currentUser.uid, email: currentUser.email || '' }
-                : null;
-            if (currentUser && currentUser.email) {
-                sessionStorage.setItem(SESSION_EMAIL_KEY, currentUser.email);
-            }
-        }
-
-        // Pulihkan sesi admin: login ulang sebagai admin.
-        // Jika sesi Auth admin tidak tersedia (mis. admin login lewat tab lain), arahkan ke login.
-        async function restoreAdminSession(adminEmail) {
-            restoringSession = true;
-            try {
-                // Tunggu event auth dari pembuatan akun selesai diproses
-                await new Promise(r => setTimeout(r, 400));
-                if (adminEmail) {
-                    try {
-                        await auth.sendPasswordResetEmail(adminEmail);
-                    } catch (e) {
-                        console.warn('Tidak bisa mengirim email reset ke admin:', e.code || e.message);
-                    }
-                }
-                await auth.signOut();
-            } catch (e) {
-                console.warn('Restore sesi:', e.code || e.message);
-            } finally {
-                restoringSession = false;
-            }
-
-            const email = adminEmail || sessionStorage.getItem(SESSION_EMAIL_KEY) || '';
-            sessionStorage.removeItem(SESSION_EMAIL_KEY);
-            adminSessionSnapshot = null;
-
-            // Konfirmasi UI bahwa relawan sudah tersimpan & akun siap dipakai
-            showLoginView();
-            if (email) document.getElementById('login-email').value = email;
-            document.getElementById('login-password').focus();
-            const hint = document.getElementById('login-relogin-note');
-            if (hint) {
-                hint.classList.remove('hidden');
-                hint.textContent = 'Akun relawan berhasil dibuat. Demi keamanan, login kembali sebagai admin' + (email ? ' (' + email + ')' : '') + '.';
-            }
-        }
 
         // Tampilkan data relawan milik akun yang login (read-only) pada tab Input Data
         async function openMyRelawanView() {
@@ -2284,10 +2238,6 @@ service cloud.firestore {
             mainView.classList.add('flex');
             loadRelawan();
         }
-
-        // Sesi admin yang sedang aktif (untuk dipulihkan setelah membuat akun relawan)
-        let adminSessionSnapshot = null;
-        let restoringSession = false;
 
         // Setelah login: baca role, catat profil (jika diizinkan Rules), lalu render UI sesuai akses
         async function initSession(user) {
@@ -2415,8 +2365,6 @@ service cloud.firestore {
         auth.onAuthStateChanged((user) => {
             // Saat membuat akun relawan, sesi admin sementara berpindah ke akun baru.
             // Jangan reset UI pada momen itu (admin langsung dipulihkan setelahnya).
-            if (restoringSession) return;
-
             if (user) {
                 currentUser = user;
                 showMainView(user);
@@ -2521,8 +2469,6 @@ service cloud.firestore {
                 return;
             }
             if (isAdminDenied()) return;
-            if (restoringSession) return; // proses pembuatan akun masih berjalan
-
             const id = document.getElementById('relawan-id').value;
             const nama = document.getElementById('input-nama').value.trim();
             const nik = document.getElementById('input-nik').value.trim();
@@ -2621,9 +2567,6 @@ service cloud.firestore {
 
             setSaving(true);
 
-            // Sesi admin perlu dipulihkan setelah pembuatan akun (jaga-jaga agar tidak logout)
-            if (!id) rememberAdminSession();
-
             try {
                 const payload = {
                     nama, nik, wa, dapil, kecamatan, kelurahan,
@@ -2641,7 +2584,6 @@ service cloud.firestore {
                         return;
                     }
                     await db.collection(RELAWAN_COLLECTION).doc(id).update(payload);
-                    showToast('Data relawan berhasil diperbarui!', 'success');
                 } else {
                     // Cek duplikasi NIK di Firestore
                     if (nik && await isNikTaken(nik)) {
@@ -2649,14 +2591,13 @@ service cloud.firestore {
                         return;
                     }
 
-                    // 1) Buat akun login relawan. Catatan: sesi Auth berpindah ke akun baru
-                    //    (Firebase otomatis login pada user yang baru dibuat).
-                    const cred = await auth.createUserWithEmailAndPassword(akunEmail, akunPassword);
+                    // Gunakan Auth terpisah agar admin tetap login pada aplikasi utama.
+                    await accountCreatorAuth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+                    const cred = await accountCreatorAuth.createUserWithEmailAndPassword(akunEmail, akunPassword);
                     const relawanId = cred.user.uid; // pakai UID sebagai ID dokumen relawan
                     const akunUid = cred.user.uid;
 
-                    // 2) Simpan biodata relawan + tautan akun (masih dalam sesi akun baru,
-                    //    jadi Rules cukup mensyaratkan login).
+                    // Simpan biodata relawan + tautan akun dengan sesi admin yang tetap aktif.
                     await db.collection(RELAWAN_COLLECTION).doc(relawanId).set({
                         ...payload,
                         akunUid,
@@ -2666,7 +2607,7 @@ service cloud.firestore {
                         createdBy: user.email || user.uid
                     });
 
-                    // 3) Daftarkan akun di koleksi users dengan role relawan + tautan ke datanya
+                    // Daftarkan akun di koleksi users dengan role relawan + tautan ke datanya
                     await db.collection(USERS_COLLECTION).doc(akunUid).set({
                         email: akunEmail,
                         nama,
@@ -2677,14 +2618,13 @@ service cloud.firestore {
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
 
-                    // 4) Pulihkan sesi admin (akun baru otomatis mengambil alih sesi)
-                    await restoreAdminSession(user.email);
                     resetAdminUiAfterSave(akunEmail, akunPassword);
                 }
 
                 if (id) {
                     resetForm();
-                    switchTab('list');
+                    switchTab('input');
+                    showToast('Data relawan berhasil diperbarui!', 'success');
                 }
             } catch (error) {
                 console.error('Gagal menyimpan data:', error);
@@ -2708,8 +2648,13 @@ service cloud.firestore {
                 showToast('Gagal menyimpan: ' + pesan, 'error');
             } finally {
                 setSaving(false);
-                // Jika sesi admin tidak sempat pulih, kembalikan ke layar login agar tidak tertahan
-                if (restoringSession) restoringSession = false;
+                if (accountCreatorAuth.currentUser) {
+                    try {
+                        await accountCreatorAuth.signOut();
+                    } catch (error) {
+                        console.warn('Gagal mengakhiri sesi pembuat akun:', error.code || error.message);
+                    }
+                }
             }
         });
 
@@ -2723,6 +2668,7 @@ service cloud.firestore {
                 document.getElementById('creds-email').textContent = email;
                 document.getElementById('creds-password').textContent = password;
             }
+            showToast('Data relawan berhasil disimpan!', 'success');
         }
 
         function copyCreds(text) {
@@ -3059,6 +3005,16 @@ service cloud.firestore {
                 filterRtEl.value,
                 false
             );
+
+            const peranOptions = unique([...masterNames('peran'), ...relawanData.map(item => item.peran)]);
+            const filterPeranEl = document.getElementById('filter-peran');
+            setListFilterOptions(
+                filterPeranEl,
+                '-- Semua Peran (' + peranOptions.length + ') --',
+                peranOptions,
+                filterPeranEl.value,
+                false
+            );
         }
 
         function roleBadgeClass(peran) {
@@ -3082,6 +3038,7 @@ service cloud.firestore {
             const filterKelurahan = document.getElementById('filter-kelurahan').value;
             const filterRw = document.getElementById('filter-rw').value;
             const filterRt = document.getElementById('filter-rt').value;
+            const filterPeran = document.getElementById('filter-peran').value;
             const hasMissingLockedFilter = (!currentRole || !currentRole.isAdmin) && (
                 !currentUserDapil() ||
                 (!isKoordinatorDapil(currentRole) && !currentUserKecamatan()) ||
@@ -3100,8 +3057,9 @@ service cloud.firestore {
                 const matchKelurahan = filterKelurahan === '' || item.kelurahan === filterKelurahan;
                 const matchRw = filterRw === '' || item.rw === filterRw;
                 const matchRt = filterRt === '' || (item.rt || []).includes(filterRt);
+                const matchPeran = filterPeran === '' || item.peran === filterPeran;
                 return !hasMissingLockedFilter && matchSearch && matchDapil && matchKec &&
-                    matchKelurahan && matchRw && matchRt;
+                    matchKelurahan && matchRw && matchRt && matchPeran;
             });
 
             const countEl = document.getElementById('filtered-count');
@@ -3182,7 +3140,7 @@ service cloud.firestore {
         };
         if (filterDapilEl) filterDapilEl.addEventListener('change', updateLocationFilters);
         if (filterKecamatanEl) filterKecamatanEl.addEventListener('change', updateLocationFilters);
-        ['filter-kelurahan', 'filter-rw', 'filter-rt'].forEach(id => {
+        ['filter-kelurahan', 'filter-rw', 'filter-rt', 'filter-peran'].forEach(id => {
             document.getElementById(id).addEventListener('change', renderRelawanList);
         });
 
