@@ -1,0 +1,3297 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Data Relawan PIP Kota Bandung</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK (compat build, agar bisa dipakai langsung di browser tanpa bundler) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Custom scrollbar untuk tampilan lebih bersih */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .fade-in {
+            animation: fadeIn 0.25s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+
+    <!-- ==========================================================
+         FIRESTORE RULES UNTUK APLIKASI INI
+         Salin blok di bawah ke Firebase Console → Firestore Database
+         → tab "Rules" → Publish.
+         Semua akun yang sudah login boleh read/create/update/delete
+         (penjagaan hak akses dilakukan di kode aplikasi).
+         ========================================================== -->
+    <script type="text/plain" id="firestore-rules-source">rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Akun harus login (email/password via Firebase Auth)
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Data relawan: semua akun login boleh baca, tambah, ubah, hapus
+    match /relawan/{relawanId} {
+      allow read, create, update, delete: if isSignedIn();
+    }
+
+    // Profil & role akun (users/{uid}): semua akun login boleh baca & tulis.
+    // Penentuan role admin tetap dijaga dari kode aplikasi.
+    match /users/{uid} {
+      allow read, create, update, delete: if isSignedIn();
+    }
+
+    // Master data dari Halaman Admin (dapil → kecamatan → kelurahan; rw/rt statis)
+    match /dapil/{docId}       { allow read, write: if isSignedIn(); }
+    match /kecamatan/{docId}   { allow read, write: if isSignedIn(); }
+    match /kelurahan/{docId}   { allow read, write: if isSignedIn(); }
+    match /rw/{docId}          { allow read, write: if isSignedIn(); }
+    match /rt/{docId}          { allow read, write: if isSignedIn(); }
+    match /peran/{docId}       { allow read, write: if isSignedIn(); }
+    match /fasilitas/{docId}   { allow read, write: if isSignedIn(); }
+    match /universitas/{docId} { allow read, write: if isSignedIn(); }
+  }
+}</script>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex justify-center bg-slate-200">
+
+    <!-- Container Utama Mobile-First (max-w-lg) -->
+    <div id="app-container" class="w-full max-w-lg bg-white min-h-screen shadow-xl flex flex-col relative overflow-x-hidden">
+
+        <!-- Custom Toast / Notifikasi Pengganti Alert -->
+        <div id="toast-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-11/12 max-w-md pointer-events-none transition-all duration-300 opacity-0 -translate-y-4">
+            <div id="toast-box" class="bg-slate-800 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm font-medium">
+                <span id="toast-icon"></span>
+                <span id="toast-message">Pesan notifikasi</span>
+            </div>
+        </div>
+
+        <!-- Custom Modal Konfirmasi Hapus -->
+        <div id="confirm-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl fade-in">
+                <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mb-4 mx-auto">
+                    <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-lg font-bold text-center text-slate-800 mb-1">Hapus Data Relawan?</h3>
+                <p id="confirm-text" class="text-sm text-slate-500 text-center mb-6">Data yang dihapus tidak dapat dikembalikan.</p>
+                <div class="flex gap-3">
+                    <button id="btn-cancel-delete" class="flex-1 py-2.5 px-4 rounded-xl border border-slate-300 text-slate-700 font-medium text-sm hover:bg-slate-50 transition">
+                        Batal
+                    </button>
+                    <button id="btn-confirm-delete" class="flex-1 py-2.5 px-4 rounded-xl bg-red-600 text-white font-medium text-sm hover:bg-red-700 transition shadow-sm">
+                        Ya, Hapus
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="relawan-detail-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="relawan-detail-title">
+            <div class="bg-white rounded-2xl max-w-md w-full max-h-[85vh] flex flex-col shadow-2xl fade-in">
+                <div class="flex items-center justify-between gap-3 p-4 border-b border-slate-100">
+                    <h3 id="relawan-detail-title" class="text-base font-bold text-slate-800">Detail Relawan</h3>
+                    <button id="btn-close-relawan-detail" type="button" title="Tutup detail" class="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div id="relawan-detail-content" class="p-4 overflow-y-auto space-y-2.5"></div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- HALAMAN 1: LOGIN SCREEN                    -->
+        <!-- ========================================== -->
+        <section id="login-view" class="flex-1 flex flex-col justify-between p-6 sm:p-8 bg-gradient-to-b from-blue-600 via-blue-700 to-indigo-900 text-white">
+            <!-- Header / Logo -->
+            <div class="mt-8 text-center">
+                <div class="w-16 h-16 bg-white/15 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/25 shadow-inner">
+                    <i data-lucide="graduation-cap" class="w-9 h-9 text-amber-300"></i>
+                </div>
+                <span class="inline-block px-3 py-1 bg-amber-400/20 text-amber-200 text-xs font-semibold rounded-full tracking-wide uppercase mb-2 border border-amber-300/30">
+                    Kota Bandung
+                </span>
+                <h1 class="text-2xl font-bold tracking-tight">Relawan PIP Bandung</h1>
+                <p class="text-blue-100 text-sm mt-1">Sistem Manajemen Data & Pendampingan Program Indonesia Pintar</p>
+            </div>
+
+            <!-- Form Login Card -->
+            <div class="bg-white text-slate-800 rounded-3xl p-6 sm:p-7 shadow-2xl my-8">
+                <h2 class="text-lg font-bold text-slate-800 mb-1">Masuk ke Akun</h2>
+                <p class="text-xs text-slate-500 mb-5">Silakan masuk dengan akun Firebase (email & password) koordinator/relawan.</p>
+
+                <form id="login-form" class="space-y-4">
+                    <div>
+                        <label for="login-email" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Alamat Email</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                <i data-lucide="mail" class="w-4 h-4"></i>
+                            </div>
+                            <input type="email" id="login-email" required autocomplete="username" placeholder="relawan@pipbandung.id"
+                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="login-password" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Password</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                <i data-lucide="lock" class="w-4 h-4"></i>
+                            </div>
+                            <input type="password" id="login-password" required autocomplete="current-password" placeholder="••••••••"
+                                class="w-full pl-10 pr-11 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                            <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="login-relogin-note" class="hidden text-[11px] leading-relaxed bg-blue-50 border border-blue-200 text-blue-800 rounded-xl px-3 py-2"></div>
+
+                    <div class="flex items-center justify-between text-xs pt-1">
+                        <label class="flex items-center gap-2 text-slate-600 cursor-pointer">
+                            <input type="checkbox" checked class="rounded text-blue-600 focus:ring-blue-500">
+                            <span>Ingat sesi saya</span>
+                        </label>
+                        <span class="text-slate-400 italic">Terhubung Firebase</span>
+                    </div>
+
+                    <button type="submit" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold py-3.5 px-4 rounded-xl shadow-md shadow-blue-600/20 transition flex items-center justify-center gap-2 mt-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100">
+                        <span id="btn-login-text">Masuk Aplikasi</span>
+                        <i id="btn-login-icon" data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Footer Login -->
+            <div class="text-center text-xs text-blue-200/80 mb-2">
+                &copy; 2026 Tim Relawan PIP Kota Bandung
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- HALAMAN 2: MAIN APP (DASHBOARD & TABS)     -->
+        <!-- ========================================== -->
+        <section id="main-view" class="hidden flex-1 flex-col bg-slate-50 min-h-screen">
+            
+            <!-- Top App Bar -->
+            <header class="bg-blue-700 text-white px-5 pt-5 pb-4 sticky top-0 z-30 shadow-md">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center border border-white/20">
+                            <i data-lucide="graduation-cap" class="w-5 h-5 text-amber-300"></i>
+                        </div>
+                        <div>
+                            <h1 class="font-bold text-base leading-tight">Relawan PIP Bandung</h1>
+                            <p id="user-display-email" class="text-xs text-blue-200 truncate max-w-[200px]">-</p>
+                            <button id="user-role-badge" type="button" onclick="openAdminPanel()" title="Buka Halaman Admin"
+                                class="hidden inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-amber-400/20 text-amber-200 border border-amber-300/30 hover:bg-amber-400/40 hover:scale-105 active:scale-95 transition">
+                                <i data-lucide="shield-check" class="w-3 h-3"></i>
+                                <span id="user-role-text">Admin</span>
+                                <i data-lucide="chevron-right" class="w-3 h-3 opacity-80"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="btn-admin-panel" onclick="openAdminPanel()" title="Panel Admin" class="hidden p-2.5 bg-white/10 hover:bg-amber-500/80 rounded-xl transition flex items-center gap-1.5 text-xs font-medium">
+                            <i data-lucide="shield" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Admin</span>
+                        </button>
+                        <button id="btn-logout" title="Keluar" class="p-2.5 bg-white/10 hover:bg-red-500/80 rounded-xl transition flex items-center gap-1.5 text-xs font-medium">
+                            <i data-lucide="log-out" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Keluar</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Banner: user belum punya izin akses penuh -->
+            <div id="access-banner" class="hidden mx-4 mt-4 p-3.5 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-2.5 text-xs text-amber-800">
+                <i data-lucide="shield-alert" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+                <div>
+                    <p class="font-bold">Akun Anda belum memiliki akses Admin</p>
+                    <p id="access-banner-detail" class="mt-0.5 leading-relaxed">Akses penuh diberikan oleh Admin melalui panel Admin.</p>
+                </div>
+            </div>
+
+            <!-- Navigasi 3 Tab Utama -->
+            <nav class="bg-white border-b border-slate-200 px-4 pt-2 sticky top-[96px] z-20 shadow-xs">
+                <div class="grid grid-cols-3 gap-1.5">
+                    <button id="tab-btn-input" onclick="switchTab('input')" class="tab-btn py-3 px-1.5 text-xs sm:text-sm font-semibold border-b-2 border-blue-600 text-blue-600 flex items-center justify-center gap-1.5 transition">
+                        <i data-lucide="user-plus" class="w-4 h-4 shrink-0"></i>
+                        <span>Input Data</span>
+                    </button>
+                    <button id="tab-btn-list" onclick="switchTab('list')" class="tab-btn py-3 px-1 text-[11px] sm:text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1 transition">
+                        <i data-lucide="clipboard-list" class="w-4 h-4 shrink-0"></i>
+                        <span class="whitespace-nowrap">Daftar Relawan</span>
+                    </button>
+                    <button id="tab-btn-admin" onclick="switchTab('admin')" class="tab-btn py-3 px-1.5 text-xs sm:text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1.5 transition">
+                        <i data-lucide="shield-check" class="w-4 h-4 shrink-0"></i>
+                        <span>Admin</span>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Konten Tab -->
+            <main class="flex-1 p-4 sm:p-5 pb-12">
+                
+                <!-- ===================================== -->
+                <!-- TAB 1: INPUT DATA RELAWAN             -->
+                <!-- ===================================== -->
+                <div id="tab-content-input" class="fade-in">
+                    <div class="bg-white rounded-2xl p-5 shadow-xs border border-slate-100">
+                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                            <div>
+                                <h2 id="form-title" class="text-base font-bold text-slate-800">Formulir Relawan Baru</h2>
+                                <p class="text-xs text-slate-500">Lengkapi biodata relawan pendamping PIP</p>
+                            </div>
+                            <span id="edit-mode-badge" class="hidden px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-lg">
+                                Mode Edit
+                            </span>
+                        </div>
+
+                        <form id="relawan-form" class="space-y-4">
+                            <input type="hidden" id="relawan-id">
+
+                            <!-- Nama Lengkap -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap Relawan <span class="text-red-500">*</span></label>
+                                <input type="text" id="input-nama" required placeholder="Contoh: Budi Santoso, S.Pd"
+                                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                            </div>
+
+                            <!-- NIK -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">NIK (16 Digit) <span class="text-red-500">*</span></label>
+                                <input type="text" id="input-nik" required maxlength="16" pattern="[0-9]{16}" placeholder="3273xxxxxxxxxxxx"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                            </div>
+
+                            <!-- Nomor WhatsApp -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">No. WhatsApp Aktif <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-sm font-medium">+62</span>
+                                    <input type="tel" id="input-wa" required placeholder="81234567890"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                        class="w-full pl-12 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                                </div>
+                            </div>
+
+                            <!-- Akun Login Relawan (email + password untuk masuk aplikasi) -->
+                            <div class="bg-blue-50/60 border border-blue-100 rounded-xl p-3 space-y-3">
+                                <div class="flex items-start gap-2">
+                                    <i data-lucide="key-round" class="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5"></i>
+                                    <p class="text-[11px] text-blue-800 leading-relaxed">
+                                        Relawan ini otomatis dibuatkan <span class="font-semibold">akun login</span> dengan email &amp; password di bawah.
+                                        Berikan keduanya kepada relawan setelah data disimpan.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Email Akun <span class="text-slate-400 font-normal">(untuk login)</span> <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                            <i data-lucide="mail" class="w-4 h-4"></i>
+                                        </div>
+                                        <input type="email" id="input-email" required autocomplete="off" placeholder="nama@contoh.com"
+                                            class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Password Akun <span class="text-slate-400 font-normal">(min. 6 karakter)</span> <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                            <i data-lucide="lock" class="w-4 h-4"></i>
+                                        </div>
+                                        <input type="password" id="input-password" required minlength="6" autocomplete="new-password" placeholder="••••••"
+                                            class="w-full pl-9 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition">
+                                        <button type="button" id="toggle-input-password" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                                            <i data-lucide="eye" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Mode edit: akun sudah ada, tidak perlu password -->
+                                <div id="akun-edit-note" class="hidden text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2 leading-relaxed">
+                                    Akun login sudah dibuat sebelumnya (<span id="akun-edit-email" class="font-mono">-</span>). Password tidak ditampilkan; untuk mengganti gunakan
+                                    <span class="font-semibold">Lupa password</span> di halaman login.
+                                </div>
+                            </div>
+
+                            <!-- Dapil → Kecamatan → Kelurahan -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Dapil</label>
+                                <select id="input-dapil"
+                                    class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                                    <option value="">-- Semua Dapil --</option>
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Kecamatan (Kota Bandung) <span class="text-red-500">*</span></label>
+                                    <select id="input-kecamatan" required
+                                        class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                                        <option value="">-- Pilih Kecamatan --</option>
+                                        <option value="Andir">Andir</option>
+                                        <option value="Antapani">Antapani</option>
+                                        <option value="Arcamanik">Arcamanik</option>
+                                        <option value="Astanaanyar">Astanaanyar</option>
+                                        <option value="Babakan Ciparay">Babakan Ciparay</option>
+                                        <option value="Bandung Kidul">Bandung Kidul</option>
+                                        <option value="Bandung Kulon">Bandung Kulon</option>
+                                        <option value="Bandung Wetan">Bandung Wetan</option>
+                                        <option value="Batununggal">Batununggal</option>
+                                        <option value="Bojongloa Kaler">Bojongloa Kaler</option>
+                                        <option value="Bojongloa Kidul">Bojongloa Kidul</option>
+                                        <option value="Buahbatu">Buahbatu</option>
+                                        <option value="Cibeunying Kaler">Cibeunying Kaler</option>
+                                        <option value="Cibeunying Kidul">Cibeunying Kidul</option>
+                                        <option value="Cibiru">Cibiru</option>
+                                        <option value="Cicendo">Cicendo</option>
+                                        <option value="Cidadap">Cidadap</option>
+                                        <option value="Cinambo">Cinambo</option>
+                                        <option value="Coblong">Coblong</option>
+                                        <option value="Gedebage">Gedebage</option>
+                                        <option value="Kiaracondong">Kiaracondong</option>
+                                        <option value="Lengkong">Lengkong</option>
+                                        <option value="Mandalajati">Mandalajati</option>
+                                        <option value="Panyileukan">Panyileukan</option>
+                                        <option value="Rancasari">Rancasari</option>
+                                        <option value="Regol">Regol</option>
+                                        <option value="Sukajadi">Sukajadi</option>
+                                        <option value="Sukasari">Sukasari</option>
+                                        <option value="Sumur Bandung">Sumur Bandung</option>
+                                        <option value="Ujungberung">Ujungberung</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Kelurahan <span class="text-red-500">*</span></label>
+                                    <select id="input-kelurahan" required
+                                        class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                                        <option value="">-- Pilih Kelurahan --</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Wilayah RW / RT (daftar statis, tidak terikat wilayah lain) -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">RW</label>
+                                    <select id="input-rw"
+                                        class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                                        <option value="">-- Pilih RW --</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">RT</label>
+                                    <select id="input-rt"
+                                        class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                                        <option value="">-- Pilih RT --</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Peran (master data dari Halaman Admin) -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Peran</label>
+                                <select id="input-peran"
+                                    class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                                    <option value="">-- Pilih Peran --</option>
+                                </select>
+                            </div>
+
+                            <!-- Universitas: hanya relevan untuk peran Mahasiswa KIP -->
+                            <div id="universitas-wrap" class="hidden">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Universitas</label>
+                                <select id="input-universitas"
+                                    class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                                    <option value="">-- Pilih Universitas --</option>
+                                </select>
+                                <p class="text-[10px] text-slate-400 mt-0.5">Muncul hanya untuk peran “Mahasiswa KIP”</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Fasilitas</label>
+                                <div id="input-fasilitas-wrap" class="grid grid-cols-2 gap-1.5">
+                                    <p class="text-[11px] text-slate-400 col-span-2">Belum ada fasilitas. Tambahkan di Halaman Admin → Fasilitas.</p>
+                                </div>
+                            </div>
+
+                            <!-- Catatan Tambahan -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Catatan Tambahan</label>
+                                <textarea id="input-alamat" rows="2" placeholder="Catatan kontak, alamat singkat, atau info lain (opsional)…"
+                                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition"></textarea>
+                            </div>
+
+                            <!-- Hasil pembuatan akun (tampil sekali setelah simpan) -->
+                            <div id="creds-result" class="hidden bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-1.5">
+                                <p class="text-[11px] font-semibold text-emerald-800 flex items-center gap-1.5">
+                                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                                    Akun login relawan sudah dibuat
+                                </p>
+                                <div class="flex items-center justify-between gap-2 text-[11px] text-emerald-900">
+                                    <span>Email: <span id="creds-email" class="font-mono font-semibold">-</span></span>
+                                    <button type="button" onclick="copyCreds(document.getElementById('creds-email').textContent)" class="px-2 py-0.5 rounded-md bg-white border border-emerald-200 hover:bg-emerald-100 transition">Salin</button>
+                                </div>
+                                <div class="flex items-center justify-between gap-2 text-[11px] text-emerald-900">
+                                    <span>Password: <span id="creds-password" class="font-mono font-semibold">-</span></span>
+                                    <button type="button" onclick="copyCreds(document.getElementById('creds-email').textContent + ' / ' + document.getElementById('creds-password').textContent)" class="px-2 py-0.5 rounded-md bg-white border border-emerald-200 hover:bg-emerald-100 transition">Salin keduanya</button>
+                                </div>
+                                <p class="text-[10px] text-emerald-700/80">Catat sekarang — password tidak disimpan dan tidak bisa dilihat lagi.</p>
+                            </div>
+
+                            <!-- Tombol Aksi -->
+                            <div class="pt-2 flex gap-2">
+                                <button type="button" id="btn-cancel-edit" onclick="resetForm()" class="hidden w-1/3 py-3 px-4 rounded-xl border border-slate-300 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition">
+                                    Batal
+                                </button>
+                                <button type="submit" id="btn-submit-relawan" class="flex-1 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold py-3 px-4 rounded-xl shadow-md shadow-blue-600/20 transition flex items-center justify-center gap-2">
+                                    <i data-lucide="save" class="w-4 h-4"></i>
+                                    <span id="btn-submit-text">Simpan Data Relawan</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- ===================================== -->
+                <!-- TAB 2: DAFTAR RELAWAN                 -->
+                <!-- ===================================== -->
+                <div id="tab-content-list" class="hidden fade-in space-y-4">
+                    
+                    <!-- Search & Filter Bar -->
+                    <div class="bg-white p-3.5 rounded-2xl shadow-xs border border-slate-100 space-y-2.5">
+                        <div class="flex items-center gap-2">
+                            <div class="relative flex-1 min-w-0">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <i data-lucide="search" class="w-4 h-4"></i>
+                                </div>
+                                <input type="text" id="search-input" placeholder="Cari nama, NIK, atau kelurahan..."
+                                    class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                            </div>
+                            <span id="filtered-count" aria-live="polite" class="shrink-0 px-2.5 py-2 bg-blue-50 text-blue-700 rounded-xl text-xs font-semibold whitespace-nowrap">Memuat...</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <select id="filter-dapil" class="min-w-0 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                                <option value="">Semua Dapil</option>
+                            </select>
+                            <select id="filter-kecamatan" class="min-w-0 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                                <option value="">Semua Kecamatan</option>
+                            </select>
+                            <select id="filter-kelurahan" class="min-w-0 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                                <option value="">Semua Kelurahan</option>
+                            </select>
+                            <select id="filter-rw" class="min-w-0 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                                <option value="">Semua RW</option>
+                            </select>
+                            <select id="filter-rt" class="min-w-0 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                                <option value="">Semua RT</option>
+                            </select>
+                            <button onclick="exportCSV()" title="Unduh CSV" class="px-3 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                <span>CSV</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Indikator Loading Data dari Firestore -->
+                    <div id="loading-state" class="hidden bg-white rounded-2xl p-8 text-center border border-slate-100">
+                        <div class="w-8 h-8 border-3 border-blue-100 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>
+                        <p class="text-xs font-medium text-slate-500">Memuat data relawan dari Firebase...</p>
+                    </div>
+
+                    <!-- Container List Kartu Relawan -->
+                    <div id="relawan-list-container" class="space-y-3">
+                        <!-- Item relawan di-render di sini via JS (real-time dari Firestore) -->
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="empty-state" class="hidden bg-white rounded-2xl p-8 text-center border border-slate-100">
+                        <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="users" class="w-7 h-7"></i>
+                        </div>
+                        <h3 class="text-sm font-bold text-slate-700">Belum Ada Data Relawan</h3>
+                        <p class="text-xs text-slate-500 mt-1 mb-4">Data relawan tidak ditemukan atau masih kosong.</p>
+                        <button onclick="switchTab('input')" class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 transition">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>Tambah Relawan</span>
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- ===================================== -->
+                <!-- TAB 3: PANEL ADMIN                    -->
+                <!-- ===================================== -->
+                <div id="tab-content-admin" class="hidden fade-in space-y-4">
+
+                    <!-- Ringkasan Level Akses Akun Saya -->
+                    <div class="bg-white rounded-2xl p-5 shadow-xs border border-slate-100">
+                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                            <div>
+                                <h2 class="text-base font-bold text-slate-800">Level Akses Saya</h2>
+                                <p class="text-xs text-slate-500">Status hak akses akun yang sedang login</p>
+                            </div>
+                            <span id="admin-mode-badge" class="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-semibold rounded-lg">Memuat...</span>
+                        </div>
+
+                        <div class="space-y-2 text-xs text-slate-600">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="flex items-center gap-1.5"><i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400"></i> Email</span>
+                                <span id="admin-my-email" class="font-mono font-medium text-slate-800 truncate">-</span>
+                            </div>
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="flex items-center gap-1.5"><i data-lucide="fingerprint" class="w-3.5 h-3.5 text-slate-400"></i> UID</span>
+                                <span id="admin-my-uid" class="font-mono text-[11px] text-slate-500 truncate" title="Klik untuk salin">-</span>
+                            </div>
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="flex items-center gap-1.5"><i data-lucide="shield" class="w-3.5 h-3.5 text-slate-400"></i> Role di koleksi users</span>
+                                <span id="admin-my-role" class="font-semibold">-</span>
+                            </div>
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="flex items-center gap-1.5"><i data-lucide="database" class="w-3.5 h-3.5 text-slate-400"></i> Dokumen</span>
+                                <span id="admin-my-doc" class="font-mono text-[11px] text-slate-600 truncate">-</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 flex gap-2">
+                            <button onclick="refreshMyRole()" class="flex-1 py-2.5 px-3 rounded-xl border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition flex items-center justify-center gap-1.5">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                <span>Muat Ulang</span>
+                            </button>
+                            <button id="btn-self-admin" onclick="toggleMyAdmin()" class="flex-1 py-2.5 px-3 rounded-xl bg-amber-500 text-white font-semibold text-xs hover:bg-amber-600 transition flex items-center justify-center gap-1.5">
+                                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                                <span id="btn-self-admin-text">Jadikan Saya Admin</span>
+                            </button>
+                        </div>
+
+                        <p class="text-[11px] text-slate-400 mt-3 leading-relaxed">
+                            Akses penuh cukup ditentukan oleh field <span class="font-mono text-slate-500">role</span> di dokumen
+                            <span class="font-mono text-slate-500">users/{{uid}}</span>: <span class="font-semibold text-slate-500">admin</span> atau <span class="font-semibold text-slate-500">relawan</span>.
+                            Bisa juga diubah langsung dari Firebase Console.
+                        </p>
+                    </div>
+
+                    <!-- Kelola Akun & Akses -->
+                    <div class="bg-white rounded-2xl p-5 shadow-xs border border-slate-100">
+                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                            <div>
+                                <h2 class="text-base font-bold text-slate-800">Kelola Akun & Akses</h2>
+                                <p class="text-xs text-slate-500">Daftar akun aplikasi, aktivitas login, dan akses admin</p>
+                            </div>
+                            <button id="btn-sync-users" onclick="syncUsers()" class="hidden px-3 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+                                <i data-lucide="user-check" class="w-3.5 h-3.5"></i>
+                                <span>Sinkron Akun</span>
+                            </button>
+                        </div>
+
+                        <!-- Mode daftar: hanya admin -->
+                        <div id="admin-list-wrap" class="hidden space-y-3">
+                            <div class="flex items-center gap-2">
+                                <div class="relative flex-1">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                        <i data-lucide="search" class="w-4 h-4"></i>
+                                    </div>
+                                    <input type="text" id="admin-search-input" placeholder="Cari email atau nama..."
+                                        class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                                </div>
+                            </div>
+                            <div id="users-list-container" class="space-y-2"></div>
+                            <p id="admin-list-empty" class="hidden text-center text-xs text-slate-500 py-6">Belum ada akun terdaftar.</p>
+                        </div>
+
+                        <!-- Mode panduan: bukan admin -->
+                        <div id="admin-guide" class="hidden space-y-3">
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Akun Anda tercatat sebagai <span class="font-semibold">relawan</span>, jadi hanya bisa melihat data.
+                                Untuk akses penuh, jadikan diri Anda admin dengan salah satu cara:
+                            </p>
+                            <ol class="space-y-2 text-xs text-slate-600 list-decimal pl-4 leading-relaxed">
+                                <li><span class="font-semibold">Cara cepat:</span> klik tombol <span class="font-semibold">“Jadikan Saya Admin”</span> di kartu atas — syaratnya aturan Firestore mengizinkannya (lihat di bawah).</li>
+                                <li><span class="font-semibold">Cara aman:</span> Firebase Console → Firestore Database → koleksi <span class="font-mono">users</span> → dokumen dengan ID UID Anda → ubah field <span class="font-mono">role</span> menjadi <span class="font-mono">admin</span>, lalu klik <span class="font-semibold">Muat Ulang</span>.</li>
+                            </ol>
+                            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                                <p class="text-[11px] font-semibold text-slate-600 mb-1">Aturan Firestore agar tombol cepat berfungsi:</p>
+                                <pre class="text-[10px] font-mono text-slate-700 whitespace-pre-wrap">match /users/{uid} {
+  allow update: if request.auth.uid == uid;
+}</pre>
+                            </div>
+                            <p id="admin-guide-detail" class="text-[11px] text-slate-400 leading-relaxed"></p>
+                        </div>
+
+                        <div id="admin-loading" class="hidden py-6 text-center">
+                            <div class="w-7 h-7 border-3 border-blue-100 border-t-blue-600 rounded-full animate-spin mx-auto mb-2"></div>
+                            <p class="text-xs text-slate-500">Memuat daftar akun...</p>
+                        </div>
+                    </div>
+
+                    <!-- Firestore Rules yang dipakai aplikasi ini -->
+                    <div class="bg-white rounded-2xl p-5 shadow-xs border border-slate-100">
+                        <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-100">
+                            <div>
+                                <h2 class="text-base font-bold text-slate-800">Firestore Rules</h2>
+                                <p class="text-xs text-slate-500">Semua akun login boleh tambah, ubah, dan hapus data</p>
+                            </div>
+                            <button onclick="copyFirestoreRules()" class="px-3 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                <span>Salin Rules</span>
+                            </button>
+                        </div>
+                        <pre class="text-[10px] leading-relaxed font-mono bg-slate-900 text-emerald-300 rounded-xl p-3 overflow-x-auto whitespace-pre" id="firestore-rules-preview">-</pre>
+                        <p class="text-[11px] text-slate-400 mt-3 leading-relaxed">
+                            Tempel ke Firebase Console → Firestore Database → tab <span class="font-semibold">Rules</span> → <span class="font-semibold">Publish</span>.
+                            Hak akses (admin/relawan) dijaga dari kode aplikasi.
+                        </p>
+                    </div>
+
+                </div>
+
+            </main>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- HALAMAN 3: ADMIN (PENGATURAN MASTER DATA)  -->
+        <!-- ========================================== -->
+        <section id="admin-view" class="hidden flex-1 flex-col bg-slate-100 min-h-screen">
+
+            <!-- Top App Bar Admin -->
+            <header class="bg-slate-900 text-white px-4 pt-4 pb-3 sticky top-0 z-30 shadow-md">
+                <div class="flex items-center gap-2.5">
+                    <button onclick="closeAdminPanel()" id="btn-admin-back" title="Kembali"
+                        class="p-2 -ml-1 rounded-xl bg-white/10 hover:bg-white/20 transition">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </button>
+                    <div class="w-9 h-9 bg-amber-400/20 rounded-xl flex items-center justify-center border border-amber-300/30">
+                        <i data-lucide="shield-check" class="w-5 h-5 text-amber-300"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h1 class="font-bold text-base leading-tight">Halaman Admin</h1>
+                        <p class="text-[11px] text-slate-300 truncate">Pengaturan master data aplikasi</p>
+                    </div>
+                </div>
+
+                <!-- Sub-navigasi master data (urut sesuai relasi) -->
+                <div id="admin-subnav" class="grid grid-cols-4 gap-1.5 mt-3">
+                    <button data-admin-tab="dapil" onclick="switchAdminTab('dapil')" class="admin-tab-btn shrink-0 px-2 py-1.5 rounded-lg text-xs font-semibold bg-amber-400 text-slate-900 transition flex items-center justify-center gap-1">
+                        <i data-lucide="landmark" class="w-3.5 h-3.5"></i>
+                        <span>Dapil</span>
+                        <span data-count="dapil" class="bg-slate-900/15 text-[10px] px-1.5 rounded-full font-bold">0</span>
+                    </button>
+                    <button data-admin-tab="kecamatan" onclick="switchAdminTab('kecamatan')" class="admin-tab-btn shrink-0 px-2 py-1.5 rounded-lg text-xs font-semibold bg-white/10 text-slate-200 hover:bg-white/20 transition flex items-center justify-center gap-1">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                        <span>Kecamatan</span>
+                        <span data-count="kecamatan" class="bg-white/15 text-[10px] px-1.5 rounded-full font-bold">0</span>
+                    </button>
+                    <button data-admin-tab="kelurahan" onclick="switchAdminTab('kelurahan')" class="admin-tab-btn shrink-0 px-2 py-1.5 rounded-lg text-xs font-semibold bg-white/10 text-slate-200 hover:bg-white/20 transition flex items-center justify-center gap-1">
+                        <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
+                        <span>Kelurahan</span>
+                        <span data-count="kelurahan" class="bg-white/15 text-[10px] px-1.5 rounded-full font-bold">0</span>
+                    </button>
+                    <button data-admin-tab="rw" onclick="switchAdminTab('rw')" class="admin-tab-btn shrink-0 px-2 py-1.5 rounded-lg text-xs font-semibold bg-white/10 text-slate-200 hover:bg-white/20 transition flex items-center justify-center gap-1">
+                        <i data-lucide="route" class="w-3.5 h-3.5"></i>
+                        <span>RW</span>
+                        <span data-count="rw" class="bg-white/15 text-[10px] px-1.5 rounded-full font-bold">0</span>
+                    </button>
+                    <button data-admin-tab="rt" onclick="switchAdminTab('rt')" class="admin-tab-btn shrink-0 px-2 py-1.5 rounded-lg text-xs font-semibold bg-white/10 text-slate-200 hover:bg-white/20 transition flex items-center justify-center gap-1">
+                        <i data-lucide="house" class="w-3.5 h-3.5"></i>
+                        <span>RT</span>
+                        <span data-count="rt" class="bg-white/15 text-[10px] px-1.5 rounded-full font-bold">0</span>
+                    </button>
+                    <button data-admin-tab="peran" onclick="switchAdminTab('peran')" class="admin-tab-btn shrink-0 px-2 py-1.5 rounded-lg text-xs font-semibold bg-white/10 text-slate-200 hover:bg-white/20 transition flex items-center justify-center gap-1">
+                        <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                        <span>Peran</span>
+                        <span data-count="peran" class="bg-white/15 text-[10px] px-1.5 rounded-full font-bold">0</span>
+                    </button>
+                    <button data-admin-tab="fasilitas" onclick="switchAdminTab('fasilitas')" class="admin-tab-btn shrink-0 px-2 py-1.5 rounded-lg text-xs font-semibold bg-white/10 text-slate-200 hover:bg-white/20 transition flex items-center justify-center gap-1">
+                        <i data-lucide="package" class="w-3.5 h-3.5"></i>
+                        <span>Fasilitas</span>
+                        <span data-count="fasilitas" class="bg-white/15 text-[10px] px-1.5 rounded-full font-bold">0</span>
+                    </button>
+                    <button data-admin-tab="universitas" onclick="switchAdminTab('universitas')" class="admin-tab-btn shrink-0 px-2 py-1.5 rounded-lg text-xs font-semibold bg-white/10 text-slate-200 hover:bg-white/20 transition flex items-center justify-center gap-1">
+                        <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i>
+                        <span>Universitas</span>
+                        <span data-count="universitas" class="bg-white/15 text-[10px] px-1.5 rounded-full font-bold">0</span>
+                    </button>
+                </div>
+            </header>
+
+            <main class="flex-1 p-4 pb-12">
+
+                <!-- FORM TAMBAH / EDIT MASTER DATA -->
+                <div class="bg-white rounded-2xl p-4 shadow-xs border border-slate-200 mb-3">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="min-w-0">
+                            <h2 id="ma-title" class="text-sm font-bold text-slate-800">Tambah Kecamatan</h2>
+                            <p id="ma-subtitle" class="text-[11px] text-slate-500">Master data dipakai di formulir Input Data</p>
+                            <p id="ma-sync" class="text-[10px] font-semibold text-slate-400 mt-0.5">Siap</p>
+                        </div>
+                        <span id="ma-edit-badge" class="hidden px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-semibold rounded-md">Edit</span>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <!-- Induk (kelurahan → kecamatan, rw/rt → kecamatan) -->
+                        <div id="ma-parent-wrap" class="hidden">
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1" id="ma-parent-label">Kecamatan</label>
+                            <select id="ma-parent" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600">
+                                <option value="">-- Pilih --</option>
+                            </select>
+                        </div>
+
+                        <!-- Nama (semua) -->
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1" id="ma-name-label">Nama <span class="text-red-500">*</span></label>
+                            <input type="text" id="ma-name" placeholder="Contoh: Coblong"
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        </div>
+
+                        <!-- Field tambahan (Kode untuk Kecamatan, Keterangan untuk Dapil, Kota untuk Universitas) -->
+                        <div id="ma-code-wrap">
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1" id="ma-code-label">Kode</label>
+                            <input type="text" id="ma-code" placeholder="Opsional, mis. 3273"
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        </div>
+
+                        <div class="flex gap-2 pt-1">
+                            <button type="button" id="ma-cancel" onclick="resetAdminForm()" class="hidden flex-1 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-semibold text-xs hover:bg-slate-50 transition">Batal</button>
+                            <button type="button" id="ma-save" onclick="saveMasterData()" class="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5">
+                                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                                <span id="ma-save-text">Tambah</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DAFTAR MASTER DATA -->
+                <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+
+                    <div class="flex items-center gap-2 p-3 border-b border-slate-100">
+                        <button id="ma-seed" onclick="seedMasterData()" title="Isi cepat data contoh"
+                            class="hidden shrink-0 p-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition">
+                            <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <div class="relative flex-1">
+                            <i data-lucide="search" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
+                            <input type="text" id="ma-search" oninput="renderMasterList()" placeholder="Cari..."
+                                class="w-full pl-8 pr-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        </div>
+                        <span id="ma-total" class="text-[11px] text-slate-400 whitespace-nowrap">0 data</span>
+                    </div>
+                    <div id="ma-list" class="divide-y divide-slate-100 max-h-[45vh] overflow-y-auto">
+                        <p class="text-center text-xs text-slate-400 py-8">Belum ada data.</p>
+                    </div>
+                </div>
+
+            </main>
+        </section>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // KONFIGURASI FIREBASE
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWr5DACpXYdiJojBxymix4cPUMlSpEobs",
+            authDomain: "relawanpipdapil3.firebaseapp.com",
+            projectId: "relawanpipdapil3",
+            storageBucket: "relawanpipdapil3.firebasestorage.app",
+            messagingSenderId: "516361893638",
+            appId: "1:516361893638:web:2f000ba73e39e968811087"
+        };
+
+        // Koleksi Firestore tempat data relawan disimpan
+        // Struktur dokumen: { nama, nik, wa, kecamatan, kelurahan, jenjang, alamat, createdAt, updatedAt, createdBy, updatedBy }
+        const RELAWAN_COLLECTION = 'relawan';
+        // Koleksi pendukung akses aplikasi
+        const USERS_COLLECTION = 'users';   // profil tiap akun: { email, nama, role, lastLoginAt, loginCount, createdAt }
+        // Master data (diatur dari Halaman Admin)
+        const MASTER_COLLECTIONS = {
+            dapil: 'dapil',           // { nama, keterangan }  — induk kecamatan
+            kecamatan: 'kecamatan',   // { nama, dapil }
+            kelurahan: 'kelurahan',   // { nama, kecamatan }
+            rw: 'rw',                 // { nama }  — statis
+            rt: 'rt',                 // { nama }  — statis
+            peran: 'peran',           // { nama }
+            fasilitas: 'fasilitas',   // { nama }
+            universitas: 'universitas'// { nama, kota }
+        };
+        // Role admin cukup dari field `role` di dokumen users/{uid}
+        // Collect email (jika diaktifkan) membatasi akun yang boleh masuk saat login pertama
+        const ALLOWED_DOMAIN = '';
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        // Set dipakai agar role bisa langsung dipakai Firestore Rules saat upaya login pertama
+        db.enablePersistence({ synchronizeTabs: true }).catch(function (err) {
+            console.warn('Persistence Firestore tidak aktif:', err.code || err.message);
+        });
+
+        // Coba pakai sessionStorage agar sesi ("Ingat sesi saya" tidak dicentang) berakhir saat tab ditutup
+        try {
+            auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+        } catch (err) {
+            console.warn('Gagal set persistence auth:', err);
+        }
+
+        // State aplikasi
+        let relawanData = [];      // cache realtime dari Firestore
+        let deleteTargetId = null;
+        let isSaving = false;
+        let unsubRelawan = null;   // unsubscribe listener Firestore
+        let isDataLoaded = false;
+
+        // State akses
+        let currentUser = null;    // firebase.User yang sedang login
+        let currentRole = null;    // { user, isAdmin }
+        let activeTab = 'input';
+        let unsubUsers = null;
+        let usersData = [];
+        let isAdminPanelLoaded = false;
+
+        // State master data & halaman admin
+        const MASTER_KEYS = ['dapil', 'kecamatan', 'kelurahan', 'rw', 'rt', 'peran', 'fasilitas', 'universitas'];
+        let masterData = { dapil: [], kecamatan: [], kelurahan: [], rw: [], rt: [], peran: [], fasilitas: [], universitas: [] };
+        const unsubMaster = {};
+        let masterLoaded = false;
+        let adminTab = 'dapil';
+        let masterEditId = null;
+        let adminViewOpen = false;
+        let formWilayah = { rw: '', rt: [] };
+        let formFasilitas = [];
+
+
+        // ==========================================
+        // FUNGSI UTILITY & NOTIFIKASI
+        // ==========================================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const box = document.getElementById('toast-box');
+            const icon = document.getElementById('toast-icon');
+            const msg = document.getElementById('toast-message');
+
+            msg.textContent = message;
+
+            if (type === 'success') {
+                box.className = 'bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm font-medium border-l-4 border-emerald-400';
+                icon.innerHTML = '<i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400"></i>';
+            } else if (type === 'error') {
+                box.className = 'bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm font-medium border-l-4 border-red-400';
+                icon.innerHTML = '<i data-lucide="alert-circle" class="w-5 h-5 text-red-400"></i>';
+            } else {
+                box.className = 'bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm font-medium border-l-4 border-blue-400';
+                icon.innerHTML = '<i data-lucide="info" class="w-5 h-5 text-blue-400"></i>';
+            }
+
+            lucide.createIcons();
+            container.classList.remove('opacity-0', '-translate-y-4');
+            container.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                container.classList.remove('opacity-100', 'translate-y-0');
+                container.classList.add('opacity-0', '-translate-y-4');
+            }, 3000);
+        }
+
+        // ==========================================
+        // DATA RELAWAN DI FIRESTORE (REAL-TIME)
+        // ==========================================
+        function toMillis(value) {
+            if (!value) return 0;
+            if (typeof value.toMillis === 'function') return value.toMillis(); // Firestore Timestamp
+            if (value instanceof Date) return value.getTime();
+            const parsed = Date.parse(value);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        function formatTanggal(value) {
+            if (!value) return '';
+            const d = typeof value.toDate === 'function' ? value.toDate() : new Date(value);
+            if (isNaN(d.getTime())) return String(value);
+            return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        // Berlangganan data relawan secara real-time dari Firestore
+        function loadRelawan() {
+            // Lepas listener lama agar tidak dobel
+            if (unsubRelawan) {
+                unsubRelawan();
+                unsubRelawan = null;
+            }
+
+            isDataLoaded = false;
+            document.getElementById('filtered-count').textContent = 'Memuat...';
+            document.getElementById('loading-state').classList.remove('hidden');
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('relawan-list-container').innerHTML = '';
+
+            if (!auth.currentUser) return;
+
+            unsubRelawan = db.collection(RELAWAN_COLLECTION)
+                .onSnapshot((snapshot) => {
+                    relawanData = snapshot.docs.map(doc => {
+                        const data = doc.data();
+                        return {
+                            id: doc.id,
+                            nama: data.nama || '',
+                            nik: data.nik || '',
+                            wa: data.wa || '',
+                            dapil: data.dapil || '',
+                            kecamatan: data.kecamatan || '',
+                            kelurahan: data.kelurahan || '',
+                            jenjang: data.jenjang || '',
+                            akunUid: data.akunUid || '',
+                            akunEmail: data.akunEmail || '',
+                            rw: data.rw || '',
+                            rt: Array.isArray(data.rt) ? data.rt : (data.rt ? [data.rt] : []),
+                            peran: data.peran || '',
+                            fasilitas: Array.isArray(data.fasilitas) ? data.fasilitas : [],
+                            universitas: data.universitas || '',
+                            alamat: data.alamat || '',
+                            createdAt: data.createdAt || null,
+                            _createdMs: toMillis(data.createdAt)
+                        };
+                    });
+
+                    // Urutkan terbaru di atas (data lama tanpa createdAt diletakkan paling bawah)
+                    relawanData.sort((a, b) => b._createdMs - a._createdMs);
+
+                    isDataLoaded = true;
+                    document.getElementById('loading-state').classList.add('hidden');
+                    updateStatsAndFilters();
+                    renderRelawanList();
+                }, (error) => {
+                    console.error('Gagal memuat data relawan:', error);
+                    isDataLoaded = true;
+                    document.getElementById('loading-state').classList.add('hidden');
+                    document.getElementById('empty-state').classList.remove('hidden');
+                    document.getElementById('filtered-count').textContent = 'Gagal memuat';
+                    showToast('Gagal memuat data dari Firebase: ' + (error.code || error.message), 'error');
+                });
+        }
+
+        function stopRealtime() {
+            if (unsubRelawan) {
+                unsubRelawan();
+                unsubRelawan = null;
+            }
+            relawanData = [];
+            isDataLoaded = false;
+            updateStatsAndFilters();
+            document.getElementById('relawan-list-container').innerHTML = '';
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('loading-state').classList.add('hidden');
+        }
+
+        // Cek duplikasi NIK langsung ke Firestore (data lokal hanya cache)
+        async function isNikTaken(nik, excludeId = null) {
+            const snap = await db.collection(RELAWAN_COLLECTION).where('nik', '==', nik).limit(5).get();
+            return snap.docs.some(doc => doc.id !== excludeId);
+        }
+
+        function setSaving(state) {
+            isSaving = state;
+            const btn = document.getElementById('btn-submit-relawan');
+            const text = document.getElementById('btn-submit-text');
+            btn.disabled = state;
+            btn.classList.toggle('opacity-60', state);
+            btn.classList.toggle('cursor-not-allowed', state);
+            if (state) text.textContent = 'Menyimpan...';
+        }
+
+        function translateAuthError(code) {
+            const map = {
+                'auth/invalid-email': 'Format email tidak valid.',
+                'auth/user-disabled': 'Akun ini dinonaktifkan.',
+                'auth/user-not-found': 'Akun tidak ditemukan. Periksa email Anda.',
+                'auth/wrong-password': 'Password salah.',
+                'auth/invalid-credential': 'Email atau password salah.',
+                'auth/invalid-login-credentials': 'Email atau password salah.',
+                'auth/too-many-requests': 'Terlalu banyak percobaan. Coba lagi nanti.',
+                'auth/network-request-failed': 'Gagal terhubung ke jaringan.',
+                'auth/operation-not-allowed': 'Metode Email/Password belum diaktifkan di Firebase Console.',
+                'auth/email-already-in-use': 'Email tersebut sudah terdaftar.'
+            };
+            return map[code] || 'Akses ditolak: ' + code;
+        }
+
+        function deniedCode(err) {
+            return err && err.code === 'permission-denied';
+        }
+
+        function translateFirebaseError(err, konteks) {
+            if (deniedCode(err)) {
+                return 'Akses ditolak Firestore Rules. ' + (konteks || 'Pastikan akun sudah login dan Rules koleksi ini mengizinkan tulis.');
+            }
+            return (err && (err.code || err.message)) || 'Kesalahan tidak diketahui';
+        }
+
+        // Admin mengatur role akun lain langsung dari daftar akun (users/{uid}.role)
+        async function setUserRole(uid, role) {
+            if (!currentRole || !currentRole.isAdmin) {
+                showToast('Hanya Admin yang dapat mengubah role akun.', 'error');
+                return;
+            }
+            try {
+                await db.collection(USERS_COLLECTION).doc(uid).set({ role, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                showToast('Role akun diubah menjadi ' + role + '.', 'success');
+            } catch (err) {
+                showToast('Gagal mengubah role: ' + translateFirebaseError(err), 'error');
+            }
+        }
+
+        async function setAccountActive(uid, email, active) {
+            if (!currentRole || !currentRole.isAdmin) {
+                showToast('Hanya Admin yang dapat menonaktifkan akun.', 'error');
+                return;
+            }
+            try {
+                await db.collection(USERS_COLLECTION).doc(uid).set({ active }, { merge: true });
+                showToast(active ? 'Akun diaktifkan.' : 'Akun dinonaktifkan (tidak bisa login).', 'success');
+            } catch (err) {
+                showToast('Gagal menyimpan status akun: ' + translateFirebaseError(err), 'error');
+            }
+        }
+
+        // ==========================================
+        // ROLE & AKSES (ADMIN)
+        // ==========================================
+        // SEDERHANA: admin = field role bernilai 'admin' di dokumen users/{uid}.
+        // Cukup diubah dari panel ini atau langsung dari Firebase Console.
+        async function loadMyRole(user, opts) {
+            const refresh = !!(opts && opts.refresh);
+            currentRole = { user: null, peran: '', isAdmin: false, canInput: true };
+
+            try {
+                const userDoc = await db.collection(USERS_COLLECTION).doc(user.uid).get({ source: refresh ? 'server' : 'default' });
+                if (userDoc.exists) {
+                    currentRole.user = userDoc.data();
+                    currentRole.isAdmin = (currentRole.user.role === 'admin');
+                }
+            } catch (err) {
+                if (!deniedCode(err)) console.warn('Gagal membaca users/{uid}:', err);
+            }
+
+            // Peran (jabatan) relawan dibaca dari dokumen relawannya sendiri.
+            // Tiga jalur supaya tetap ketemu walau data akun lama tidak konsisten:
+            //   1. users/{uid}.relawanId   2. relawan/{uid} (ID dokumen = UID)   3. query akunUid == uid
+            const src = refresh ? 'server' : 'default';
+            currentRole.relawanId = '';
+            currentRole.relawanDoc = null;
+
+            const applyRelawanDoc = (id, data) => {
+                if (!data) return false;
+                currentRole.relawanId = id;
+                currentRole.relawanDoc = data;
+                currentRole.peran = String(data.peran || '').trim();
+                return true;
+            };
+
+            let found = false;
+
+            // 1) Lewat penautan di dokumen users
+            const linkedId = currentRole.user && currentRole.user.relawanId;
+            if (linkedId) {
+                try {
+                    const doc = await db.collection(RELAWAN_COLLECTION).doc(linkedId).get({ source: src });
+                    if (doc.exists) found = applyRelawanDoc(doc.id, doc.data());
+                } catch (err) {
+                    if (!deniedCode(err)) console.warn('Gagal membaca relawan via users.relawanId:', err);
+                }
+            }
+
+            // 2) ID dokumen relawan sama dengan UID akun
+            if (!found) {
+                try {
+                    const doc = await db.collection(RELAWAN_COLLECTION).doc(user.uid).get({ source: src });
+                    if (doc.exists) found = applyRelawanDoc(doc.id, doc.data());
+                } catch (err) {
+                    if (!deniedCode(err)) console.warn('Gagal membaca relawan/{uid}:', err);
+                }
+            }
+
+            // 3) Dokumen berisi field akunUid == uid (akun lama / relawan yang dibuat manual)
+            if (!found) {
+                try {
+                    const snap = await db.collection(RELAWAN_COLLECTION).where('akunUid', '==', user.uid).limit(1).get();
+                    if (!snap.empty) found = applyRelawanDoc(snap.docs[0].id, snap.docs[0].data());
+                } catch (err) {
+                    if (!deniedCode(err)) console.warn('Gagal mencari relawan via akunUid:', err);
+                }
+            }
+
+            // 4) Terakhir: cocokkan email akun (untuk data lama yang belum punya akunUid)
+            if (!found && user.email) {
+                try {
+                    const snap = await db.collection(RELAWAN_COLLECTION).where('akunEmail', '==', String(user.email).toLowerCase()).limit(1).get();
+                    if (!snap.empty) found = applyRelawanDoc(snap.docs[0].id, snap.docs[0].data());
+                } catch (err) {
+                    if (!deniedCode(err)) console.warn('Gagal mencari relawan via akunEmail:', err);
+                }
+            }
+
+            if (!found && relawanData.length) {
+                // Cadangan terakhir: pakai cache daftar relawan yang sudah dimuat
+                const key = String(user.email || '').toLowerCase();
+                const hit = relawanData.find(r => (r.akunUid && r.akunUid === user.uid) ||
+                    (key && String(r.akunEmail || '').toLowerCase() === key));
+                if (hit) applyRelawanDoc(hit.id, hit);
+            }
+
+            currentRole.canInput = canRoleInput(currentRole);
+            return currentRole;
+        }
+
+        // Peran yang TIDAK boleh mengisi Input Data
+        const PERAN_TANPA_INPUT = ['relawan rt', 'mahasiswa kip'];
+
+        function canRoleInput(role) {
+            const r = role || {};
+            if (r.isAdmin) return true;
+            return !PERAN_TANPA_INPUT.includes(String(r.peran || '').trim().toLowerCase());
+        }
+
+        function isInputAllowed() {
+            return canRoleInput(currentRole);
+        }
+
+        // Ubah role akun sendiri: admin <-> relawan
+        async function toggleMyAdmin() {
+            if (!currentUser) return;
+            const target = currentRole && currentRole.isAdmin ? 'relawan' : 'admin';
+            const btn = document.getElementById('btn-self-admin');
+            btn.disabled = true;
+
+            try {
+                await db.collection(USERS_COLLECTION).doc(currentUser.uid).set({
+                    email: currentUser.email || '',
+                    role: target,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                await loadMyRole(currentUser, { refresh: true });
+                renderRoleUI();
+                if (currentRole.isAdmin) {
+                    await loadUsers();
+                    showToast('Sekarang Anda Admin. Akses penuh aktif.', 'success');
+                } else {
+                    showToast('Role Anda sekarang Relawan (hanya lihat data).', 'info');
+                    switchTab('input');
+                }
+            } catch (err) {
+                console.error('Gagal mengubah role:', err);
+                showToast('Gagal mengubah role: ' + translateFirebaseError(err, 'Ubah Jadi Admin'), 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // Menyimpan profil tiap login (users/{uid}), termasuk aktivitas login terakhir.
+        // Kalau Rules menolak (belum Admin), aplikasi tetap berjalan — tidak ada pemaksaan.
+        async function ensureUserProfile(user, opts) {
+            const refresh = !!(opts && opts.refresh);
+            const ref = db.collection(USERS_COLLECTION).doc(user.uid);
+            const base = { email: user.email || '', lastLoginAt: firebase.firestore.FieldValue.serverTimestamp() };
+
+            try {
+                const snapshot = await ref.get({ source: refresh ? 'server' : 'default' });
+                if (snapshot.exists) {
+                    await ref.update({ email: user.email || '', lastLoginAt: base.lastLoginAt });
+                } else {
+                    // Akun baru selalu mulai sebagai 'relawan'; naikkan ke admin dari panel Admin
+                    // atau dengan mengubah field role di Firebase Console.
+                    await ref.set({
+                        ...base,
+                        nama: '',
+                        role: 'relawan',
+                        active: true,
+                        loginCount: 1,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                return true;
+            } catch (err) {
+                const status = deniedCode(err) ? 'ditolak Rules' : (err.code || err.message);
+                console.warn('Profil users/{uid} tidak bisa disimpan dari client:', status);
+                return false;
+            }
+        }
+
+        function renderRoleUI() {
+            const role = currentRole || {};
+            const badge = document.getElementById('user-role-badge');
+            if (badge) badge.style.pointerEvents = 'auto';
+            const roleText = document.getElementById('user-role-text');
+            const adminBtn = document.getElementById('btn-admin-panel');
+            const banner = document.getElementById('access-banner');
+
+            badge.classList.remove('hidden');
+            badge.className = role.isAdmin
+                ? 'inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-amber-400/20 text-amber-200 border border-amber-300/30'
+                : 'inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-white/15 text-blue-100 border border-white/20';
+            // Badge selalu tampil & bisa diklik (Admin → Halaman Admin; Relawan → petunjuk)
+            roleText.textContent = role.isAdmin ? 'Admin' : (role.peran || 'Relawan');
+            badge.title = role.isAdmin ? 'Buka Halaman Admin' : 'Akun relawan — klik untuk info akses';
+            adminBtn.classList.toggle('hidden', !role.isAdmin);
+
+            // Tab Input Data mengikuti peran (Relawan RT & Mahasiswa KIP tidak mendapatkannya)
+            applyInputTabVisibility();
+
+            // Non-admin tidak boleh berada di Halaman Admin
+            if (!role.isAdmin && adminViewOpen) closeAdminPanel();
+
+            // Banner hanya untuk akun yang TIDAK boleh input (Relawan RT / Mahasiswa KIP).
+            // Admin maupun peran lain (mis. Koordinator Dapil) tidak melihat banner ini.
+            if (!isInputAllowed()) {
+                banner.classList.remove('hidden');
+                const peran = role.peran || 'Akun ini';
+                document.getElementById('access-banner-detail').textContent =
+                    'Peran ' + peran + ' hanya dapat melihat data, tidak mengisi Input Data. Hubungi Admin bila akses perlu diubah.';
+                const bannerTitle = banner.querySelector('p.font-bold');
+                if (bannerTitle) bannerTitle.textContent = 'Akses Input Data tidak tersedia untuk peran ini';
+            } else {
+                banner.classList.add('hidden');
+            }
+
+            renderAdminStatus();
+            updateStatsAndFilters();
+            renderRelawanList();
+        }
+
+        function renderAdminStatus() {
+            const role = currentRole || {};
+            const user = currentUser;
+            const setVal = (id, text, cls) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.textContent = text;
+                if (cls) el.className = cls;
+            };
+            const ok = 'font-semibold text-emerald-600';
+            const no = 'font-semibold text-slate-400';
+            const currentRoleValue = role.user ? (role.user.role || 'relawan') : 'belum ada dokumen';
+
+            setVal('admin-my-email', user ? user.email : '-', 'font-mono font-medium text-slate-800 truncate');
+            setVal('admin-my-uid', user ? user.uid : '-', 'font-mono text-[11px] text-slate-500 truncate');
+            setVal('admin-my-role', currentRoleValue, role.isAdmin ? ok : no);
+            setVal('admin-my-doc', user ? 'users/' + user.uid : '-', 'font-mono text-[11px] text-slate-600 truncate');
+
+            const selfBtnText = document.getElementById('btn-self-admin-text');
+            if (selfBtnText) selfBtnText.textContent = role.isAdmin ? 'Cabut Akses Admin' : 'Jadikan Saya Admin';
+
+            const modeBadge = document.getElementById('admin-mode-badge');
+            modeBadge.textContent = role.isAdmin ? 'ADMIN' : 'AKSES TERBATAS';
+            modeBadge.className = role.isAdmin
+                ? 'px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-lg'
+                : 'px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-semibold rounded-lg';
+
+            document.getElementById('admin-list-wrap').classList.toggle('hidden', !role.isAdmin);
+            document.getElementById('admin-guide').classList.toggle('hidden', !!role.isAdmin);
+            document.getElementById('btn-sync-users').classList.toggle('hidden', !role.isAdmin);
+            document.getElementById('admin-guide-detail').textContent = 'Kolom role pada dokumen users/{uid} adalah satu-satunya penentu akses: admin berhak mengubah data, relawan hanya bisa melihat.';
+            lucide.createIcons();
+        }
+
+        async function refreshMyRole() {
+            if (!currentUser) return;
+            try {
+                await loadMyRole(currentUser, { refresh: true });
+                renderRoleUI();
+                if (currentRole.isAdmin) {
+                    await loadUsers();
+                    showToast('Akses admin terdeteksi.', 'success');
+                } else {
+                    showToast('Belum ada akses admin untuk akun ini.', 'info');
+                }
+            } catch (err) {
+                showToast('Gagal memuat ulang akses: ' + translateFirebaseError(err), 'error');
+            }
+        }
+
+
+
+        // ==========================================
+        // PANEL ADMIN (KELOLA AKUN & AKSES)
+        // ==========================================
+        // Catatan: openAdminPanel() ada di blok MASTER DATA (membuka Halaman Admin).
+
+        // Tampilkan & salin Firestore Rules yang tertanam di file ini
+        function getFirestoreRules() {
+            const el = document.getElementById('firestore-rules-source');
+            return el ? el.textContent.trim() : '';
+        }
+
+        function renderFirestoreRules() {
+            const pre = document.getElementById('firestore-rules-preview');
+            if (pre) pre.textContent = getFirestoreRules();
+        }
+
+        function copyFirestoreRules() {
+            const rules = getFirestoreRules();
+            const done = () => showToast('Rules disalin. Tempel di Firebase Console → Rules → Publish.', 'success');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(rules).then(done).catch(() => legacyCopy(rules, done));
+            } else {
+                legacyCopy(rules, done);
+            }
+        }
+
+        function legacyCopy(text, done) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); done(); }
+            catch (e) { showToast('Gagal menyalin. Blok teks rules lalu salin manual.', 'error'); }
+            document.body.removeChild(ta);
+        }
+
+        async function loadUsers(refresh) {
+            if (unsubUsers) {
+                unsubUsers();
+                unsubUsers = null;
+            }
+            if (!currentRole || !currentRole.isAdmin) return;
+
+            isAdminPanelLoaded = false;
+            document.getElementById('admin-loading').classList.remove('hidden');
+
+            unsubUsers = db.collection(USERS_COLLECTION).onSnapshot((snapshot) => {
+                usersData = snapshot.docs.map(doc => {
+                    const d = doc.data();
+                    return {
+                        uid: doc.id,
+                        email: d.email || '',
+                        nama: d.nama || '',
+                        role: d.role || 'relawan',
+                        loginCount: d.loginCount || 0,
+                        lastLoginAt: d.lastLoginAt || null,
+                        active: d.active !== false
+                    };
+                });
+                isAdminPanelLoaded = true;
+                document.getElementById('admin-loading').classList.add('hidden');
+                renderUsersList();
+            }, (error) => {
+                console.error('Gagal memuat daftar akun:', error);
+                isAdminPanelLoaded = true;
+                document.getElementById('admin-loading').classList.add('hidden');
+                showToast('Gagal memuat akun: ' + translateFirebaseError(error), 'error');
+            });
+        }
+
+        function renderUsersList() {
+            const container = document.getElementById('users-list-container');
+            const emptyEl = document.getElementById('admin-list-empty');
+            const q = (document.getElementById('admin-search-input').value || '').toLowerCase().trim();
+
+            // Pastikan Admin yang sedang login selalu terlihat di daftar walau profilnya belum terbentuk
+            let rows = usersData.slice();
+            if (currentUser && !rows.some(r => r.uid === currentUser.uid)) {
+                const me = currentRole && currentRole.user;
+                rows.push({
+                    uid: currentUser.uid,
+                    email: currentUser.email || '',
+                    nama: (me && me.nama) || '',
+                    role: 'admin',
+                    loginCount: (me && me.loginCount) || 0,
+                    lastLoginAt: (me && me.lastLoginAt) || null,
+                    active: true
+                });
+            }
+
+            rows = rows.filter(r => !q || (r.email || '').toLowerCase().includes(q) || (r.nama || '').toLowerCase().includes(q));
+
+            container.innerHTML = '';
+            if (rows.length === 0) {
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+            emptyEl.classList.add('hidden');
+
+            rows.forEach(r => {
+                const initial = ((r.nama || r.email || '?').trim().substring(0, 2)).toUpperCase();
+                const isMe = currentUser && r.uid === currentUser.uid;
+                const lastLogin = r.lastLoginAt ? formatTanggal(r.lastLoginAt) : 'belum tercatat';
+                const isAdminRow = r.role === 'admin';
+                const card = document.createElement('div');
+                card.className = 'rounded-xl border border-slate-100 bg-slate-50/60 p-3';
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex items-start gap-2.5 min-w-0">
+                            <div class="w-9 h-9 rounded-lg ${isAdminRow ? 'bg-amber-100 text-amber-700' : 'bg-blue-50 text-blue-600'} font-bold flex items-center justify-center shrink-0 text-xs border border-slate-100">${escapeHTML(initial)}</div>
+                            <div class="min-w-0">
+                                <p class="text-sm font-bold text-slate-800 truncate">${escapeHTML(r.nama || r.email || 'Tanpa nama')} ${isMe ? '<span class="text-[10px] font-semibold text-blue-600">(Anda)</span>' : ''}</p>
+                                <p class="text-[11px] font-mono text-slate-500 truncate">${escapeHTML(r.email || '-')}</p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Login terakhir: ${escapeHTML(lastLogin)} · ${r.loginCount} kali</p>
+                                ${isMe ? '' : `<div class="flex items-center gap-1.5 mt-2">
+                                    <button onclick="setUserRole('${r.uid}', '${isAdminRow ? 'relawan' : 'admin'}')" class="px-2 py-1 rounded-lg text-[10px] font-semibold ${isAdminRow ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'} transition">${isAdminRow ? 'Turunkan ke Relawan' : 'Jadikan Admin'}</button>
+                                    <button onclick="setAccountActive('${r.uid}', '${escapeHTML(r.email || '').replace(/'/g, "\\'")}', ${r.active ? 'false' : 'true'})" class="px-2 py-1 rounded-lg text-[10px] font-semibold ${r.active ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'} transition">${r.active ? 'Nonaktifkan' : 'Aktifkan'}</button>
+                                </div>`}
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end gap-1 shrink-0">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${isAdminRow ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-600'}">${isAdminRow ? 'Admin' : 'Relawan'}</span>
+                            ${r.active ? '' : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-red-100 text-red-700">Nonaktif</span>'}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        // Sinkronkan akun yang login sebelum koleksi users dibuat (isi email, lastLoginAt, role)
+        async function syncUsers() {
+            if (!currentRole || !currentRole.isAdmin) {
+                showToast('Hanya Admin yang dapat menyinkronkan akun.', 'error');
+                return;
+            }
+            const btn = document.getElementById('btn-sync-users');
+            btn.disabled = true;
+            try {
+                if (!currentRole.isAdmin) {
+                    showToast('Hanya Admin yang dapat menyinkronkan akun.', 'error');
+                    return;
+                }
+                await db.collection(USERS_COLLECTION).doc(currentUser.uid).set({
+                    email: currentUser.email || '',
+                    role: 'admin',
+                    lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                await loadUsers(true);
+                showToast('Data akun disinkronkan.', 'success');
+            } catch (err) {
+                showToast('Gagal sinkron: ' + translateFirebaseError(err), 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('admin-search-input');
+            if (input) input.addEventListener('input', renderUsersList);
+            const uidEl = document.getElementById('admin-my-uid');
+            if (uidEl) {
+                uidEl.addEventListener('click', function() {
+                    if (!currentUser) return;
+                    navigator.clipboard.writeText(currentUser.uid).then(() => showToast('UID disalin.', 'success')).catch(() => {});
+                });
+            }
+        });
+
+        // ==========================================
+        // MASTER DATA + HALAMAN ADMIN
+        // ==========================================
+        // parent = field induk yang wajib dipilih sebelum menyimpan
+        // extra  = field tambahan bebas (label + placeholder)
+        const MASTER_META = {
+            dapil: { title: 'Dapil', parent: null, parentField: null, nameLabel: 'Nama Dapil', ph: 'Contoh: Dapil 1 Bandung', extra: { field: 'keterangan', label: 'Keterangan', ph: 'Opsional' } },
+            kecamatan: { title: 'Kecamatan', parent: 'Dapil', parentField: 'dapil', nameLabel: 'Nama Kecamatan', ph: 'Contoh: Coblong', extra: { field: 'kode', label: 'Kode', ph: 'Opsional, mis. 3273' } },
+            kelurahan: { title: 'Kelurahan', parent: 'Kecamatan', parentField: 'kecamatan', nameLabel: 'Nama Kelurahan', ph: 'Contoh: Dago' },
+            rw: { title: 'RW', parent: null, parentField: null, nameLabel: 'Nomor RW', ph: 'Contoh: 001' },
+            rt: { title: 'RT', parent: null, parentField: null, nameLabel: 'Nomor RT', ph: 'Contoh: 003' },
+            peran: { title: 'Peran', parent: null, parentField: null, nameLabel: 'Nama Peran', ph: 'Contoh: Koordinator Wilayah' },
+            fasilitas: { title: 'Fasilitas', parent: null, parentField: null, nameLabel: 'Nama Fasilitas', ph: 'Contoh: Laptop' },
+            universitas: { title: 'Universitas', parent: null, parentField: null, nameLabel: 'Nama Universitas', ph: 'Contoh: Universitas Padjadjaran', extra: { field: 'kota', label: 'Kota', ph: 'Contoh: Bandung' } }
+        };
+
+        // Urutan tampil master data (relasi: dapil → kecamatan → kelurahan)
+        const MASTER_ORDER = ['dapil', 'kecamatan', 'kelurahan', 'rw', 'rt', 'peran', 'fasilitas', 'universitas'];
+
+        // Saran awal nama peran (dipakai tombol isi cepat di tab Peran)
+        const PERAN_CONTOH = [
+            'Koordinator Wilayah',
+            'Relawan Pendamping',
+            'Relawan RT',
+            'Mahasiswa KIP',
+            'Fasilitator Sekolah',
+            'Verifikator Data'
+        ];
+
+        // Daftar awal (hanya dipakai saat admin mengatur / mengisi cepat)
+        const KECAMATAN_BANDUNG = ['Andir', 'Antapani', 'Arcamanik', 'Astanaanyar', 'Babakan Ciparay', 'Bandung Kidul', 'Bandung Kulon', 'Bandung Wetan', 'Batununggal', 'Bojongloa Kaler', 'Bojongloa Kidul', 'Buahbatu', 'Cibeunying Kaler', 'Cibeunying Kidul', 'Cibiru', 'Cicendo', 'Cidadap', 'Cinambo', 'Coblong', 'Gedebage', 'Kiaracondong', 'Lengkong', 'Mandalajati', 'Panyileukan', 'Rancasari', 'Regol', 'Sukajadi', 'Sukasari', 'Sumur Bandung', 'Ujungberung'];
+
+        function masterByKey(key) {
+            return masterData[key] || [];
+        }
+
+        function masterNames(key) {
+            return masterByKey(key).map(x => x.nama);
+        }
+
+        function currentUserDapil() {
+            return String((currentRole && currentRole.relawanDoc && currentRole.relawanDoc.dapil) || '').trim();
+        }
+
+        function currentUserKecamatan() {
+            return String((currentRole && currentRole.relawanDoc && currentRole.relawanDoc.kecamatan) || '').trim();
+        }
+
+        function currentUserKelurahan() {
+            return String((currentRole && currentRole.relawanDoc && currentRole.relawanDoc.kelurahan) || '').trim();
+        }
+
+        function currentUserRw() {
+            return String((currentRole && currentRole.relawanDoc && currentRole.relawanDoc.rw) || '').trim();
+        }
+
+        function isKoordinatorDapil(role) {
+            return String((role && role.peran) || '').trim().toLowerCase() === 'koordinator dapil';
+        }
+
+        function isKoordinatorKecamatan(role) {
+            return String((role && role.peran) || '').trim().toLowerCase() === 'koordinator kecamatan';
+        }
+
+        function isRelawanRw(role) {
+            return String((role && role.peran) || '').trim().toLowerCase() === 'relawan rw';
+        }
+
+        function canChooseKelurahan(role) {
+            return !!(role && role.isAdmin) || isKoordinatorDapil(role) || isKoordinatorKecamatan(role);
+        }
+
+        // Berlangganan semua koleksi master secara real-time (sekali per login).
+        // onSnapshot selalu mengirim data dari CACHE lokal lalu server, sehingga
+        // item yang baru disimpan langsung terlihat tanpa refresh.
+        function loadMasterData() {
+            if (!auth.currentUser) return;
+            MASTER_KEYS.forEach(key => {
+                if (unsubMaster[key]) return;
+                unsubMaster[key] = db.collection(MASTER_COLLECTIONS[key]).onSnapshot({ includeMetadataChanges: true }, snapshot => {
+                    const rows = snapshot.docs
+                        .map(doc => ({ id: doc.id, ...doc.data() }))
+                        .sort((a, b) => String(a.nama || '').localeCompare(String(b.nama || ''), 'id', { numeric: true }));
+
+                    const prev = masterData[key] || [];
+                    const prevSig = prev.map(x => x.id).join('|');
+                    const nextSig = rows.map(x => x.id).join('|');
+                    masterData[key] = rows;
+                    masterLoaded = true;
+
+                    // Tandai tersinkron hanya setelah server (bukan cache) menjawab
+                    if (!snapshot.metadata.fromCache && !document.getElementById('admin-view').classList.contains('hidden') && adminTab === key) {
+                        clearTimeout(syncFlashTimer);
+                        setAdminSyncState('Tersinkron ✓');
+                        syncFlashTimer = setTimeout(() => setAdminSyncState('Siap'), 2500);
+                    }
+
+                    // Render ulang bila isi berubah, atau bila masih menampilkan "Memuat data..."
+                    if (prevSig !== nextSig || prev.length === 0) onMasterChanged();
+                }, error => {
+                    console.error('Gagal memuat master ' + key + ':', error);
+                    masterLoaded = true;
+                    onMasterChanged();
+                    showToast('Gagal memuat ' + MASTER_META[key].title + ': ' + (error.code || error.message), 'error');
+                });
+            });
+        }
+
+        let syncFlashTimer = null;
+
+        // Indikator kecil di Halaman Admin bahwa data sudah sinkron dengan server
+        function setAdminSyncState(text) {
+            const el = document.getElementById('ma-sync');
+            if (!el) return;
+            el.textContent = text;
+            const ok = /Tersinkron|Tersimpan|Siap/i.test(text);
+            el.className = 'text-[10px] font-semibold mt-0.5 ' + (ok ? 'text-emerald-600' : 'text-amber-600');
+        }
+
+        function stopMaster() {
+            MASTER_KEYS.forEach(key => {
+                if (unsubMaster[key]) {
+                    unsubMaster[key]();
+                    delete unsubMaster[key];
+                }
+            });
+            masterData = { dapil: [], kecamatan: [], kelurahan: [], rw: [], rt: [], peran: [], fasilitas: [], universitas: [] };
+            masterLoaded = false;
+        }
+
+        // Segarkan semua tampilan yang bergantung pada master data
+        function onMasterChanged() {
+            const counts = {};
+            MASTER_KEYS.forEach(k => { counts[k] = masterByKey(k).length; });
+            document.querySelectorAll('[data-count]').forEach(el => {
+                el.textContent = counts[el.getAttribute('data-count')] || 0;
+            });
+            renderFormMasterOptions();
+            updateStatsAndFilters();
+            renderRelawanList();
+            // Daftar Halaman Admin selalu digambar ulang (tidak lagi bergantung pada state
+            // adminViewOpen, yang bisa tetap false setelah page reload).
+            renderMasterList();
+        }
+
+        // ---- Form Input Data: isi pilihan dari master ----
+        function ulangPilih(selectEl, placeholder, names, selected) {
+            if (!selectEl) return;
+            const prev = selected !== undefined ? selected : selectEl.value;
+            selectEl.innerHTML = '<option value="">' + placeholder + '</option>' +
+                names.map(n => `<option value="${escapeHTML(n)}">${escapeHTML(n)}</option>`).join('');
+            selectEl.value = names.includes(prev) ? prev : '';
+        }
+
+        function renderFormMasterOptions() {
+            const selKec = document.getElementById('input-kecamatan');
+            if (!selKec) return;
+            const dapilEl = document.getElementById('input-dapil');
+            const isAdmin = !!(currentRole && currentRole.isAdmin);
+            const userDapil = currentUserDapil();
+            const availableDapil = masterNames('dapil');
+            const dapilOptions = isAdmin
+                ? availableDapil
+                : (userDapil && availableDapil.includes(userDapil) ? [userDapil] : []);
+            const dapilPlaceholder = isAdmin
+                ? '-- Semua Dapil --'
+                : (userDapil
+                    ? (dapilOptions.length ? userDapil : '-- Dapil akun tidak ditemukan --')
+                    : '-- Dapil akun belum ditetapkan --');
+            ulangPilih(dapilEl, dapilPlaceholder, dapilOptions, isAdmin ? dapilEl.value : dapilOptions[0] || '');
+            if (dapilEl) dapilEl.disabled = !isAdmin;
+            renderKecamatanOptions();
+            renderKelurahanOptions();
+            renderRwOptions();
+            renderRtOptions();
+            ulangPilih(document.getElementById('input-peran'), '-- Pilih Peran --', masterNames('peran'));
+            ulangPilih(document.getElementById('input-universitas'), '-- Pilih Universitas --', masterNames('universitas'));
+            syncUniversitasVisibility();
+            renderFasilitasCheckboxes();
+        }
+
+        // Kecamatan mengikuti Dapil yang dipilih (jika Dapil dikosongkan → semua kecamatan)
+        function renderKecamatanOptions() {
+            const dapilEl = document.getElementById('input-dapil');
+            const dapil = dapilEl ? dapilEl.value : '';
+            const isAdmin = !!(currentRole && currentRole.isAdmin);
+            const canChooseKecamatan = isAdmin || isKoordinatorDapil(currentRole);
+            const userKecamatan = currentUserKecamatan();
+            const showAllKecamatan = isAdmin && !dapil;
+            const kecamatanByDapil = masterByKey('kecamatan')
+                .filter(k => showAllKecamatan || (!!dapil && k.dapil === dapil));
+            const list = canChooseKecamatan
+                ? kecamatanByDapil.map(k => k.nama)
+                : (userKecamatan && kecamatanByDapil.some(k => k.nama === userKecamatan) ? [userKecamatan] : []);
+            const placeholder = !canChooseKecamatan
+                ? (!userKecamatan
+                    ? '-- Kecamatan akun belum ditetapkan --'
+                    : (!dapil && !isAdmin
+                        ? '-- Dapil akun belum tersedia --'
+                        : (list.length ? '-- Kecamatan: ' + userKecamatan + ' --' : '-- Kecamatan akun tidak tersedia di Dapil --')))
+                : (!dapil && !isAdmin
+                    ? '-- Dapil akun belum tersedia --'
+                    : (!dapil
+                        ? (list.length ? '-- Pilih Kecamatan --' : '-- Belum ada data kecamatan --')
+                        : (list.length ? '-- Pilih Kecamatan di ' + dapil + ' --' : '-- Belum ada kecamatan di dapil ini --')));
+            const kecEl = document.getElementById('input-kecamatan');
+            ulangPilih(kecEl, placeholder, list, canChooseKecamatan ? kecEl.value : list[0] || '');
+            if (kecEl) kecEl.disabled = !canChooseKecamatan;
+        }
+
+        // Kelurahan: dropdown yang hanya berisi kelurahan dari kecamatan terpilih
+        function renderKelurahanOptions() {
+            const kecEl = document.getElementById('input-kecamatan');
+            const kec = kecEl ? kecEl.value : '';
+            const canChoose = canChooseKelurahan(currentRole);
+            const userKelurahan = currentUserKelurahan();
+            const kelurahanByKecamatan = kec
+                ? masterByKey('kelurahan').filter(k => k.kecamatan === kec)
+                : [];
+            const list = canChoose
+                ? kelurahanByKecamatan.map(k => k.nama)
+                : (userKelurahan && kelurahanByKecamatan.some(k => k.nama === userKelurahan) ? [userKelurahan] : []);
+            const placeholder = !canChoose
+                ? (!userKelurahan
+                    ? '-- Kelurahan akun belum ditetapkan --'
+                    : (!kec
+                        ? '-- Kecamatan akun belum tersedia --'
+                        : (list.length ? '-- Kelurahan: ' + userKelurahan + ' --' : '-- Kelurahan akun tidak tersedia di Kecamatan ini --')))
+                : (!kec
+                    ? '-- Pilih Kecamatan dulu --'
+                    : (list.length ? '-- Pilih Kelurahan --' : '-- Belum ada kelurahan di kecamatan ini --'));
+            const kelEl = document.getElementById('input-kelurahan');
+            ulangPilih(kelEl, placeholder, list, canChoose ? kelEl.value : list[0] || '');
+            if (kelEl) kelEl.disabled = !canChoose;
+        }
+
+        // RW statis: seluruh RW, tidak terikat kecamatan/kelurahan
+        function renderRwOptions() {
+            const allRw = masterNames('rw');
+            const sel = document.getElementById('input-rw');
+            const isLocked = isRelawanRw(currentRole);
+            const userRw = currentUserRw();
+            const list = isLocked
+                ? (userRw && allRw.includes(userRw) ? [userRw] : [])
+                : allRw;
+            const placeholder = isLocked
+                ? (!userRw
+                    ? '-- RW akun belum ditetapkan --'
+                    : (list.length ? '-- RW: ' + userRw + ' --' : '-- RW akun tidak ditemukan --'))
+                : (list.length ? '-- Pilih RW --' : '-- Belum ada RW --');
+            ulangPilih(sel, placeholder, list, isLocked ? list[0] || '' : formWilayah.rw);
+            if (sel) sel.disabled = isLocked;
+            if (sel) formWilayah.rw = sel.value;
+        }
+
+        // RT statis: seluruh RT, pilih satu saja
+        function renderRtOptions() {
+            const sel = document.getElementById('input-rt');
+            if (!sel) return;
+            const list = masterNames('rt');
+            const current = formWilayah.rt[0] || sel.value || '';
+            ulangPilih(sel, list.length ? '-- Pilih RT --' : '-- Belum ada RT --', list, current);
+            formWilayah.rt = sel.value ? [sel.value] : [];
+        }
+
+        // Universitas hanya relevan untuk peran "Mahasiswa KIP"
+        const PERAN_MAHASISWA = 'Mahasiswa KIP';
+
+        function isPeranMahasiswa() {
+            const el = document.getElementById('input-peran');
+            return !!el && el.value.trim().toLowerCase() === PERAN_MAHASISWA.toLowerCase();
+        }
+
+        function syncUniversitasVisibility() {
+            const wrap = document.getElementById('universitas-wrap');
+            const sel = document.getElementById('input-universitas');
+            if (!wrap || !sel) return;
+            const show = isPeranMahasiswa();
+            wrap.classList.toggle('hidden', !show);
+            if (!show) sel.value = ''; // peran lain → universitas dikosongkan
+        }
+
+        function renderFasilitasCheckboxes() {
+            const wrap = document.getElementById('input-fasilitas-wrap');
+            if (!wrap) return;
+            const list = masterNames('fasilitas');
+            if (!list.length) {
+                wrap.innerHTML = '<p class="text-[11px] text-slate-400 col-span-2">Belum ada fasilitas. Tambahkan di Halaman Admin → Fasilitas.</p>';
+                return;
+            }
+            wrap.innerHTML = list.map(name => {
+                const checked = formFasilitas.includes(name) ? ' checked' : '';
+                return `<label class="flex items-center gap-2 px-2.5 py-2 rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-700 cursor-pointer hover:border-blue-300 transition">
+                    <input type="checkbox" class="fasilitas-check rounded text-blue-600 focus:ring-blue-500" value="${escapeHTML(name)}"${checked}>
+                    <span class="truncate">${escapeHTML(name)}</span>
+                </label>`;
+            }).join('');
+        }
+
+        // ---- Buka / tutup Halaman Admin ----
+        function openAdminPanel() {
+            if (currentRole && !currentRole.isAdmin) {
+                showToast('Halaman Admin hanya untuk akun dengan role admin.', 'error');
+                return;
+            }
+            adminViewOpen = true;
+            document.getElementById('main-view').classList.add('hidden');
+            document.getElementById('main-view').classList.remove('flex');
+            const view = document.getElementById('admin-view');
+            view.classList.remove('hidden');
+            view.classList.add('flex');
+            loadMasterData();
+            switchAdminTab(adminTab);
+            // Tarik data server sekali saat halaman dibuka: daftar langsung terisi dan
+            // listener real-time baru dipasang setelah setiap koleksi berhasil dibaca.
+            refreshMasterFromServer();
+            lucide.createIcons();
+        }
+
+        // Baca semua master sekali dari server (jaminan data tampil), lalu pasang listener.
+        async function refreshMasterFromServer() {
+            if (!auth.currentUser) return;
+            for (const key of MASTER_KEYS) {
+                try {
+                    const snap = await db.collection(MASTER_COLLECTIONS[key]).get();
+                    masterData[key] = snap.docs
+                        .map(doc => ({ id: doc.id, ...doc.data() }))
+                        .sort((a, b) => String(a.nama || '').localeCompare(String(b.nama || ''), 'id', { numeric: true }));
+                } catch (err) {
+                    console.warn('Get master ' + key + ' gagal:', err.code || err.message);
+                }
+                loadMasterData(); // pasang listener bila belum ada
+            }
+            masterLoaded = true;
+            onMasterChanged();
+        }
+
+        function closeAdminPanel() {
+            adminViewOpen = false;
+            const view = document.getElementById('admin-view');
+            view.classList.add('hidden');
+            view.classList.remove('flex');
+            const main = document.getElementById('main-view');
+            main.classList.remove('hidden');
+            main.classList.add('flex');
+            renderFormMasterOptions();
+            lucide.createIcons();
+        }
+
+        function switchAdminTab(key) {
+            if (!MASTER_META[key]) return;
+            adminTab = key;
+            document.querySelectorAll('#admin-subnav [data-admin-tab]').forEach(btn => {
+                const active = btn.getAttribute('data-admin-tab') === key;
+                btn.className = 'admin-tab-btn shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1 ' +
+                    (active ? 'bg-amber-400 text-slate-900' : 'bg-white/10 text-slate-200 hover:bg-white/20');
+            });
+            resetAdminForm();
+            renderMasterList();
+            setAdminSyncState(masterLoaded ? 'Siap' : 'Memuat...');
+            lucide.createIcons();
+        }
+
+        // Isi cepat: kecamatan Kota Bandung (tab Kecamatan) atau daftar peran umum (tab Peran)
+        async function seedMasterData() {
+            if (adminTab === 'peran') return seedPeranDefault();
+            return seedKecamatanBandung();
+        }
+
+        async function seedPeranDefault() {
+            const existing = new Set(masterNames('peran').map(n => n.toLowerCase()));
+            const todo = PERAN_CONTOH.filter(n => !existing.has(n.toLowerCase()));
+            if (!todo.length) {
+                showToast('Semua peran contoh sudah ada.', 'info');
+                return;
+            }
+            const btn = document.getElementById('ma-seed');
+            if (btn) btn.disabled = true;
+            try {
+                const batch = db.batch();
+                todo.forEach(nama => {
+                    batch.set(db.collection(MASTER_COLLECTIONS.peran).doc(), {
+                        nama,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        createdBy: (currentUser && currentUser.email) || ''
+                    });
+                });
+                await batch.commit();
+                showToast(todo.length + ' peran ditambahkan.', 'success');
+            } catch (err) {
+                showToast('Gagal mengisi peran: ' + translateFirebaseError(err), 'error');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        // Isi cepat semua kecamatan Kota Bandung ke Dapil yang sedang dipilih di form
+        async function seedKecamatanBandung() {
+            const dapil = (document.getElementById('ma-parent') || {}).value || '';
+            if (!dapil) {
+                showToast('Pilih Dapil dulu di form, lalu klik isi cepat.', 'error');
+                return;
+            }
+            const existing = new Set(masterByKey('kecamatan').filter(k => k.dapil === dapil).map(k => String(k.nama).toLowerCase()));
+            const todo = KECAMATAN_BANDUNG.filter(n => !existing.has(n.toLowerCase()));
+            if (!todo.length) {
+                showToast('Semua kecamatan Kota Bandung sudah ada di ' + dapil + '.', 'info');
+                return;
+            }
+            if (!confirm('Tambahkan ' + todo.length + ' kecamatan Kota Bandung ke "' + dapil + '"?')) return;
+            const btn = document.getElementById('ma-seed');
+            if (btn) btn.disabled = true;
+            try {
+                const batch = db.batch();
+                todo.forEach(nama => {
+                    batch.set(db.collection(MASTER_COLLECTIONS.kecamatan).doc(), {
+                        nama,
+                        dapil,
+                        kode: '',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        createdBy: (currentUser && currentUser.email) || ''
+                    });
+                });
+                await batch.commit();
+                showToast(todo.length + ' kecamatan ditambahkan ke ' + dapil + '.', 'success');
+            } catch (err) {
+                showToast('Gagal mengisi kecamatan: ' + translateFirebaseError(err), 'error');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function resetAdminForm() {
+            masterEditId = null;
+            const meta = MASTER_META[adminTab];
+            const parentWrap = document.getElementById('ma-parent-wrap');
+            const codeWrap = document.getElementById('ma-code');
+
+            document.getElementById('ma-title').textContent = 'Tambah ' + meta.title;
+            document.getElementById('ma-subtitle').textContent = 'Master data dipakai di formulir Input Data';
+            document.getElementById('ma-edit-badge').classList.add('hidden');
+            document.getElementById('ma-cancel').classList.add('hidden');
+            document.getElementById('ma-save-text').textContent = 'Tambah';
+            document.getElementById('ma-name').value = '';
+            document.getElementById('ma-name-label').innerHTML = meta.nameLabel + ' <span class="text-red-500">*</span>';
+            document.getElementById('ma-name').placeholder = meta.ph;
+
+            // Field tambahan sesuai master (Kode / Keterangan / Kota)
+            const extra = meta.extra || null;
+            document.getElementById('ma-code').value = '';
+            document.getElementById('ma-code').placeholder = extra ? extra.ph : '';
+            document.getElementById('ma-code-label').innerHTML = extra ? (extra.label + ' <span class="text-slate-400 font-normal">(opsional)</span>') : 'Kode';
+            codeWrap.classList.toggle('hidden', !extra);
+            const codeWrapBox = document.getElementById('ma-code-wrap');
+            if (codeWrapBox) codeWrapBox.classList.toggle('hidden', !extra);
+
+            // Tombol isi cepat tersedia untuk Kecamatan dan Peran
+            const seedBtn = document.getElementById('ma-seed');
+            if (seedBtn) seedBtn.classList.toggle('hidden', adminTab !== 'kecamatan' && adminTab !== 'peran');
+
+            if (meta.parent) {
+                parentWrap.classList.remove('hidden');
+                document.getElementById('ma-parent-label').innerHTML = meta.parent + ' <span class="text-red-500">*</span>';
+                const options = masterNames(meta.parentField);
+                document.getElementById('ma-parent').innerHTML = '<option value="">-- Pilih ' + meta.parent + ' --</option>' +
+                    options.map(n => `<option value="${escapeHTML(n)}">${escapeHTML(n)}</option>`).join('');
+            } else {
+                parentWrap.classList.add('hidden');
+            }
+
+            document.getElementById('ma-subtitle').textContent = (adminTab === 'kecamatan')
+                ? 'Pilih Dapil dulu, RW/RT bersifat statis'
+                : 'Master data dipakai di formulir Input Data';
+        }
+
+        function editMasterData(id) {
+            const item = masterByKey(adminTab).find(x => x.id === id);
+            if (!item) return;
+            masterEditId = id;
+            document.getElementById('ma-title').textContent = 'Edit ' + MASTER_META[adminTab].title;
+            document.getElementById('ma-edit-badge').classList.remove('hidden');
+            document.getElementById('ma-cancel').classList.remove('hidden');
+            document.getElementById('ma-save-text').textContent = 'Simpan Perubahan';
+            document.getElementById('ma-name').value = item.nama || '';
+            const extra = MASTER_META[adminTab].extra;
+            document.getElementById('ma-code').value = extra ? (item[extra.field] || '') : '';
+            const parentEl = document.getElementById('ma-parent');
+            if (parentEl && MASTER_META[adminTab].parentField) parentEl.value = item[MASTER_META[adminTab].parentField] || '';
+            document.getElementById('ma-name').focus();
+        }
+
+        async function saveMasterData() {
+            const meta = MASTER_META[adminTab];
+            const col = MASTER_COLLECTIONS[adminTab];
+            const nama = document.getElementById('ma-name').value.trim();
+            const kode = document.getElementById('ma-code').value.trim();
+            const parentEl = document.getElementById('ma-parent');
+            const parentVal = parentEl ? parentEl.value : '';
+
+            if (!nama) {
+                showToast('Nama ' + meta.title + ' wajib diisi.', 'error');
+                return;
+            }
+            if (meta.parent && !parentVal) {
+                showToast('Pilih ' + meta.parent + ' terlebih dahulu.', 'error');
+                return;
+            }
+
+            const exists = masterByKey(adminTab).some(x =>
+                x.id !== masterEditId &&
+                String(x.nama).toLowerCase() === nama.toLowerCase() &&
+                (!meta.parentField || x[meta.parentField] === parentVal)
+            );
+            if (exists) {
+                showToast(meta.title + ' "' + nama + '" sudah ada.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('ma-save');
+            btn.disabled = true;
+            const btnText = document.getElementById('ma-save-text');
+            if (btnText) btnText.textContent = 'Menyimpan...';
+            setAdminSyncState('Menyimpan...');
+            // Sumber kebenaran tab = UI (tombol aktif), bukan variabel yang bisa tertinggal
+            const activeBtn = document.querySelector('#admin-subnav [data-admin-tab].bg-amber-400');
+            if (activeBtn) adminTab = activeBtn.getAttribute('data-admin-tab');
+
+            try {
+                const payload = { nama, updatedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedBy: (currentUser && currentUser.email) || '' };
+                if (meta.extra) payload[meta.extra.field] = document.getElementById('ma-code').value.trim();
+                if (meta.parentField) payload[meta.parentField] = parentVal;
+
+                let ref;
+                if (masterEditId) {
+                    ref = db.collection(col).doc(masterEditId);
+                    await ref.set(payload, { merge: true });
+                    showToast(meta.title + ' diperbarui.', 'success');
+                } else {
+                    payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    ref = db.collection(col).doc(); // ID dibuat client supaya bisa ditampilkan langsung
+                    await ref.set(payload);
+                    showToast(meta.title + ' "' + nama + '" ditambahkan.', 'success');
+                }
+
+                // ---- Tampilkan langsung di daftar (tanpa menunggu refresh / server) ----
+                upsertMasterLocal(adminTab, { id: ref.id, ...payload });
+
+                resetAdminForm();
+                renderMasterList();
+                setAdminSyncState('Tersimpan ✓');
+            } catch (err) {
+                console.error('Gagal menyimpan master:', err);
+                setAdminSyncState('Gagal menyimpan');
+                showToast('Gagal menyimpan: ' + translateFirebaseError(err), 'error');
+            } finally {
+                btn.disabled = false;
+                if (btnText) btnText.textContent = 'Tambah';
+            }
+        }
+
+        // Sisipkan/perbarui satu item di cache lokal + urutkan ulang.
+        // Data server akan menyusul lewat onSnapshot dan menimpa dengan versi akhir.
+        function upsertMasterLocal(key, item) {
+            const list = (masterData[key] || []).filter(x => x.id !== item.id);
+            list.push(item);
+            list.sort((a, b) => String(a.nama || '').localeCompare(String(b.nama || ''), 'id', { numeric: true }));
+            masterData[key] = list;
+            masterLoaded = true;
+
+            const counts = {};
+            MASTER_KEYS.forEach(k => { counts[k] = masterByKey(k).length; });
+            document.querySelectorAll('[data-count]').forEach(el => {
+                el.textContent = counts[el.getAttribute('data-count')] || 0;
+            });
+            renderFormMasterOptions();
+            updateStatsAndFilters();
+        }
+
+        async function deleteMasterData(id) {
+            const item = masterByKey(adminTab).find(x => x.id === id);
+            if (!item) return;
+            const childNote = adminTab === 'dapil'
+                ? ' Kecamatan di dapil ini tetap ada (dapil-nya menjadi kosong).'
+                : adminTab === 'kecamatan'
+                    ? ' Kelurahan di kecamatan ini tidak ikut terhapus.'
+                    : '';
+            if (!confirm('Hapus ' + MASTER_META[adminTab].title + ' "' + item.nama + '"?' + childNote)) return;
+            try {
+                await db.collection(MASTER_COLLECTIONS[adminTab]).doc(id).delete();
+                // Hilangkan langsung dari tampilan
+                masterData[adminTab] = masterByKey(adminTab).filter(x => x.id !== id);
+                renderMasterList();
+                showToast(MASTER_META[adminTab].title + ' dihapus.', 'info');
+                if (masterEditId === id) resetAdminForm();
+            } catch (err) {
+                showToast('Gagal menghapus: ' + translateFirebaseError(err), 'error');
+            }
+        }
+
+        function renderMasterList() {
+            const listEl = document.getElementById('ma-list');
+            const totalEl = document.getElementById('ma-total');
+            if (!listEl) return;
+            // Tab yang benar-benar tampil di UI (jangan bergantung pada adminTab semata)
+            const activeBtn = document.querySelector('#admin-subnav [data-admin-tab].bg-amber-400');
+            if (activeBtn) adminTab = activeBtn.getAttribute('data-admin-tab');
+            const meta = MASTER_META[adminTab];
+            const q = (document.getElementById('ma-search').value || '').toLowerCase().trim();
+            const extraField = meta.extra ? meta.extra.field : null;
+            const rows = masterByKey(adminTab)
+                .filter(x => {
+                    if (!q) return true;
+                    const hay = [x.nama, meta.parentField ? x[meta.parentField] : '', extraField ? x[extraField] : ''].filter(Boolean).join(' ').toLowerCase();
+                    return hay.includes(q);
+                })
+                .sort((a, b) => String(a.nama || '').localeCompare(String(b.nama || ''), 'id', { numeric: true }));
+
+            if (totalEl) totalEl.textContent = rows.length + ' data';
+
+            if (!rows.length) {
+                listEl.innerHTML = '<p class="text-center text-xs text-slate-400 py-8">' +
+                    (masterLoaded ? 'Belum ada data. Tambahkan lewat form di atas.' : 'Memuat data...') + '</p>';
+                return;
+            }
+
+            const indukField = meta.parentField;
+            const indukLabel = meta.parent || '';
+            const extraLabel = meta.extra ? meta.extra.label : '';
+            listEl.innerHTML = rows.map(item => {
+                const induk = indukField ? item[indukField] : '';
+                const sub = [
+                    induk ? (indukLabel + ': ' + induk) : '',
+                    (extraField && item[extraField]) ? (extraLabel + ' ' + item[extraField]) : ''
+                ].filter(Boolean).join(' · ');
+                return `<div class="flex items-center gap-2 px-3 py-2.5 hover:bg-slate-50 transition">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-semibold text-slate-800 truncate">${escapeHTML(item.nama || '-')}</p>
+                        ${sub ? `<p class="text-[11px] text-slate-400 truncate">${escapeHTML(sub)}</p>` : ''}
+                    </div>
+                    <button onclick="editMasterData('${item.id}')" title="Edit" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                    <button onclick="deleteMasterData('${item.id}')" title="Hapus" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                </div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // ==========================================
+        // AKUN LOGIN RELAWAN (dibuat dari form Input Data)
+        // ==========================================
+        // Alur: simpan biodata → createUserWithEmailAndPassword (sesi ikut berpindah ke akun baru)
+        //     → tulis users/{uid} (role relawan, relawanId) → pulihkan sesi admin semula.
+        // Password TIDAK pernah ditulis ke Firestore.
+        const SESSION_EMAIL_KEY = 'pip_last_admin_email';
+
+        // Simpan email admin sebelum sesi berpindah, supaya bisa dipulihkan otomatis
+        function rememberAdminSession() {
+            adminSessionSnapshot = currentUser
+                ? { uid: currentUser.uid, email: currentUser.email || '' }
+                : null;
+            if (currentUser && currentUser.email) {
+                sessionStorage.setItem(SESSION_EMAIL_KEY, currentUser.email);
+            }
+        }
+
+        // Pulihkan sesi admin: login ulang sebagai admin.
+        // Jika sesi Auth admin tidak tersedia (mis. admin login lewat tab lain), arahkan ke login.
+        async function restoreAdminSession(adminEmail) {
+            restoringSession = true;
+            try {
+                // Tunggu event auth dari pembuatan akun selesai diproses
+                await new Promise(r => setTimeout(r, 400));
+                if (adminEmail) {
+                    try {
+                        await auth.sendPasswordResetEmail(adminEmail);
+                    } catch (e) {
+                        console.warn('Tidak bisa mengirim email reset ke admin:', e.code || e.message);
+                    }
+                }
+                await auth.signOut();
+            } catch (e) {
+                console.warn('Restore sesi:', e.code || e.message);
+            } finally {
+                restoringSession = false;
+            }
+
+            const email = adminEmail || sessionStorage.getItem(SESSION_EMAIL_KEY) || '';
+            sessionStorage.removeItem(SESSION_EMAIL_KEY);
+            adminSessionSnapshot = null;
+
+            // Konfirmasi UI bahwa relawan sudah tersimpan & akun siap dipakai
+            showLoginView();
+            if (email) document.getElementById('login-email').value = email;
+            document.getElementById('login-password').focus();
+            const hint = document.getElementById('login-relogin-note');
+            if (hint) {
+                hint.classList.remove('hidden');
+                hint.textContent = 'Akun relawan berhasil dibuat. Demi keamanan, login kembali sebagai admin' + (email ? ' (' + email + ')' : '') + '.';
+            }
+        }
+
+        // Tampilkan data relawan milik akun yang login (read-only) pada tab Input Data
+        async function openMyRelawanView() {
+            const relawanId = (currentRole && (currentRole.relawanId || (currentRole.user && currentRole.user.relawanId))) || '';
+            if (!relawanId) return;
+            try {
+                const snap = await db.collection(RELAWAN_COLLECTION).doc(relawanId).get();
+                if (!snap.exists) return;
+                const d = snap.data();
+                switchTab('input');
+                const fill = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+                fill('relawan-id', relawanId);
+                fill('input-nama', d.nama);
+                fill('input-nik', d.nik);
+                fill('input-wa', d.wa);
+                fill('input-kelurahan', d.kelurahan);
+                fill('input-alamat', d.alamat);
+                renderFormMasterOptions();
+                fill('input-dapil', d.dapil);
+                fill('input-kecamatan', d.kecamatan);
+                fill('input-rw', d.rw);
+                fill('input-peran', d.peran);
+                fill('input-universitas', d.universitas);
+                fill('input-email', d.akunEmail);
+                formWilayah = { rw: d.rw || '', rt: d.rt || [] };
+                formFasilitas = d.fasilitas || [];
+                renderFormMasterOptions();
+
+                document.getElementById('form-title').textContent = 'Data Diri Saya';
+                document.getElementById('edit-mode-badge').classList.remove('hidden');
+                document.getElementById('edit-mode-badge').textContent = 'Hanya Lihat';
+                document.getElementById('btn-cancel-edit').classList.add('hidden');
+                document.getElementById('btn-submit-relawan').classList.add('hidden');
+                // Form read-only: semua input dikunci agar tidak terkirim tanpa sengaja
+                document.querySelectorAll('#relawan-form input, #relawan-form select, #relawan-form textarea').forEach(el => {
+                    if (el.type === 'checkbox' || el.type === 'radio') el.disabled = true;
+                    else el.readOnly = true;
+                });
+                document.getElementById('relawan-form').setAttribute('data-readonly', '1');
+                document.getElementById('akun-edit-note').classList.remove('hidden');
+                document.getElementById('akun-edit-email').textContent = d.akunEmail || (currentUser && currentUser.email) || '-';
+                document.getElementById('input-password').required = false;
+                const pwd = document.getElementById('input-password');
+                if (pwd) pwd.closest('div').classList.add('hidden');
+                document.getElementById('input-email').readOnly = true;
+                document.getElementById('login-view').classList.add('hidden');
+            } catch (err) {
+                console.warn('Gagal memuat data relawan saya:', err.code || err.message);
+            }
+        }
+
+        // ==========================================
+        // SISTEM AUTENTIKASI (FIREBASE AUTH)
+        // ==========================================
+        function showLoginView() {
+            document.getElementById('login-view').classList.remove('hidden');
+            const mainView = document.getElementById('main-view');
+            mainView.classList.add('hidden');
+            mainView.classList.remove('flex');
+        }
+
+        function showMainView(user) {
+            document.getElementById('user-display-email').textContent = user.email || user.uid;
+            document.getElementById('login-view').classList.add('hidden');
+            const mainView = document.getElementById('main-view');
+            mainView.classList.remove('hidden');
+            mainView.classList.add('flex');
+            loadRelawan();
+        }
+
+        // Sesi admin yang sedang aktif (untuk dipulihkan setelah membuat akun relawan)
+        let adminSessionSnapshot = null;
+        let restoringSession = false;
+
+        // Setelah login: baca role, catat profil (jika diizinkan Rules), lalu render UI sesuai akses
+        async function initSession(user) {
+            try {
+                await loadMyRole(user);
+                await ensureUserProfile(user);
+                await loadMyRole(user);
+            } catch (err) {
+                console.warn('Gagal menyiapkan sesi:', err);
+            }
+            loadMasterData();
+            renderRoleUI();
+            renderFirestoreRules();
+            if (currentRole.isAdmin) loadUsers();
+            else if (activeTab === 'admin') switchTab('input');
+
+            // Hanya peran yang TIDAK boleh input (Relawan RT / Mahasiswa KIP) yang melihat
+            // "Data Diri Saya" (read-only). Peran lain - termasuk Koordinator Dapil -
+            // mendapat form kosong untuk mengisi data relawan baru.
+            const bolehInput = isInputAllowed();
+            if (!bolehInput && (currentRole.relawanId || (currentRole.user && currentRole.user.relawanId))) {
+                openMyRelawanView();
+            } else if (bolehInput) {
+                // Pastikan form benar-benar bersih dari sisa tampilan sebelumnya
+                resetForm();
+                switchTab('input');
+            }
+        }
+
+        // Seluruh peran boleh menambah/mengubah data, kecuali Relawan RT & Mahasiswa KIP
+        function isAdminDenied() {
+            if (isInputAllowed()) return false;
+            const peran = (currentRole && currentRole.peran) || 'peran Anda';
+            showToast('Akses ditolak: peran ' + peran + ' tidak dapat mengisi data relawan.', 'error');
+            return true;
+        }
+
+        // Sembunyikan tab "Input Data" untuk peran yang dilarang
+        function applyInputTabVisibility() {
+            const btn = document.getElementById('tab-btn-input');
+            const allowed = isInputAllowed();
+            const isAdmin = !!(currentRole && currentRole.isAdmin);
+            const adminTabBtn = document.getElementById('tab-btn-admin');
+            if (btn) btn.classList.toggle('hidden', !allowed);
+            if (adminTabBtn) adminTabBtn.classList.toggle('hidden', !isAdmin);
+            const nav = btn ? btn.parentElement : null;
+            if (nav) {
+                nav.className = isAdmin
+                    ? 'grid grid-cols-3 gap-1.5'
+                    : (allowed ? 'grid grid-cols-2 gap-1.5' : 'grid grid-cols-1 gap-1.5');
+            }
+            if (!isAdmin && activeTab === 'admin') {
+                switchTab(allowed ? 'input' : 'list');
+            } else if (!allowed && activeTab === 'input') {
+                switchTab('list');
+            }
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('btn-login');
+            const btnText = document.getElementById('btn-login-text');
+
+            if (!email || !password) {
+                showToast('Email dan password wajib diisi!', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btnText.textContent = 'Memeriksa akun...';
+
+            try {
+                const cred = await auth.signInWithEmailAndPassword(email, password);
+
+                // Collect email (opsional): batasi akun yang boleh masuk
+                if (ALLOWED_DOMAIN && !(cred.user.email || '').toLowerCase().endsWith('@' + ALLOWED_DOMAIN.toLowerCase())) {
+                    await auth.signOut();
+                    showToast('Hanya email @' + ALLOWED_DOMAIN + ' yang diperbolehkan.', 'error');
+                    return;
+                }
+
+                // Akun yang dinonaktifkan Admin tidak boleh masuk (status dibaca dari users/{uid})
+                try {
+                    const profile = await db.collection(USERS_COLLECTION).doc(cred.user.uid).get({ source: 'server' });
+                    if (profile.exists && profile.data().active === false) {
+                        await auth.signOut();
+                        showToast('Akun ini dinonaktifkan Admin.', 'error');
+                        return;
+                    }
+                } catch (e) {
+                    console.warn('Tidak bisa cek status akun:', e.code || e.message);
+                }
+
+                showToast('Login berhasil! Selamat bertugas.', 'success');
+                // Pindah ke main view & pengecekan role ditangani onAuthStateChanged
+            } catch (error) {
+                console.error('Login error:', error);
+                if (error.code === 'auth/user-not-found') {
+                    auth.sendPasswordResetEmail(email).catch(function (e) {
+                        console.warn('Reset password tidak terkirim:', e.code);
+                    });
+                    showToast('Akun tidak ditemukan. Kami kirim tautan aktivasi jika email terdaftar.', 'error');
+                } else {
+                    showToast(translateAuthError(error.code), 'error');
+                }
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = 'Masuk Aplikasi';
+            }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', async function() {
+            try {
+                await auth.signOut();
+                showToast('Anda telah keluar dari aplikasi.', 'info');
+            } catch (error) {
+                console.error('Logout error:', error);
+                showToast('Gagal keluar: ' + (error.code || error.message), 'error');
+            }
+        });
+
+        // Satu-satunya sumber status login
+        auth.onAuthStateChanged((user) => {
+            // Saat membuat akun relawan, sesi admin sementara berpindah ke akun baru.
+            // Jangan reset UI pada momen itu (admin langsung dipulihkan setelahnya).
+            if (restoringSession) return;
+
+            if (user) {
+                currentUser = user;
+                showMainView(user);
+                initSession(user);
+            } else {
+                currentUser = null;
+                currentRole = null;
+                usersData = [];
+                isAdminPanelLoaded = false;
+                activeTab = 'input';
+                if (unsubUsers) {
+                    unsubUsers();
+                    unsubUsers = null;
+                }
+                document.getElementById('user-role-badge').classList.add('hidden');
+                document.getElementById('btn-admin-panel').classList.add('hidden');
+                document.getElementById('access-banner').classList.add('hidden');
+                if (adminViewOpen) closeAdminPanel();
+                stopRealtime();
+                stopMaster();
+                formWilayah = { rw: '', rt: [] };
+                formFasilitas = [];
+                resetForm();
+                showLoginView();
+            }
+        });
+
+        // Toggle visibility password akun relawan (form Input Data)
+        const toggleInputPwd = document.getElementById('toggle-input-password');
+        if (toggleInputPwd) toggleInputPwd.addEventListener('click', function () {
+            const el = document.getElementById('input-password');
+            const isPwd = el.type === 'password';
+            el.type = isPwd ? 'text' : 'password';
+            this.innerHTML = isPwd
+                ? '<i data-lucide="eye-off" class="w-4 h-4"></i>'
+                : '<i data-lucide="eye" class="w-4 h-4"></i>';
+            lucide.createIcons();
+        });
+
+        // Toggle visibility password
+        document.getElementById('toggle-password').addEventListener('click', function() {
+            const pwdInput = document.getElementById('login-password');
+            const isPassword = pwdInput.type === 'password';
+            pwdInput.type = isPassword ? 'text' : 'password';
+            this.innerHTML = isPassword 
+                ? '<i data-lucide="eye-off" class="w-4 h-4"></i>' 
+                : '<i data-lucide="eye" class="w-4 h-4"></i>';
+            lucide.createIcons();
+        });
+
+        // ==========================================
+        // NAVIGASI TAB SPA (3 tab)
+        // ==========================================
+        // Konstanta kelas tab: font menyesuaikan agar 3 tab muat dalam satu baris di layar HP
+        const TAB_BTN_ACTIVE = 'tab-btn py-3 px-1 text-[11px] sm:text-sm font-semibold border-b-2 border-blue-600 text-blue-600 flex items-center justify-center gap-1 transition';
+        const TAB_BTN_IDLE = 'tab-btn py-3 px-1 text-[11px] sm:text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1 transition';
+
+        function switchTab(tabName) {
+            // Peran tanpa hak input tidak bisa membuka tab Input Data (juga saat dipanggil dari kode)
+            if (tabName === 'input' && !isInputAllowed()) tabName = 'list';
+            if (tabName === 'admin' && !(currentRole && currentRole.isAdmin)) {
+                tabName = isInputAllowed() ? 'input' : 'list';
+            }
+            const isAdminTab = tabName === 'admin';
+            const contentName = isAdminTab ? 'admin' : tabName;
+
+            const tabs = {
+                input: { btn: document.getElementById('tab-btn-input'), content: document.getElementById('tab-content-input') },
+                list: { btn: document.getElementById('tab-btn-list'), content: document.getElementById('tab-content-list') },
+                admin: { btn: document.getElementById('tab-btn-admin'), content: document.getElementById('tab-content-admin') }
+            };
+
+            Object.keys(tabs).forEach(name => {
+                const active = name === contentName;
+                const hidden = tabs[name].btn.classList.contains('hidden');
+                tabs[name].btn.className = active ? TAB_BTN_ACTIVE : TAB_BTN_IDLE;
+                if (hidden) tabs[name].btn.classList.add('hidden');
+                tabs[name].content.classList.toggle('hidden', !active);
+            });
+
+            activeTab = contentName;
+
+            if (contentName === 'list') renderRelawanList();
+            if (contentName === 'admin') {
+                renderAdminStatus();
+                renderFirestoreRules();
+                if (currentRole && currentRole.isAdmin && !unsubUsers) loadUsers();
+            }
+        }
+
+        // ==========================================
+        // CRUD DATA RELAWAN (TAMBAH, EDIT, HAPUS)
+        // ==========================================
+        document.getElementById('relawan-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (isSaving) return;
+
+            const user = auth.currentUser;
+            if (!user) {
+                showToast('Sesi login berakhir. Silakan login kembali.', 'error');
+                showLoginView();
+                return;
+            }
+            if (isAdminDenied()) return;
+            if (restoringSession) return; // proses pembuatan akun masih berjalan
+
+            const id = document.getElementById('relawan-id').value;
+            const nama = document.getElementById('input-nama').value.trim();
+            const nik = document.getElementById('input-nik').value.trim();
+            const wa = document.getElementById('input-wa').value.trim();
+            const dapilManual = document.getElementById('input-dapil').value;
+            const kecamatan = document.getElementById('input-kecamatan').value;
+            const kelurahan = document.getElementById('input-kelurahan').value.trim();
+            const alamat = document.getElementById('input-alamat').value.trim();
+            // Wilayah & properti tambahan dari master data Halaman Admin
+            const rw = document.getElementById('input-rw').value;
+            // RT sekarang pilih satu
+            const rtVal = document.getElementById('input-rt').value;
+            const rt = rtVal ? [rtVal] : [];
+            const peran = document.getElementById('input-peran').value;
+            const fasilitas = [...document.querySelectorAll('#input-fasilitas-wrap .fasilitas-check:checked')].map(c => c.value);
+            // Universitas hanya disimpan bila peran = Mahasiswa KIP
+            const universitas = isPeranMahasiswa() ? document.getElementById('input-universitas').value : '';
+            // Dapil otomatis mengikuti kecamatan yang dipilih (fallback ke pilihan manual)
+            const kecItem = masterByKey('kecamatan').find(k => k.nama === kecamatan);
+            const dapil = (kecItem && kecItem.dapil) || dapilManual || '';
+
+            const isAdmin = !!(currentRole && currentRole.isAdmin);
+            if (!isAdmin) {
+                const userDapil = currentUserDapil();
+                if (!userDapil || dapilManual !== userDapil || dapil !== userDapil) {
+                    showToast(
+                        userDapil
+                            ? 'Dapil data harus sesuai dengan Dapil akun Anda.'
+                            : 'Dapil akun Anda belum ditetapkan. Hubungi Admin.',
+                        'error'
+                    );
+                    return;
+                }
+            }
+            if (!isAdmin && !isKoordinatorDapil(currentRole)) {
+                const userKecamatan = currentUserKecamatan();
+                if (!userKecamatan || kecamatan !== userKecamatan) {
+                    showToast(
+                        userKecamatan
+                            ? 'Kecamatan data harus sesuai dengan Kecamatan akun Anda.'
+                            : 'Kecamatan akun Anda belum ditetapkan. Hubungi Admin.',
+                        'error'
+                    );
+                    return;
+                }
+            }
+            if (!canChooseKelurahan(currentRole)) {
+                const userKelurahan = currentUserKelurahan();
+                if (!userKelurahan || kelurahan !== userKelurahan) {
+                    showToast(
+                        userKelurahan
+                            ? 'Kelurahan data harus sesuai dengan Kelurahan akun Anda.'
+                            : 'Kelurahan akun Anda belum ditetapkan. Hubungi Admin.',
+                        'error'
+                    );
+                    return;
+                }
+            }
+            if (isRelawanRw(currentRole)) {
+                const userRw = currentUserRw();
+                if (!userRw || rw !== userRw) {
+                    showToast(
+                        userRw
+                            ? 'RW data harus sesuai dengan RW akun Anda.'
+                            : 'RW akun Anda belum ditetapkan. Hubungi Admin.',
+                        'error'
+                    );
+                    return;
+                }
+            }
+
+            // Akun login
+            const akunEmail = (document.getElementById('input-email').value || '').trim().toLowerCase();
+            const akunPassword = document.getElementById('input-password').value || '';
+
+            if (nik.length !== 16) {
+                showToast('NIK harus berjumlah 16 digit angka!', 'error');
+                return;
+            }
+            if (!nama || !wa || !kecamatan || !kelurahan) {
+                showToast('Lengkapi dulu nama, WhatsApp, kecamatan, dan kelurahan.', 'error');
+                return;
+            }
+            if (!id) {
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(akunEmail)) {
+                    showToast('Email akun tidak valid.', 'error');
+                    document.getElementById('input-email').focus();
+                    return;
+                }
+                if (akunPassword.length < 6) {
+                    showToast('Password akun minimal 6 karakter.', 'error');
+                    document.getElementById('input-password').focus();
+                    return;
+                }
+            }
+
+            setSaving(true);
+
+            // Sesi admin perlu dipulihkan setelah pembuatan akun (jaga-jaga agar tidak logout)
+            if (!id) rememberAdminSession();
+
+            try {
+                const payload = {
+                    nama, nik, wa, dapil, kecamatan, kelurahan,
+                    rw, rt, peran, fasilitas, universitas,
+                    alamat,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: user.email || user.uid
+                };
+
+                if (id) {
+                    // Update dokumen di Firestore
+                    if (isAdminDenied()) return;
+                    if (await isNikTaken(nik, id)) {
+                        showToast('NIK tersebut sudah dipakai relawan lain!', 'error');
+                        return;
+                    }
+                    await db.collection(RELAWAN_COLLECTION).doc(id).update(payload);
+                    showToast('Data relawan berhasil diperbarui!', 'success');
+                } else {
+                    // Cek duplikasi NIK di Firestore
+                    if (await isNikTaken(nik)) {
+                        showToast('NIK tersebut sudah terdaftar sebagai relawan!', 'error');
+                        return;
+                    }
+
+                    // 1) Buat akun login relawan. Catatan: sesi Auth berpindah ke akun baru
+                    //    (Firebase otomatis login pada user yang baru dibuat).
+                    const cred = await auth.createUserWithEmailAndPassword(akunEmail, akunPassword);
+                    const relawanId = cred.user.uid; // pakai UID sebagai ID dokumen relawan
+                    const akunUid = cred.user.uid;
+
+                    // 2) Simpan biodata relawan + tautan akun (masih dalam sesi akun baru,
+                    //    jadi Rules cukup mensyaratkan login).
+                    await db.collection(RELAWAN_COLLECTION).doc(relawanId).set({
+                        ...payload,
+                        akunUid,
+                        akunEmail,
+                        punyaAkun: true,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        createdBy: user.email || user.uid
+                    });
+
+                    // 3) Daftarkan akun di koleksi users dengan role relawan + tautan ke datanya
+                    await db.collection(USERS_COLLECTION).doc(akunUid).set({
+                        email: akunEmail,
+                        nama,
+                        role: 'relawan',
+                        active: true,
+                        relawanId,
+                        loginCount: 0,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+
+                    // 4) Pulihkan sesi admin (akun baru otomatis mengambil alih sesi)
+                    await restoreAdminSession(user.email);
+                    resetAdminUiAfterSave(akunEmail, akunPassword);
+                }
+
+                if (id) {
+                    resetForm();
+                    switchTab('list');
+                }
+            } catch (error) {
+                console.error('Gagal menyimpan data:', error);
+                let pesan = error.code || error.message;
+                if (error.code === 'permission-denied') {
+                    pesan = 'Ditolak Firestore Rules — perubahan data hanya untuk Admin.';
+                } else if (error.code === 'not-found') {
+                    pesan = 'Data sudah tidak ada (mungkin dihapus pengguna lain).';
+                } else if (error.code === 'unavailable') {
+                    pesan = 'Tidak dapat terhubung ke Firestore. Periksa koneksi internet.';
+                }
+                if (/auth\/email-already-in-use/.test(error.code || '')) {
+                    pesan = 'Email tersebut sudah dipakai akun lain. Gunakan email lain.';
+                } else if (/auth\/weak-password/.test(error.code || '')) {
+                    pesan = 'Password terlalu lemah (minimal 6 karakter).';
+                } else if (/auth\/invalid-email/.test(error.code || '')) {
+                    pesan = 'Format email akun tidak valid.';
+                } else if (/auth\/operation-not-allowed/.test(error.code || '')) {
+                    pesan = 'Metode Email/Password belum diaktifkan di Firebase Authentication.';
+                }
+                showToast('Gagal menyimpan: ' + pesan, 'error');
+            } finally {
+                setSaving(false);
+                // Jika sesi admin tidak sempat pulih, kembalikan ke layar login agar tidak tertahan
+                if (restoringSession) restoringSession = false;
+            }
+        });
+
+        // Setelah akun dibuat: tampilkan kredensial sekali agar admin bisa langsung memberi tahu relawan
+        function resetAdminUiAfterSave(email, password) {
+            resetForm();
+            switchTab('input');
+            const box = document.getElementById('creds-result');
+            if (box) {
+                box.classList.remove('hidden');
+                document.getElementById('creds-email').textContent = email;
+                document.getElementById('creds-password').textContent = password;
+            }
+        }
+
+        function copyCreds(text) {
+            const done = () => showToast('Disalin.', 'success');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(done).catch(() => legacyCopy(text, done));
+            } else {
+                legacyCopy(text, done);
+            }
+        }
+
+        function editRelawan(id) {
+            const item = relawanData.find(r => r.id === id);
+            if (!item) return;
+
+            document.getElementById('relawan-id').value = item.id;
+            document.getElementById('input-nama').value = item.nama;
+            document.getElementById('input-nik').value = item.nik;
+            document.getElementById('input-wa').value = item.wa;
+            document.getElementById('input-kecamatan').value = item.kecamatan;
+            document.getElementById('input-kelurahan').value = item.kelurahan;
+            document.getElementById('input-alamat').value = item.alamat || '';
+            const dapilEl = document.getElementById('input-dapil');
+            if (dapilEl) dapilEl.value = item.dapil || '';
+
+            // Wilayah & properti tambahan
+            formWilayah = { rw: item.rw || '', rt: item.rt || [] };
+            formFasilitas = item.fasilitas || [];
+            renderFormMasterOptions();
+            const peranEl = document.getElementById('input-peran');
+            if (peranEl) peranEl.value = item.peran || '';
+            const uniEl = document.getElementById('input-universitas');
+            if (uniEl) uniEl.value = item.universitas || '';
+
+            syncUniversitasVisibility();
+
+            // Akun login: sudah ada → email dikunci, field password disembunyikan
+            const emailEl = document.getElementById('input-email');
+            const pwdEl = document.getElementById('input-password');
+            if (emailEl) { emailEl.value = item.akunEmail || ''; emailEl.readOnly = true; }
+            if (pwdEl) {
+                pwdEl.value = '';
+                pwdEl.required = false;
+                if (pwdEl.closest('div')) pwdEl.closest('div').classList.add('hidden');
+            }
+            document.getElementById('akun-edit-note').classList.remove('hidden');
+            document.getElementById('akun-edit-email').textContent = item.akunEmail || '(akun belum dibuat)';
+
+            // Sembunyikan kotak kredensial dari penyimpanan sebelumnya
+            document.getElementById('creds-result').classList.add('hidden');
+            unlockFormFields();
+
+            // Ubah UI form ke Mode Edit
+            document.getElementById('form-title').textContent = 'Edit Data Relawan';
+            document.getElementById('edit-mode-badge').classList.remove('hidden');
+            document.getElementById('btn-cancel-edit').classList.remove('hidden');
+            document.getElementById('btn-submit-text').textContent = 'Simpan Perubahan';
+
+            switchTab('input');
+        }
+
+        // Buka kunci field yang sempat dijadikan read-only (mode "Data Diri Saya")
+        function unlockFormFields() {
+            const form = document.getElementById('relawan-form');
+            if (!form || !form.hasAttribute('data-readonly')) return;
+            form.removeAttribute('data-readonly');
+            form.querySelectorAll('input, select, textarea').forEach(el => {
+                if (el.type === 'checkbox' || el.type === 'radio') el.disabled = false;
+                else el.readOnly = false;
+            });
+            document.getElementById('edit-mode-badge').classList.add('hidden');
+            document.getElementById('edit-mode-badge').textContent = 'Mode Edit';
+            document.getElementById('btn-submit-relawan').classList.remove('hidden');
+        }
+
+        function resetForm() {
+            unlockFormFields();
+            document.getElementById('relawan-form').reset();
+            document.getElementById('relawan-id').value = '';
+            document.getElementById('form-title').textContent = 'Formulir Relawan Baru';
+            document.getElementById('edit-mode-badge').classList.add('hidden');
+            document.getElementById('edit-mode-badge').textContent = 'Mode Edit';
+            document.getElementById('btn-cancel-edit').classList.add('hidden');
+            document.getElementById('btn-submit-text').textContent = 'Simpan Data Relawan';
+            const btn = document.getElementById('btn-submit-relawan');
+            btn.disabled = false;
+            btn.classList.remove('opacity-60', 'cursor-not-allowed', 'hidden');
+            formWilayah = { rw: '', rt: [] };
+            formFasilitas = [];
+
+            // Akun login: kembali ke mode "buat akun baru"
+            const emailEl = document.getElementById('input-email');
+            const pwdEl = document.getElementById('input-password');
+            if (emailEl) { emailEl.readOnly = false; emailEl.value = ''; }
+            if (pwdEl) {
+                pwdEl.value = '';
+                pwdEl.required = true;
+                if (pwdEl.closest('div')) pwdEl.closest('div').classList.remove('hidden');
+            }
+            document.getElementById('akun-edit-note').classList.add('hidden');
+            document.getElementById('creds-result').classList.add('hidden');
+
+            renderFormMasterOptions();
+        }
+
+        // Mode edit: akun sudah ada → email dikunci, password disembunyikan
+        function setAkunFieldsForEdit(email) {
+            const emailEl = document.getElementById('input-email');
+            const pwdEl = document.getElementById('input-password');
+            if (emailEl) { emailEl.value = email || ''; emailEl.readOnly = true; }
+            if (pwdEl) {
+                pwdEl.value = '';
+                pwdEl.required = false;
+                if (pwdEl.closest('div')) pwdEl.closest('div').classList.add('hidden');
+            }
+            const note = document.getElementById('akun-edit-note');
+            note.classList.remove('hidden');
+            document.getElementById('akun-edit-email').textContent = email || '-';
+        }
+
+        function showRelawanDetail(id) {
+            const item = relawanData.find(row => row.id === id);
+            if (!item) {
+                showToast('Data relawan tidak ditemukan.', 'error');
+                return;
+            }
+
+            const valueText = value => {
+                const normalized = Array.isArray(value) ? value.join(', ') : value;
+                return String(normalized == null ? '' : normalized).trim() || '-';
+            };
+            const details = [
+                ['Nama', item.nama],
+                ['NIK', item.nik],
+                ['Nomor WhatsApp', item.wa],
+                ['Peran', item.peran],
+                ['Dapil', item.dapil],
+                ['Kecamatan', item.kecamatan],
+                ['Kelurahan', item.kelurahan],
+                ['RW', item.rw],
+                ['RT', item.rt],
+                ['Fasilitas', item.fasilitas],
+                ['Universitas', item.universitas],
+                ['Alamat / Catatan', item.alamat],
+                ['Email Akun', item.akunEmail],
+                ['Tanggal Terdaftar', formatTanggal(item.createdAt)]
+            ];
+            document.getElementById('relawan-detail-content').innerHTML = details.map(([label, value]) => `
+                <div class="grid grid-cols-3 gap-3 py-2 border-b border-slate-100 last:border-0">
+                    <span class="text-xs font-semibold text-slate-500">${escapeHTML(label)}</span>
+                    <span class="col-span-2 text-sm text-slate-800 whitespace-pre-wrap break-words">${escapeHTML(valueText(value))}</span>
+                </div>
+            `).join('');
+
+            const modal = document.getElementById('relawan-detail-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.getElementById('btn-close-relawan-detail').focus();
+            lucide.createIcons();
+        }
+
+        function closeRelawanDetail() {
+            const modal = document.getElementById('relawan-detail-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.getElementById('btn-close-relawan-detail').addEventListener('click', closeRelawanDetail);
+        document.getElementById('relawan-detail-modal').addEventListener('click', event => {
+            if (event.target === event.currentTarget) closeRelawanDetail();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape') closeRelawanDetail();
+        });
+
+        // Modal Konfirmasi Hapus
+        function confirmDelete(id, nama) {
+            if (isAdminDenied()) return;
+            deleteTargetId = id;
+            document.getElementById('confirm-text').textContent = `Anda yakin ingin menghapus data relawan "${nama}"?`;
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        document.getElementById('btn-cancel-delete').addEventListener('click', () => {
+            deleteTargetId = null;
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        });
+
+        document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
+            const modal = document.getElementById('confirm-modal');
+            const btnConfirm = document.getElementById('btn-confirm-delete');
+            const targetId = deleteTargetId;
+
+            deleteTargetId = null;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+
+            if (!targetId) return;
+
+            btnConfirm.disabled = true;
+            btnConfirm.textContent = 'Menghapus...';
+
+            try {
+                await db.collection(RELAWAN_COLLECTION).doc(targetId).delete();
+                showToast('Data relawan berhasil dihapus.', 'info');
+            } catch (error) {
+                console.error('Gagal menghapus data:', error);
+                const pesan = error.code === 'permission-denied'
+                    ? 'Ditolak oleh Firestore Rules (tidak punya izin hapus).'
+                    : (error.code || error.message);
+                showToast('Gagal menghapus: ' + pesan, 'error');
+            } finally {
+                btnConfirm.disabled = false;
+                btnConfirm.textContent = 'Ya, Hapus';
+            }
+        });
+
+        // ==========================================
+        // RENDER DAFTAR RELAWAN & FILTERS
+        // ==========================================
+        function setListFilterOptions(selectEl, placeholder, options, selected, locked) {
+            if (!selectEl) return '';
+            selectEl.innerHTML = '<option value="">' + escapeHTML(placeholder) + '</option>' +
+                options.map(value => `<option value="${escapeHTML(value)}">${escapeHTML(value)}</option>`).join('');
+            selectEl.value = options.includes(selected) ? selected : '';
+            selectEl.disabled = locked;
+            return selectEl.value;
+        }
+
+        function updateStatsAndFilters() {
+            const unique = values => [...new Set(values
+                .map(value => String(value == null ? '' : value).trim())
+                .filter(Boolean))]
+                .sort((a, b) => a.localeCompare(b, 'id', { numeric: true }));
+            const role = currentRole || {};
+            const isAdmin = !!role.isAdmin;
+
+            const dapilOptionsAll = unique([...masterNames('dapil'), ...relawanData.map(item => item.dapil)]);
+            const dapilLocked = !isAdmin;
+            const dapilOptions = dapilLocked
+                ? (currentUserDapil() ? [currentUserDapil()] : [])
+                : dapilOptionsAll;
+            const filterDapilEl = document.getElementById('filter-dapil');
+            const selectedDapil = dapilLocked ? currentUserDapil() : filterDapilEl.value;
+            const filterDapil = setListFilterOptions(
+                filterDapilEl,
+                dapilLocked
+                    ? (currentUserDapil() ? '-- Dapil akun --' : '-- Dapil akun belum ditetapkan --')
+                    : '-- Semua Dapil (' + dapilOptions.length + ') --',
+                dapilOptions,
+                selectedDapil,
+                dapilLocked
+            );
+
+            const kecamatanRows = [
+                ...masterByKey('kecamatan').map(item => ({ nama: item.nama, dapil: item.dapil })),
+                ...relawanData.map(item => ({ nama: item.kecamatan, dapil: item.dapil }))
+            ].filter(item => item.nama);
+            const kecamatanByDapil = kecamatanRows.filter(item =>
+                (isAdmin && !filterDapil) || (!!filterDapil && item.dapil === filterDapil)
+            );
+            const kecamatanOptionsAll = unique(kecamatanByDapil.map(item => item.nama));
+            const kecamatanLocked = !isAdmin && !isKoordinatorDapil(role);
+            const kecamatanOptions = kecamatanLocked
+                ? (currentUserKecamatan() ? [currentUserKecamatan()] : [])
+                : kecamatanOptionsAll;
+            const filterKecamatanEl = document.getElementById('filter-kecamatan');
+            const selectedKecamatan = kecamatanLocked ? currentUserKecamatan() : filterKecamatanEl.value;
+            const filterKecamatan = setListFilterOptions(
+                filterKecamatanEl,
+                kecamatanLocked
+                    ? (currentUserKecamatan() ? '-- Kecamatan akun --' : '-- Kecamatan akun belum ditetapkan --')
+                    : '-- Semua Kecamatan (' + kecamatanOptions.length + ') --',
+                kecamatanOptions,
+                selectedKecamatan,
+                kecamatanLocked
+            );
+
+            const kelurahanRows = [
+                ...masterByKey('kelurahan').map(item => ({ nama: item.nama, kecamatan: item.kecamatan })),
+                ...relawanData.map(item => ({ nama: item.kelurahan, kecamatan: item.kecamatan }))
+            ].filter(item => item.nama);
+            const eligibleKecamatan = new Set(kecamatanByDapil.map(item => item.nama));
+            const kelurahanOptionsAll = unique(kelurahanRows
+                .filter(item => filterKecamatan
+                    ? item.kecamatan === filterKecamatan
+                    : eligibleKecamatan.has(item.kecamatan))
+                .map(item => item.nama));
+            const kelurahanLocked = !canChooseKelurahan(role);
+            const kelurahanOptions = kelurahanLocked
+                ? (currentUserKelurahan() ? [currentUserKelurahan()] : [])
+                : kelurahanOptionsAll;
+            const filterKelurahanEl = document.getElementById('filter-kelurahan');
+            const selectedKelurahan = kelurahanLocked ? currentUserKelurahan() : filterKelurahanEl.value;
+            setListFilterOptions(
+                filterKelurahanEl,
+                kelurahanLocked
+                    ? (currentUserKelurahan() ? '-- Kelurahan akun --' : '-- Kelurahan akun belum ditetapkan --')
+                    : '-- Semua Kelurahan (' + kelurahanOptions.length + ') --',
+                kelurahanOptions,
+                selectedKelurahan,
+                kelurahanLocked
+            );
+
+            const rwOptionsAll = unique([...masterNames('rw'), ...relawanData.map(item => item.rw)]);
+            const rwLocked = isRelawanRw(role);
+            const rwOptions = rwLocked
+                ? (currentUserRw() ? [currentUserRw()] : [])
+                : rwOptionsAll;
+            const filterRwEl = document.getElementById('filter-rw');
+            setListFilterOptions(
+                filterRwEl,
+                rwLocked
+                    ? (currentUserRw() ? '-- RW akun --' : '-- RW akun belum ditetapkan --')
+                    : '-- Semua RW (' + rwOptions.length + ') --',
+                rwOptions,
+                rwLocked ? currentUserRw() : filterRwEl.value,
+                rwLocked
+            );
+
+            const rtOptions = unique([
+                ...masterNames('rt'),
+                ...relawanData.flatMap(item => Array.isArray(item.rt) ? item.rt : [])
+            ]);
+            const filterRtEl = document.getElementById('filter-rt');
+            setListFilterOptions(
+                filterRtEl,
+                '-- Semua RT (' + rtOptions.length + ') --',
+                rtOptions,
+                filterRtEl.value,
+                false
+            );
+        }
+
+        function roleBadgeClass(peran) {
+            const colors = {
+                'koordinator dapil': 'bg-orange-50 text-orange-700',
+                'koordinator kecamatan': 'bg-blue-50 text-blue-700',
+                'koordinator kelurahan': 'bg-red-50 text-red-700',
+                'relawan rw': 'bg-green-50 text-green-700',
+                'relawan rt': 'bg-purple-50 text-purple-700'
+            };
+            return colors[String(peran || '').trim().toLowerCase()] || 'bg-indigo-50 text-indigo-700';
+        }
+
+        function renderRelawanList() {
+            const container = document.getElementById('relawan-list-container');
+            const emptyState = document.getElementById('empty-state');
+            const searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+            const filterKec = document.getElementById('filter-kecamatan').value;
+            const filterDapilEl = document.getElementById('filter-dapil');
+            const filterDapil = filterDapilEl ? filterDapilEl.value : '';
+            const filterKelurahan = document.getElementById('filter-kelurahan').value;
+            const filterRw = document.getElementById('filter-rw').value;
+            const filterRt = document.getElementById('filter-rt').value;
+            const hasMissingLockedFilter = (!currentRole || !currentRole.isAdmin) && (
+                !currentUserDapil() ||
+                (!isKoordinatorDapil(currentRole) && !currentUserKecamatan()) ||
+                (!canChooseKelurahan(currentRole) && !currentUserKelurahan())
+            ) || (isRelawanRw(currentRole) && !currentUserRw());
+
+            const filtered = relawanData.filter(item => {
+                const nama = (item.nama || '').toLowerCase();
+                const nik = item.nik || '';
+                const kelurahan = (item.kelurahan || '').toLowerCase();
+                const matchSearch = nama.includes(searchQuery) ||
+                                    nik.includes(searchQuery) ||
+                                    kelurahan.includes(searchQuery);
+                const matchKec = filterKec === '' || item.kecamatan === filterKec;
+                const matchDapil = filterDapil === '' || item.dapil === filterDapil;
+                const matchKelurahan = filterKelurahan === '' || item.kelurahan === filterKelurahan;
+                const matchRw = filterRw === '' || item.rw === filterRw;
+                const matchRt = filterRt === '' || (item.rt || []).includes(filterRt);
+                return !hasMissingLockedFilter && matchSearch && matchDapil && matchKec &&
+                    matchKelurahan && matchRw && matchRt;
+            });
+
+            const countEl = document.getElementById('filtered-count');
+            if (countEl) countEl.textContent = isDataLoaded ? filtered.length + ' relawan' : 'Memuat...';
+
+            container.innerHTML = '';
+
+            // Jangan tampilkan empty state selama data Firestore belum termuat
+            if (!isDataLoaded) {
+                emptyState.classList.add('hidden');
+                return;
+            }
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            filtered.forEach(item => {
+                const cleanWa = (item.wa || '').replace(/[^0-9]/g, '');
+                const waNumber = cleanWa.startsWith('62')
+                    ? cleanWa
+                    : (cleanWa.startsWith('0') ? '62' + cleanWa.slice(1) : (cleanWa ? '62' + cleanWa : ''));
+                const waDisplay = cleanWa
+                    ? (cleanWa.startsWith('62') ? '+' + cleanWa : '+62 ' + (cleanWa.startsWith('0') ? cleanWa.slice(1) : cleanWa))
+                    : '-';
+                const badgeClass = roleBadgeClass(item.peran);
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl p-4 shadow-xs border border-slate-100 hover:border-blue-200 transition';
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0 space-y-1">
+                            <h3 class="font-bold text-slate-800 text-sm leading-snug break-words">${escapeHTML(item.nama)}</h3>
+                            <p class="text-xs text-slate-500 font-mono">NIK: ${escapeHTML(item.nik)}</p>
+                            <p class="text-xs text-slate-600">Peran:
+                                <span class="inline-block px-2 py-0.5 ${badgeClass} rounded-md text-[10px] font-semibold">${escapeHTML(item.peran || '-')}</span>
+                            </p>
+                            ${waNumber
+                                ? `<a href="https://wa.me/${waNumber}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i><span>Nomor WA: ${escapeHTML(waDisplay)}</span></a>`
+                                : '<p class="text-xs text-slate-600">Nomor WA: -</p>'}
+                        </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button type="button" data-relawan-detail="${escapeHTML(item.id)}" title="Lihat Detail" aria-label="Lihat detail ${escapeHTML(item.nama)}"
+                                class="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                            <button type="button" onclick="editRelawan('${item.id}')" title="Edit Data" aria-label="Edit data"
+                                class="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition">
+                                <i data-lucide="pencil" class="w-4 h-4"></i>
+                            </button>
+                            <button type="button" onclick="confirmDelete('${item.id}', '${escapeHTML(item.nama || '').replace(/'/g, "\\'")}')" title="Hapus Data" aria-label="Hapus data"
+                                class="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        // Event listener pencarian & filter
+        document.getElementById('relawan-list-container').addEventListener('click', event => {
+            const detailButton = event.target.closest('[data-relawan-detail]');
+            if (detailButton) showRelawanDetail(detailButton.getAttribute('data-relawan-detail'));
+        });
+        document.getElementById('search-input').addEventListener('input', renderRelawanList);
+        const filterDapilEl = document.getElementById('filter-dapil');
+        const filterKecamatanEl = document.getElementById('filter-kecamatan');
+        const updateLocationFilters = () => {
+            updateStatsAndFilters();
+            renderRelawanList();
+        };
+        if (filterDapilEl) filterDapilEl.addEventListener('change', updateLocationFilters);
+        if (filterKecamatanEl) filterKecamatanEl.addEventListener('change', updateLocationFilters);
+        ['filter-kelurahan', 'filter-rw', 'filter-rt'].forEach(id => {
+            document.getElementById(id).addEventListener('change', renderRelawanList);
+        });
+
+        // Export Data ke CSV (dari data Firestore yang sedang ditampilkan)
+        function exportCSV() {
+            if (relawanData.length === 0) {
+                showToast('Tidak ada data untuk diunduh.', 'error');
+                return;
+            }
+            const headers = ['Nama Lengkap', 'NIK', 'No WhatsApp', 'Dapil', 'Kecamatan', 'Kelurahan', 'RW', 'RT', 'Peran', 'Fasilitas', 'Universitas', 'Catatan Tambahan', 'Terdaftar'];
+            // Escape tanda kutip ganda agar CSV tidak rusak
+            const q = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+            const rows = relawanData.map(r => [
+                q(r.nama),
+                q(r.nik),
+                `"+62${(r.wa || '').replace(/[^0-9]/g, '')}"`,
+                q(r.dapil),
+                q(r.kecamatan),
+                q(r.kelurahan),
+                q(r.rw),
+                q((r.rt || []).join(', ')),
+                q(r.peran),
+                q((r.fasilitas || []).join(', ')),
+                q(r.universitas),
+                q(r.alamat),
+                q(formatTanggal(r.createdAt))
+            ]);
+
+            const csvContent = "data:text/csv;charset=utf-8,"
+                + encodeURIComponent([headers.join(','), ...rows.map(e => e.join(','))].join('\n'));
+
+            const link = document.createElement('a');
+            link.setAttribute('href', csvContent);
+            link.setAttribute('download', `Data_Relawan_PIP_Bandung_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('File CSV berhasil diunduh!', 'success');
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag]));
+        }
+
+        // ==========================================
+        // JALANKAN SAAT HALAMAN DIMUAT
+        // ==========================================
+        window.addEventListener('load', function() {
+            lucide.createIcons();
+            renderFirestoreRules();
+            // Status login & pemuatan data ditangani oleh auth.onAuthStateChanged()
+        });
+
+        // Lepas listener Firestore saat tab ditutup
+        window.addEventListener('beforeunload', function() {
+            if (unsubRelawan) unsubRelawan();
+            if (unsubUsers) unsubUsers();
+            Object.keys(unsubMaster).forEach(k => unsubMaster[k]());
+        });
+
+        // ==========================================
+        // EVENT: KETERKAIAN FORM (WILAYAH & FASILITAS)
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', function () {
+            const selDapil = document.getElementById('input-dapil');
+            if (selDapil) selDapil.addEventListener('change', function () {
+                renderKecamatanOptions();
+                renderKelurahanOptions();
+            });
+
+            const selKec = document.getElementById('input-kecamatan');
+            if (selKec) selKec.addEventListener('change', function () {
+                // Ganti kecamatan → kelurahan lama tidak relevan lagi
+                const kelEl = document.getElementById('input-kelurahan');
+                if (kelEl) kelEl.value = '';
+                renderKelurahanOptions();
+                // Dapil otomatis ikut kecamatan yang dipilih
+                const item = masterByKey('kecamatan').find(k => k.nama === this.value);
+                const dapilEl = document.getElementById('input-dapil');
+                if (item && item.dapil && dapilEl && dapilEl.value !== item.dapil) {
+                    dapilEl.value = item.dapil;
+                }
+            });
+
+            const selRw = document.getElementById('input-rw');
+            if (selRw) selRw.addEventListener('change', function () {
+                formWilayah.rw = this.value;
+            });
+
+            const selRt = document.getElementById('input-rt');
+            if (selRt) selRt.addEventListener('change', function () {
+                formWilayah.rt = this.value ? [this.value] : [];
+            });
+
+            const selPeran = document.getElementById('input-peran');
+            if (selPeran) selPeran.addEventListener('change', syncUniversitasVisibility);
+
+            const fasWrap = document.getElementById('input-fasilitas-wrap');
+            if (fasWrap) fasWrap.addEventListener('change', function () {
+                formFasilitas = [...fasWrap.querySelectorAll('.fasilitas-check:checked')].map(c => c.value);
+            });
+        });
+    </script>
+</body>
+</html>
