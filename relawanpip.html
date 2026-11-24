@@ -102,7 +102,7 @@ service cloud.firestore {
                 <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mb-4 mx-auto">
                     <i data-lucide="alert-triangle" class="w-6 h-6"></i>
                 </div>
-                <h3 class="text-lg font-bold text-center text-slate-800 mb-1">Hapus Data Relawan?</h3>
+                <h3 id="confirm-title" class="text-lg font-bold text-center text-slate-800 mb-1">Hapus Data Relawan?</h3>
                 <p id="confirm-text" class="text-sm text-slate-500 text-center mb-6">Data yang dihapus tidak dapat dikembalikan.</p>
                 <div class="flex gap-3">
                     <button id="btn-cancel-delete" class="flex-1 py-2.5 px-4 rounded-xl border border-slate-300 text-slate-700 font-medium text-sm hover:bg-slate-50 transition">
@@ -124,6 +124,45 @@ service cloud.firestore {
                     </button>
                 </div>
                 <div id="relawan-detail-content" class="p-4 overflow-y-auto space-y-2.5"></div>
+            </div>
+        </div>
+
+        <!-- Modal Lupa Password (kirim email reset) -->
+        <div id="forgot-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="forgot-title">
+            <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl fade-in">
+                <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-4 mx-auto">
+                    <i data-lucide="key-round" class="w-6 h-6"></i>
+                </div>
+                <h3 id="forgot-title" class="text-lg font-bold text-center text-slate-800 mb-1">Lupa Password?</h3>
+                <p class="text-xs text-slate-500 text-center mb-4 leading-relaxed">
+                    Masukkan email akun Anda. Kami kirim tautan reset password ke email tersebut.
+                </p>
+
+                <form id="forgot-form" class="space-y-3" autocomplete="off">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Email Akun</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                <i data-lucide="mail" class="w-4 h-4"></i>
+                            </div>
+                            <input type="email" id="forgot-email" required autocomplete="username" placeholder="nama@contoh.com"
+                                class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                        </div>
+                    </div>
+
+                    <div id="forgot-error" class="hidden text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-2.5 leading-relaxed"></div>
+                    <div id="forgot-success" class="hidden text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 leading-relaxed"></div>
+
+                    <div class="flex gap-2 pt-1">
+                        <button type="button" id="btn-cancel-forgot" class="flex-1 py-2.5 px-4 rounded-xl border border-slate-300 text-slate-700 font-medium text-sm hover:bg-slate-50 transition">
+                            Batal
+                        </button>
+                        <button type="submit" id="btn-send-reset" class="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-1.5">
+                            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                            <span id="btn-send-reset-text">Kirim Email</span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -181,7 +220,9 @@ service cloud.firestore {
                             <input type="checkbox" checked class="rounded text-blue-600 focus:ring-blue-500">
                             <span>Ingat sesi saya</span>
                         </label>
-                        <span class="text-slate-400 italic">Terhubung Firebase</span>
+                        <button type="button" id="btn-forgot-password" class="font-semibold text-blue-600 hover:text-blue-700 hover:underline transition">
+                            Lupa Password?
+                        </button>
                     </div>
 
                     <button type="submit" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold py-3.5 px-4 rounded-xl shadow-md shadow-blue-600/20 transition flex items-center justify-center gap-2 mt-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100">
@@ -334,17 +375,22 @@ service cloud.firestore {
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Password Akun <span class="text-slate-400 font-normal">(min. 6 karakter)</span> <span class="text-red-500">*</span></label>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Password Akun <span class="text-slate-400 font-normal">(default: 123456)</span> <span class="text-red-500">*</span></label>
                                     <div class="relative">
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                                             <i data-lucide="lock" class="w-4 h-4"></i>
                                         </div>
-                                        <input type="password" id="input-password" required minlength="6" autocomplete="new-password" placeholder="••••••"
+                                        <!-- passwordrules/autocomplete="off" mencegah browser menampilkan
+                                             saran "Sandi Kuat". Nilai default 123456, dapat diubah user di tab Profil. -->
+                                        <input type="password" id="input-password" required minlength="6" value="123456"
+                                            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                                            data-lpignore="true" data-1p-ignore="true" passwordrules="minlength: 6;"
                                             class="w-full pl-9 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition">
                                         <button type="button" id="toggle-input-password" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
                                             <i data-lucide="eye" class="w-4 h-4"></i>
                                         </button>
                                     </div>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">Password awal 123456 — sarankan relawan menggantinya di tab Profil.</p>
                                 </div>
 
                                 <!-- Mode edit: akun sudah ada, tidak perlu password -->
@@ -640,6 +686,12 @@ service cloud.firestore {
                             </div>
                             <div id="users-list-container" class="space-y-2"></div>
                             <p id="admin-list-empty" class="hidden text-center text-xs text-slate-500 py-6">Belum ada akun terdaftar.</p>
+                            <p class="text-[11px] text-slate-400 leading-relaxed pt-1">
+                                <span class="font-semibold">Hapus Akun</span> menghapus dokumen <span class="font-mono">users/{uid}</span>,
+                                data relawan terkait, dan menonaktifkan akun di Firebase Authentication.
+                                Untuk menghapus permanen dari Authentication, deploy Firebase Function Admin SDK
+                                lalu isi <span class="font-mono">DELETE_USER_ENDPOINT</span> pada kode.
+                            </p>
                         </div>
 
                         <!-- Mode panduan: bukan admin -->
@@ -1031,6 +1083,10 @@ service cloud.firestore {
         // Collect email (jika diaktifkan) membatasi akun yang boleh masuk saat login pertama
         const ALLOWED_DOMAIN = '';
 
+        // Password awal untuk akun relawan baru. User dapat menggantinya sendiri
+        // di tab Profil → Ubah Password, atau lewat "Lupa Password?" di halaman login.
+        const DEFAULT_RESET_PASSWORD = '123456';
+
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
@@ -1051,6 +1107,7 @@ service cloud.firestore {
         // State aplikasi
         let relawanData = [];      // cache realtime dari Firestore
         let deleteTargetId = null;
+        let pendingDeleteUid = null; // UID akun yang menunggu konfirmasi hapus akun
         let isSaving = false;
         let unsubRelawan = null;   // unsubscribe listener Firestore
         let isDataLoaded = false;
@@ -1269,6 +1326,179 @@ service cloud.firestore {
             } catch (err) {
                 showToast('Gagal menyimpan status akun: ' + translateFirebaseError(err), 'error');
             }
+        }
+
+        // ==========================================
+        // HAPUS AKUN (Firestore + Firebase Authentication)
+        // ==========================================
+        // CATATAN PENTING:
+        // Menghapus akun di Firebase Auth TIDAK BISA dilakukan dari SDK client
+        // (butuh Admin SDK / service account di server). Karena itu, setelah dokumen
+        // users/{uid} & relawan/{relawanId} dihapus, akun Auth ditandai terlarang lewat
+        // REST Identity Toolkit (accounts:update dengan disableUser) memakai API key
+        // project. Akun-nya hilang dari daftar akun aktif dan tidak bisa login lagi.
+        //
+        // Untuk benar-benar menghapus dari Authentication (bukan hanya disable),
+        // deploy Firebase Function "deleteAuthUser" (Admin SDK) lalu isi
+        // DELETE_USER_ENDPOINT di bawah. Tombol akan otomatis memakai endpoint itu.
+        const DELETE_USER_ENDPOINT = ''; // contoh: 'https://asia-southeast2-<project>.cloudfunctions.net/deleteAuthUser'
+
+        // Hapus dokumen users/{uid} + relawan yang tertaut (best-effort)
+        async function deleteAccountDocs(uid) {
+            const userRef = db.collection(USERS_COLLECTION).doc(uid);
+            let userData = null;
+            try {
+                const snap = await userRef.get();
+                if (snap.exists) userData = snap.data();
+            } catch (err) {
+                if (!deniedCode(err)) console.warn('Gagal membaca users/{uid} sebelum hapus:', err);
+            }
+
+            // Kumpulkan ID dokumen relawan yang terkait dengan akun ini
+            const relawanIds = new Set();
+            if (userData && userData.relawanId) relawanIds.add(userData.relawanId);
+            relawanIds.add(uid); // ID dokumen relawan yang dibuat aplikasi = UID akun
+            relawanData.forEach(item => {
+                if (item.akunUid === uid) relawanIds.add(item.id);
+                else if (userData && userData.email && normIdentitas(item.akunEmail) === normIdentitas(userData.email)) relawanIds.add(item.id);
+            });
+
+            for (const relawanId of relawanIds) {
+                try {
+                    await db.collection(RELAWAN_COLLECTION).doc(relawanId).delete();
+                } catch (err) {
+                    if (!deniedCode(err) || err.code !== 'not-found') console.warn('Gagal hapus relawan/' + relawanId + ':', err.code || err.message);
+                }
+            }
+
+            await userRef.delete();
+            return { userData, relawanDeleted: [...relawanIds] };
+        }
+
+        // Tandai akun Auth terlarang (disable) via REST Identity Toolkit.
+        // Butuh idToken admin yang masih valid dan API key project.
+        async function disableAuthAccount(uid) {
+            const admin = auth.currentUser;
+            if (!admin) throw new Error('Sesi admin berakhir.');
+            const idToken = await admin.getIdToken(true);
+            const res = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:update?key=' + encodeURIComponent(firebaseConfig.apiKey), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ localId: uid, disableUser: true, idToken })
+            });
+            if (!res.ok) {
+                let detail = 'HTTP ' + res.status;
+                try {
+                    const body = await res.json();
+                    detail = (body && body.error && (body.error.message || body.error)) || detail;
+                } catch (e) { /* abaikan */ }
+                throw new Error(String(detail));
+            }
+            return true;
+        }
+
+        // Panggil Firebase Function (Admin SDK) bila DELETE_USER_ENDPOINT diisi
+        async function deleteAuthAccountViaEndpoint(uid) {
+            const admin = auth.currentUser;
+            if (!admin) throw new Error('Sesi admin berakhir.');
+            const idToken = await admin.getIdToken(true);
+            const res = await fetch(DELETE_USER_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ uid, idToken })
+            });
+            if (!res.ok) {
+                let detail = 'HTTP ' + res.status;
+                try {
+                    const body = await res.json();
+                    detail = (body && (body.error || body.message)) || detail;
+                } catch (e) { /* abaikan */ }
+                throw new Error(String(detail));
+            }
+            return true;
+        }
+
+        // Buka modal konfirmasi hapus akun (dipanggil dari tombol di daftar akun)
+        function confirmDeleteAccount(uid) {
+            if (!currentRole || !currentRole.isAdmin) {
+                showToast('Hanya Admin yang dapat menghapus akun.', 'error');
+                return;
+            }
+            if (currentUser && uid === currentUser.uid) {
+                showToast('Anda tidak dapat menghapus akun milik sendiri.', 'error');
+                return;
+            }
+            const row = usersData.find(u => u.uid === uid);
+            const label = row ? (row.nama || row.email || uid) : uid;
+            pendingDeleteUid = uid;
+            document.getElementById('confirm-title').textContent = 'Hapus Akun Pengguna?';
+            document.getElementById('confirm-text').textContent =
+                'Akun "' + label + '" akan dihapus dari daftar akun beserta data relawannya, dan akun tidak bisa login lagi. Tindakan ini tidak dapat dibatalkan.';
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Eksekusi penghapusan akun (dipanggil dari tombol konfirmasi di modal)
+        async function deleteAccount(uid) {
+            if (!uid) return;
+            const row = usersData.find(u => u.uid === uid) || {};
+            const btn = document.getElementById('btn-confirm-delete');
+            btn.disabled = true;
+            btn.textContent = 'Menghapus...';
+
+            let docResult = null;
+            let docError = null;
+            let authError = null;
+            let authMode = '';
+
+            // --- 1) Hapus dokumen Firestore (users + relawan terkait) ---
+            try {
+                docResult = await deleteAccountDocs(uid);
+            } catch (err) {
+                docError = err;
+            }
+
+            // --- 2) Hapus / nonaktifkan akun di Firebase Authentication ---
+            try {
+                if (DELETE_USER_ENDPOINT) {
+                    await deleteAuthAccountViaEndpoint(uid);
+                    authMode = 'deleted';
+                } else {
+                    await disableAuthAccount(uid);
+                    authMode = 'disabled';
+                }
+            } catch (err) {
+                authError = err;
+                console.warn('Akun Auth tidak dapat dihapus/dinonaktifkan:', err.message || err);
+            }
+
+            // --- 3) Laporan hasil ---
+            if (docError && authError) {
+                showToast('Gagal menghapus akun: ' + ((docError.code || docError.message) || '') +
+                    ' / Auth: ' + (authError.message || 'gagal'), 'error');
+            } else if (docError) {
+                showToast('Dokumen akun gagal dihapus (' + (docError.code || docError.message) +
+                    '). Akun Auth ' + (authMode === 'deleted' ? 'sudah dihapus' : (authMode === 'disabled' ? 'sudah dinonaktifkan' : 'tidak berubah')) + '.', 'error');
+            } else if (authError) {
+                showToast('Data akun "' + (row.email || uid) + '" dihapus, tetapi akun Auth belum terhapus (' + (authError.message || 'gagal') +
+                    '). Gunakan Firebase Console → Authentication untuk menghapus permanen.', 'error');
+            } else {
+                showToast(authMode === 'deleted'
+                    ? 'Akun ' + (row.email || uid) + ' berhasil dihapus (Firestore + Authentication).'
+                    : 'Akun ' + (row.email || uid) + ' dihapus dari data aplikasi dan dinonaktifkan di Authentication.',
+                    'success');
+            }
+
+            // --- 4) Bersihkan cache lokal agar hilang dari daftar ---
+            usersData = usersData.filter(u => u.uid !== uid);
+            relawanData = relawanData.filter(item => item.akunUid !== uid && item.id !== uid &&
+                !(docResult && docResult.relawanDeleted && docResult.relawanDeleted.includes(item.id)));
+            renderUsersList();
+            renderRelawanList();
+
+            btn.disabled = false;
+            btn.textContent = 'Ya, Hapus';
         }
 
         // ==========================================
@@ -1880,9 +2110,12 @@ service cloud.firestore {
                                 <p class="text-sm font-bold text-slate-800 truncate">${escapeHTML(r.nama || r.email || 'Tanpa nama')} ${isMe ? '<span class="text-[10px] font-semibold text-blue-600">(Anda)</span>' : ''}</p>
                                 <p class="text-[11px] font-mono text-slate-500 truncate">${escapeHTML(r.email || '-')}</p>
                                 <p class="text-[11px] text-slate-400 mt-0.5">Login terakhir: ${escapeHTML(lastLogin)} · ${r.loginCount} kali</p>
-                                ${isMe ? '' : `<div class="flex items-center gap-1.5 mt-2">
+                                ${isMe ? '' : `<div class="flex flex-wrap items-center gap-1.5 mt-2">
                                     <button onclick="setUserRole('${r.uid}', '${isAdminRow ? 'relawan' : 'admin'}')" class="px-2 py-1 rounded-lg text-[10px] font-semibold ${isAdminRow ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'} transition">${isAdminRow ? 'Turunkan ke Relawan' : 'Jadikan Admin'}</button>
                                     <button onclick="setAccountActive('${r.uid}', '${escapeHTML(r.email || '').replace(/'/g, "\\'")}', ${r.active ? 'false' : 'true'})" class="px-2 py-1 rounded-lg text-[10px] font-semibold ${r.active ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'} transition">${r.active ? 'Nonaktifkan' : 'Aktifkan'}</button>
+                                    <button data-hapus-akun="${escapeHTML(r.uid)}" title="Hapus akun dari Firebase Auth & Firestore" class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-red-600 text-white hover:bg-red-700 transition flex items-center gap-1">
+                                        <i data-lucide="user-x" class="w-3 h-3"></i> Hapus Akun
+                                    </button>
                                 </div>`}
                             </div>
                         </div>
@@ -1932,6 +2165,15 @@ service cloud.firestore {
                 uidEl.addEventListener('click', function() {
                     if (!currentUser) return;
                     navigator.clipboard.writeText(currentUser.uid).then(() => showToast('UID disalin.', 'success')).catch(() => {});
+                });
+            }
+            // Tombol "Hapus Akun" pada kartu akun (delegasi event)
+            const usersList = document.getElementById('users-list-container');
+            if (usersList) {
+                usersList.addEventListener('click', function(event) {
+                    const btn = event.target.closest('[data-hapus-akun]');
+                    if (!btn) return;
+                    confirmDeleteAccount(btn.getAttribute('data-hapus-akun'));
                 });
             }
         });
@@ -2872,6 +3114,96 @@ service cloud.firestore {
         });
 
         // ==========================================
+        // LUPA PASSWORD (kirim email reset dari Firebase Auth)
+        // ==========================================
+        function showForgotError(message) {
+            const err = document.getElementById('forgot-error');
+            const ok = document.getElementById('forgot-success');
+            if (ok) { ok.textContent = ''; ok.classList.add('hidden'); }
+            if (!err) return;
+            if (!message) { err.textContent = ''; err.classList.add('hidden'); return; }
+            err.textContent = message;
+            err.classList.remove('hidden');
+        }
+
+        function openForgotModal() {
+            showForgotError('');
+            const success = document.getElementById('forgot-success');
+            if (success) { success.textContent = ''; success.classList.add('hidden'); }
+            // Isi otomatis dari email yang sudah diketik di form login
+            const typed = document.getElementById('login-email').value.trim();
+            document.getElementById('forgot-email').value = typed;
+            const modal = document.getElementById('forgot-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.getElementById('forgot-email').focus();
+            lucide.createIcons();
+        }
+
+        function closeForgotModal() {
+            const modal = document.getElementById('forgot-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            showForgotError('');
+        }
+
+        // Kirim tautan reset password ke email akun.
+        // Password baru TIDAK ditentukan dari aplikasi (demi keamanan, SDK client tidak bisa
+        // menetapkan password akun lain). Firebase mengirim email resmi berisi tautan untuk
+        // membuat password baru; pengguna diminta menggantinya setelah login.
+        async function sendPasswordReset() {
+            const emailEl = document.getElementById('forgot-email');
+            const email = (emailEl.value || '').trim().toLowerCase();
+            showForgotError('');
+
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showForgotError('Masukkan alamat email yang valid.');
+                emailEl.focus();
+                return;
+            }
+
+            const btn = document.getElementById('btn-send-reset');
+            const btnText = document.getElementById('btn-send-reset-text');
+            btn.disabled = true;
+            if (btnText) btnText.textContent = 'Mengirim...';
+
+            try {
+                await auth.sendPasswordResetEmail(email);
+                const success = document.getElementById('forgot-success');
+                if (success) {
+                    success.innerHTML = '';
+                    success.textContent = 'Email reset password sudah dikirim ke ' + email +
+                        '. Buka tautan di email tersebut untuk membuat password baru, lalu login kembali.';
+                    success.classList.remove('hidden');
+                }
+                showToast('Email reset password terkirim ke ' + email + '.', 'success');
+            } catch (err) {
+                console.error('Gagal mengirim email reset password:', err);
+                const map = {
+                    'auth/user-not-found': 'Email belum terdaftar sebagai akun aplikasi.',
+                    'auth/invalid-email': 'Format email tidak valid.',
+                    'auth/too-many-requests': 'Terlalu banyak percobaan. Coba lagi beberapa saat lagi.',
+                    'auth/network-request-failed': 'Gagal terhubung ke jaringan.',
+                    'auth/operation-not-allowed': 'Metode Email/Password belum diaktifkan di Firebase Console.'
+                };
+                showForgotError(map[err.code] || ('Gagal mengirim email reset: ' + (err.code || err.message)));
+            } finally {
+                btn.disabled = false;
+                if (btnText) btnText.textContent = 'Kirim Email';
+            }
+        }
+
+        document.getElementById('btn-forgot-password').addEventListener('click', openForgotModal);
+        document.getElementById('btn-cancel-forgot').addEventListener('click', closeForgotModal);
+        document.getElementById('forgot-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            sendPasswordReset();
+        });
+        document.getElementById('forgot-modal').addEventListener('click', function (e) {
+            if (e.target === this) closeForgotModal();
+        });
+
+        // ==========================================
         // NAVIGASI TAB SPA (3 tab)
         // ==========================================
         // Konstanta kelas tab: font menyesuaikan agar 3-4 tab muat dalam satu baris di layar HP
@@ -3007,7 +3339,8 @@ service cloud.firestore {
 
             // Akun login
             const akunEmail = (document.getElementById('input-email').value || '').trim().toLowerCase();
-            const akunPassword = document.getElementById('input-password').value || '';
+            // Password default 123456 bila field kosong / tidak diisi admin
+            const akunPassword = (document.getElementById('input-password').value || '').trim() || DEFAULT_RESET_PASSWORD;
 
             if (nik && nik.length !== 16) {
                 showToast('NIK harus berjumlah 16 digit angka!', 'error');
@@ -3196,7 +3529,7 @@ service cloud.firestore {
             const pwdEl = document.getElementById('input-password');
             if (emailEl) { emailEl.value = item.akunEmail || ''; emailEl.readOnly = true; }
             if (pwdEl) {
-                pwdEl.value = '';
+                pwdEl.value = DEFAULT_RESET_PASSWORD;
                 pwdEl.required = false;
                 if (pwdEl.closest('div')) pwdEl.closest('div').classList.add('hidden');
             }
@@ -3309,7 +3642,7 @@ service cloud.firestore {
             const pwdEl = document.getElementById('input-password');
             if (emailEl) { emailEl.readOnly = false; emailEl.value = ''; }
             if (pwdEl) {
-                pwdEl.value = '';
+                pwdEl.value = DEFAULT_RESET_PASSWORD; // isi ulang password default 123456
                 pwdEl.required = true;
                 if (pwdEl.closest('div')) pwdEl.closest('div').classList.remove('hidden');
             }
@@ -3325,7 +3658,7 @@ service cloud.firestore {
             const pwdEl = document.getElementById('input-password');
             if (emailEl) { emailEl.value = email || ''; emailEl.readOnly = true; }
             if (pwdEl) {
-                pwdEl.value = '';
+                pwdEl.value = DEFAULT_RESET_PASSWORD;
                 pwdEl.required = false;
                 if (pwdEl.closest('div')) pwdEl.closest('div').classList.add('hidden');
             }
@@ -3390,6 +3723,8 @@ service cloud.firestore {
         });
 
         // Modal Konfirmasi Hapus
+        // Dipakai untuk dua aksi: hapus DATA relawan (deleteTargetId) dan
+        // hapus AKUN (pendingDeleteUid). Keduanya dipisahkan agar tidak tertukar.
         function confirmDelete(id, nama) {
             if (isAdminDenied()) return;
             const item = relawanData.find(row => row.id === id);
@@ -3397,28 +3732,41 @@ service cloud.firestore {
                 showToast('Anda hanya dapat menghapus data milik akun Anda sendiri atau data yang dibuat/diubah oleh akun Anda.', 'error');
                 return;
             }
+            pendingDeleteUid = null;
             deleteTargetId = id;
+            document.getElementById('confirm-title').textContent = 'Hapus Data Relawan?';
             document.getElementById('confirm-text').textContent = `Anda yakin ingin menghapus data relawan "${nama}"?`;
             const modal = document.getElementById('confirm-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
         }
 
-        document.getElementById('btn-cancel-delete').addEventListener('click', () => {
+        function closeConfirmModal() {
             deleteTargetId = null;
+            pendingDeleteUid = null;
             const modal = document.getElementById('confirm-modal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
-        });
+        }
+
+        document.getElementById('btn-cancel-delete').addEventListener('click', closeConfirmModal);
 
         document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
-            const modal = document.getElementById('confirm-modal');
             const btnConfirm = document.getElementById('btn-confirm-delete');
             const targetId = deleteTargetId;
+            const targetUid = pendingDeleteUid;
 
             deleteTargetId = null;
+            pendingDeleteUid = null;
+            const modal = document.getElementById('confirm-modal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+
+            // Jalur hapus AKUN (Firestore + Firebase Auth)
+            if (targetUid) {
+                await deleteAccount(targetUid);
+                return;
+            }
 
             if (!targetId) return;
             const item = relawanData.find(row => row.id === targetId);
@@ -3660,8 +4008,13 @@ service cloud.firestore {
                                 <span class="inline-block px-2 py-0.5 ${badgeClass} rounded-md text-[10px] font-semibold">${escapeHTML(item.peran || '-')}</span>
                             </p>
                             ${waNumber
-                                ? `<a href="https://wa.me/${waNumber}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i><span>Nomor WA: ${escapeHTML(waDisplay)}</span></a>`
-                                : '<p class="text-xs text-slate-600">Nomor WA: -</p>'}
+                                ? `<a href="https://wa.me/${waNumber}" target="_blank" rel="noopener noreferrer" title="Chat WhatsApp ${escapeHTML(waDisplay)}"
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-[11px] font-semibold hover:bg-emerald-700 active:scale-[0.98] transition shadow-xs">
+                                    <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                                    <span>Hubungi via WA</span>
+                                    <span class="text-emerald-100 font-normal">${escapeHTML(waDisplay)}</span>
+                                </a>`
+                                : '<p class="text-xs text-slate-600 flex items-center gap-1"><i data-lucide="message-circle" class="w-3.5 h-3.5 text-slate-400"></i> Nomor WA belum ada</p>'}
                         </div>
                         <div class="flex items-center gap-1 shrink-0">
                             <button type="button" data-relawan-detail="${escapeHTML(item.id)}" title="Lihat Detail" aria-label="Lihat detail ${escapeHTML(item.nama)}"
