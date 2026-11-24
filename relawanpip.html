@@ -242,9 +242,9 @@ service cloud.firestore {
                 </div>
             </div>
 
-            <!-- Navigasi 3 Tab Utama -->
+            <!-- Navigasi Tab Utama (Profil selalu tampil) -->
             <nav class="bg-white border-b border-slate-200 px-4 pt-2 sticky top-[96px] z-20 shadow-xs">
-                <div class="grid grid-cols-3 gap-1.5">
+                <div id="main-tab-nav" class="grid grid-cols-4 gap-1.5">
                     <button id="tab-btn-input" onclick="switchTab('input')" class="tab-btn py-3 px-1.5 text-xs sm:text-sm font-semibold border-b-2 border-blue-600 text-blue-600 flex items-center justify-center gap-1.5 transition">
                         <i data-lucide="user-plus" class="w-4 h-4 shrink-0"></i>
                         <span>Input Data</span>
@@ -256,6 +256,10 @@ service cloud.firestore {
                     <button id="tab-btn-admin" onclick="switchTab('admin')" class="tab-btn py-3 px-1.5 text-xs sm:text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1.5 transition">
                         <i data-lucide="shield-check" class="w-4 h-4 shrink-0"></i>
                         <span>Admin</span>
+                    </button>
+                    <button id="tab-btn-profil" onclick="switchTab('profil')" class="tab-btn py-3 px-1.5 text-xs sm:text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1.5 transition">
+                        <i data-lucide="circle-user-round" class="w-4 h-4 shrink-0"></i>
+                        <span>Profil</span>
                     </button>
                 </div>
             </nav>
@@ -284,7 +288,8 @@ service cloud.firestore {
                             <!-- Nama Lengkap -->
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap Relawan <span class="text-red-500">*</span></label>
-                                <input type="text" id="input-nama" required placeholder="Contoh: Budi Santoso, S.Pd"
+                                <input type="text" id="input-nama" required placeholder="Contoh: BUDI SANTOSO, S.PD"
+                                    oninput="this.value = this.value.toUpperCase()"
                                     class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
                             </div>
 
@@ -683,6 +688,176 @@ service cloud.firestore {
 
                 </div>
 
+                <!-- ===================================== -->
+                <!-- TAB 4: PROFIL AKUN                    -->
+                <!-- ===================================== -->
+                <div id="tab-content-profil" class="hidden fade-in space-y-4">
+
+                    <!-- Kartu Profil (gabungan users/{uid} + relawan/{relawanId}) -->
+                    <div class="bg-white rounded-2xl p-5 shadow-xs border border-slate-100">
+                        <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+                            <div id="profil-avatar" class="w-14 h-14 rounded-2xl bg-blue-600 text-white font-bold text-lg flex items-center justify-center shrink-0 shadow-sm">--</div>
+                            <div class="min-w-0">
+                                <h2 id="profil-nama" class="text-base font-bold text-slate-800 leading-tight truncate">Memuat profil...</h2>
+                                <p id="profil-email" class="text-xs font-mono text-slate-500 truncate">-</p>
+                                <div class="flex items-center gap-1.5 mt-1">
+                                    <span id="profil-peran-badge" class="inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-50 text-indigo-700">-</span>
+                                    <span id="profil-role-badge" class="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-slate-100 text-slate-600">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Data akun (koleksi users) -->
+                        <div class="mt-4">
+                            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-2 flex items-center gap-1.5">
+                                <i data-lucide="user-round" class="w-3 h-3"></i> Data Akun
+                            </p>
+                            <div class="space-y-2 text-xs text-slate-600">
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400"></i> Email Akun</span>
+                                    <span id="profil-akun-email" class="font-mono font-medium text-slate-800 truncate">-</span>
+                                </div>
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="fingerprint" class="w-3.5 h-3.5 text-slate-400"></i> UID</span>
+                                    <span id="profil-uid" class="font-mono text-[11px] text-slate-500 truncate">-</span>
+                                </div>
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="shield" class="w-3.5 h-3.5 text-slate-400"></i> Role</span>
+                                    <span id="profil-akun-role" class="font-semibold text-slate-800">-</span>
+                                </div>
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="log-in" class="w-3.5 h-3.5 text-slate-400"></i> Login terakhir</span>
+                                    <span id="profil-last-login" class="text-slate-800">-</span>
+                                </div>
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="history" class="w-3.5 h-3.5 text-slate-400"></i> Total login</span>
+                                    <span id="profil-login-count" class="text-slate-800">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Data relawan (koleksi relawan) -->
+                        <div class="mt-4 pt-4 border-t border-slate-100">
+                            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-2 flex items-center gap-1.5">
+                                <i data-lucide="id-card" class="w-3 h-3"></i> Data Relawan
+                            </p>
+                            <div id="profil-relawan-empty" class="hidden text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-2.5 leading-relaxed">
+                                Data relawan belum tertaut ke akun ini. Hubungi Admin untuk menautkan data.
+                            </div>
+                            <div id="profil-relawan-data" class="space-y-2 text-xs text-slate-600">
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="user-round" class="w-3.5 h-3.5 text-slate-400"></i> Nama</span>
+                                    <span id="profil-relawan-nama" class="font-semibold text-slate-800 truncate">-</span>
+                                </div>
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="hash" class="w-3.5 h-3.5 text-slate-400"></i> NIK</span>
+                                    <span id="profil-relawan-nik" class="font-mono text-slate-800 truncate">-</span>
+                                </div>
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="message-circle" class="w-3.5 h-3.5 text-slate-400"></i> WhatsApp</span>
+                                    <span id="profil-relawan-wa" class="text-slate-800 truncate">-</span>
+                                </div>
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i> Kecamatan</span>
+                                    <span id="profil-relawan-kec" class="text-slate-800 truncate">-</span>
+                                </div>
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="building-2" class="w-3.5 h-3.5 text-slate-400"></i> Kelurahan</span>
+                                    <span id="profil-relawan-kel" class="text-slate-800 truncate">-</span>
+                                </div>
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="landmark" class="w-3.5 h-3.5 text-slate-400"></i> Dapil</span>
+                                    <span id="profil-relawan-dapil" class="text-slate-800 truncate">-</span>
+                                </div>
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="route" class="w-3.5 h-3.5 text-slate-400"></i> RW / RT</span>
+                                    <span id="profil-relawan-wilayah" class="text-slate-800 truncate">-</span>
+                                </div>
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="users" class="w-3.5 h-3.5 text-slate-400"></i> Peran</span>
+                                    <span id="profil-relawan-peran" class="text-slate-800 truncate">-</span>
+                                </div>
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="calendar-days" class="w-3.5 h-3.5 text-slate-400"></i> Terdaftar</span>
+                                    <span id="profil-relawan-terdaftar" class="text-slate-800 truncate">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="loadProfil(true)" class="w-full mt-4 py-2.5 px-3 rounded-xl border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition flex items-center justify-center gap-1.5">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            <span>Muat Ulang Profil</span>
+                        </button>
+                    </div>
+
+                    <!-- Ubah Password -->
+                    <div class="bg-white rounded-2xl p-5 shadow-xs border border-slate-100">
+                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                            <div>
+                                <h2 class="text-base font-bold text-slate-800">Ubah Password</h2>
+                                <p class="text-xs text-slate-500">Ganti password akun login Anda sendiri</p>
+                            </div>
+                            <i data-lucide="key-round" class="w-4 h-4 text-slate-400"></i>
+                        </div>
+
+                        <form id="password-form" class="space-y-3" autocomplete="off">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Password Saat Ini <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                        <i data-lucide="lock" class="w-4 h-4"></i>
+                                    </div>
+                                    <input type="password" id="pwd-current" required autocomplete="current-password" placeholder="••••••"
+                                        class="w-full pl-9 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                                    <button type="button" class="pwd-toggle absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600" data-target="pwd-current" title="Lihat password">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Password Baru <span class="text-slate-400 font-normal">(min. 6 karakter)</span> <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                        <i data-lucide="lock-keyhole" class="w-4 h-4"></i>
+                                    </div>
+                                    <input type="password" id="pwd-new" required minlength="6" autocomplete="new-password" placeholder="••••••"
+                                        class="w-full pl-9 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                                    <button type="button" class="pwd-toggle absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600" data-target="pwd-new" title="Lihat password">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Ulangi Password Baru <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                        <i data-lucide="lock-keyhole" class="w-4 h-4"></i>
+                                    </div>
+                                    <input type="password" id="pwd-confirm" required minlength="6" autocomplete="new-password" placeholder="••••••"
+                                        class="w-full pl-9 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                                    <button type="button" class="pwd-toggle absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600" data-target="pwd-confirm" title="Lihat password">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="pwd-error" class="hidden text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-2.5 leading-relaxed"></div>
+
+                            <button type="submit" id="btn-save-password" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold py-3 px-4 rounded-xl shadow-md shadow-blue-600/20 transition flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100">
+                                <i data-lucide="shield-check" class="w-4 h-4"></i>
+                                <span id="btn-save-password-text">Simpan Password Baru</span>
+                            </button>
+
+                            <p class="text-[11px] text-slate-400 leading-relaxed">
+                                Setelah password berhasil diubah, Anda akan keluar dari aplikasi dan diminta login kembali dengan password baru.
+                            </p>
+                        </form>
+                    </div>
+
+                </div>
+
             </main>
         </section>
 
@@ -981,6 +1156,10 @@ service cloud.firestore {
                             jenjang: data.jenjang || '',
                             akunUid: data.akunUid || '',
                             akunEmail: data.akunEmail || '',
+                            createdBy: data.createdBy || '',
+                            updatedBy: data.updatedBy || '',
+                            createdByUid: data.createdByUid || '',
+                            updatedByUid: data.updatedByUid || '',
                             rw: data.rw || '',
                             rt: Array.isArray(data.rt) ? data.rt : (data.rt ? [data.rt] : []),
                             peran: data.peran || '',
@@ -1347,6 +1526,242 @@ service cloud.firestore {
             }
         }
 
+        // ==========================================
+        // TAB PROFIL (GABUNGAN users/{uid} + relawan/{relawanId})
+        // ==========================================
+        let profilLoading = false;
+
+        // Ambil profil dari dua koleksi yang saling terhubung:
+        //   1. users/{uid}        → email, role, aktivitas login
+        //   2. relawan/{relawanId} → biodata (nama, NIK, WA, wilayah, peran, dst)
+        // Penautan relawanId dicari lewat loadMyRole() (users.relawanId → relawan/{uid} → akunUid → akunEmail).
+        async function loadProfil(refresh) {
+            if (!currentUser) return;
+            if (profilLoading) return;
+            profilLoading = true;
+            const sumber = refresh ? 'server' : 'default';
+
+            try {
+                // --- 1) Dokumen akun (users/{uid}) ---
+                let userDoc = null;
+                try {
+                    const snap = await db.collection(USERS_COLLECTION).doc(currentUser.uid).get({ source: sumber });
+                    if (snap.exists) userDoc = snap.data();
+                } catch (err) {
+                    if (!deniedCode(err)) console.warn('Gagal membaca users/{uid}:', err);
+                }
+
+                // --- 2) Dokumen relawan yang tertaut ---
+                // loadMyRole() sudah menyediakan relawanId + relawanDoc hasil pencarian multi-jalur.
+                await loadMyRole(currentUser, { refresh: !!refresh });
+                let relawanDoc = currentRole.relawanDoc;
+                let relawanId = currentRole.relawanId;
+
+                // Cadangan: kalau belum ketemu, coba cocokkan dari cache daftar relawan
+                if (!relawanDoc) {
+                    const email = normIdentitas(currentUser.email);
+                    const hit = relawanData.find(r =>
+                        (!!currentUser.uid && (r.akunUid === currentUser.uid || r.id === currentUser.uid)) ||
+                        (!!email && normIdentitas(r.akunEmail) === email)
+                    );
+                    if (hit) { relawanDoc = hit; relawanId = hit.id; }
+                }
+                if (!relawanDoc && relawanId) {
+                    try {
+                        const snap = await db.collection(RELAWAN_COLLECTION).doc(relawanId).get({ source: sumber });
+                        if (snap.exists) relawanDoc = snap.data();
+                    } catch (err) {
+                        if (!deniedCode(err)) console.warn('Gagal membaca relawan/{relawanId}:', err);
+                    }
+                }
+
+                renderProfil(userDoc, relawanDoc, relawanId);
+            } catch (err) {
+                console.error('Gagal memuat profil:', err);
+                showToast('Gagal memuat profil: ' + translateFirebaseError(err), 'error');
+            } finally {
+                profilLoading = false;
+            }
+        }
+
+        function renderProfil(userDoc, relawanDoc, relawanId) {
+            const user = currentUser || {};
+            const akun = userDoc || {};
+            const relawan = relawanDoc || {};
+            const setText = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = value;
+            };
+            const nilai = v => {
+                const s = Array.isArray(v) ? v.join(', ') : v;
+                return String(s == null ? '' : s).trim() || '-';
+            };
+
+            const nama = String(relawan.nama || akun.nama || '').trim();
+            const email = user.email || akun.email || '';
+            const peran = String(relawan.peran || currentRole?.peran || '').trim();
+            const roleAkun = akun.role || 'relawan';
+
+            // Header kartu
+            const inisial = (nama || email || '?').trim().substring(0, 2).toUpperCase();
+            setText('profil-avatar', inisial);
+            setText('profil-nama', nama || (email ? 'Akun ' + email : 'Akun Relawan'));
+            setText('profil-email', email || '-');
+
+            const peranBadge = document.getElementById('profil-peran-badge');
+            if (peranBadge) {
+                peranBadge.textContent = peran || 'Peran belum ada';
+                peranBadge.className = 'inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold ' + roleBadgeClass(peran);
+            }
+            const roleBadge = document.getElementById('profil-role-badge');
+            if (roleBadge) {
+                roleBadge.textContent = roleAkun;
+                roleBadge.className = 'inline-block px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ' +
+                    (roleAkun === 'admin' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600');
+            }
+
+            // Data akun (koleksi users)
+            setText('profil-akun-email', email || '-');
+            setText('profil-uid', user.uid || relawanId || '-');
+            setText('profil-akun-role', roleAkun + (akun.active === false ? ' (nonaktif)' : ''));
+            setText('profil-last-login', akun.lastLoginAt ? formatTanggal(akun.lastLoginAt) : '-');
+            setText('profil-login-count', (Number(akun.loginCount) || 0) + ' kali');
+
+            // Data relawan (koleksi relawan)
+            const hasRelawan = !!(relawanDoc && relawanId);
+            document.getElementById('profil-relawan-empty').classList.toggle('hidden', hasRelawan);
+            document.getElementById('profil-relawan-data').classList.toggle('hidden', !hasRelawan);
+            if (hasRelawan) {
+                setText('profil-relawan-nama', nilai(relawan.nama));
+                setText('profil-relawan-nik', nilai(relawan.nik));
+                setText('profil-relawan-wa', nilai(relawan.wa));
+                setText('profil-relawan-kec', nilai(relawan.kecamatan));
+                setText('profil-relawan-kel', nilai(relawan.kelurahan));
+                setText('profil-relawan-dapil', nilai(relawan.dapil));
+                const rt = Array.isArray(relawan.rt) ? relawan.rt : (relawan.rt ? [relawan.rt] : []);
+                const wilayah = [relawan.rw ? 'RW ' + relawan.rw : '', rt.length ? 'RT ' + rt.join(', ') : ''].filter(Boolean).join(' / ');
+                setText('profil-relawan-wilayah', wilayah || '-');
+                setText('profil-relawan-peran', nilai(relawan.peran));
+                setText('profil-relawan-terdaftar', relawan.createdAt ? formatTanggal(relawan.createdAt) : '-');
+            }
+            lucide.createIcons();
+        }
+
+        function showPasswordError(message) {
+            const box = document.getElementById('pwd-error');
+            if (!box) return;
+            if (!message) {
+                box.textContent = '';
+                box.classList.add('hidden');
+                return;
+            }
+            box.textContent = message;
+            box.classList.remove('hidden');
+        }
+
+        // Ubah password akun sendiri (Firebase Auth).
+        // Password lama diverifikasi dulu dengan re-authenticate agar akun yang
+        // ditinggal terbuka di perangkat lain tidak bisa diganti sembarangan.
+        async function changeMyPassword() {
+            const user = auth.currentUser;
+            if (!user) {
+                showToast('Sesi login berakhir. Silakan login kembali.', 'error');
+                showLoginView();
+                return;
+            }
+
+            const currentPwd = document.getElementById('pwd-current').value;
+            const newPwd = document.getElementById('pwd-new').value;
+            const confirmPwd = document.getElementById('pwd-confirm').value;
+            showPasswordError('');
+
+            if (!currentPwd) {
+                showPasswordError('Password saat ini wajib diisi.');
+                document.getElementById('pwd-current').focus();
+                return;
+            }
+            if (newPwd.length < 6) {
+                showPasswordError('Password baru minimal 6 karakter.');
+                document.getElementById('pwd-new').focus();
+                return;
+            }
+            if (newPwd !== confirmPwd) {
+                showPasswordError('Konfirmasi password baru belum sama.');
+                document.getElementById('pwd-confirm').focus();
+                return;
+            }
+            if (newPwd === currentPwd) {
+                showPasswordError('Password baru harus berbeda dari password saat ini.');
+                document.getElementById('pwd-new').focus();
+                return;
+            }
+
+            const btn = document.getElementById('btn-save-password');
+            const btnText = document.getElementById('btn-save-password-text');
+            btn.disabled = true;
+            if (btnText) btnText.textContent = 'Menyimpan...';
+
+            try {
+                // Verifikasi password lama (wajib untuk operasi sensitif Firebase)
+                const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPwd);
+                await user.reauthenticateWithCredential(credential);
+
+                // Simpan password baru
+                await user.updatePassword(newPwd);
+
+                // Catat waktu perubahan password di users/{uid} (best-effort)
+                db.collection(USERS_COLLECTION).doc(user.uid).set({
+                    passwordChangedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true }).catch(err => {
+                    if (!deniedCode(err)) console.warn('Gagal mencatat waktu ubah password:', err);
+                });
+
+                document.getElementById('password-form').reset();
+                showPasswordError('');
+                showToast('Password berhasil diubah. Silakan masuk dengan password baru.', 'success');
+
+                // Keluar supaya sesi lama tidak lagi memakai kredensial lama
+                setTimeout(async () => {
+                    try { await auth.signOut(); } catch (e) { /* diabaikan */ }
+                }, 1200);
+            } catch (err) {
+                console.error('Gagal mengubah password:', err);
+                const map = {
+                    'auth/wrong-password': 'Password saat ini salah.',
+                    'auth/invalid-credential': 'Password saat ini salah.',
+                    'auth/invalid-login-credentials': 'Password saat ini salah.',
+                    'auth/weak-password': 'Password baru terlalu lemah (minimal 6 karakter).',
+                    'auth/too-many-requests': 'Terlalu banyak percobaan. Coba lagi beberapa saat lagi.',
+                    'auth/requires-recent-login': 'Sesi terlalu lama. Keluar lalu login kembali sebelum mengubah password.',
+                    'auth/network-request-failed': 'Gagal terhubung ke jaringan.'
+                };
+                showPasswordError(map[err.code] || ('Gagal mengubah password: ' + (err.code || err.message)));
+            } finally {
+                btn.disabled = false;
+                if (btnText) btnText.textContent = 'Simpan Password Baru';
+            }
+        }
+
+        document.getElementById('password-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            changeMyPassword();
+        });
+
+        // Tombol mata untuk field password di tab Profil
+        document.querySelectorAll('.pwd-toggle').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const input = document.getElementById(this.getAttribute('data-target'));
+                if (!input) return;
+                const isPwd = input.type === 'password';
+                input.type = isPwd ? 'text' : 'password';
+                this.innerHTML = isPwd
+                    ? '<i data-lucide="eye-off" class="w-4 h-4"></i>'
+                    : '<i data-lucide="eye" class="w-4 h-4"></i>';
+                lucide.createIcons();
+            });
+        });
+
 
 
         // ==========================================
@@ -1540,6 +1955,33 @@ service cloud.firestore {
         // Urutan tampil master data (relasi: dapil → kecamatan → kelurahan)
         const MASTER_ORDER = ['dapil', 'kecamatan', 'kelurahan', 'rw', 'rt', 'peran', 'fasilitas', 'universitas'];
 
+        const HIRARKI_PERAN = [
+            'Mahasiswa KIP',
+            'Relawan RT',
+            'Relawan RW',
+            'Koordinator Kelurahan',
+            'Koordinator Kecamatan',
+            'Koordinator Dapil'
+        ];
+
+        function peranYangBisaDitambahkan(role) {
+            if (role && role.isAdmin) return masterNames('peran');
+            const currentIndex = HIRARKI_PERAN.findIndex(
+                peran => peran.toLowerCase() === String((role && role.peran) || '').trim().toLowerCase()
+            );
+            if (currentIndex < 0) return [];
+            const allowed = HIRARKI_PERAN.slice(0, currentIndex).map(peran => peran.toLowerCase());
+            const peranMaster = masterNames('peran');
+            return allowed
+                .map(peran => peranMaster.find(name => name.trim().toLowerCase() === peran))
+                .filter(Boolean);
+        }
+
+        function bolehMenambahkanPeran(role, peranBaru) {
+            return peranYangBisaDitambahkan(role)
+                .some(peran => peran.trim().toLowerCase() === String(peranBaru || '').trim().toLowerCase());
+        }
+
         // Saran awal nama peran (dipakai tombol isi cepat di tab Peran)
         const PERAN_CONTOH = [
             'Koordinator Wilayah',
@@ -1696,7 +2138,13 @@ service cloud.firestore {
             renderKelurahanOptions();
             renderRwOptions();
             renderRtOptions();
-            ulangPilih(document.getElementById('input-peran'), '-- Pilih Peran --', masterNames('peran'));
+            const peranOptions = peranYangBisaDitambahkan(currentRole);
+            const peranPlaceholder = peranOptions.length
+                ? '-- Pilih Peran --'
+                : (currentRole && currentRole.isAdmin
+                    ? '-- Belum ada peran --'
+                    : '-- Tidak ada peran di bawah Anda --');
+            ulangPilih(document.getElementById('input-peran'), peranPlaceholder, peranOptions);
             ulangPilih(document.getElementById('input-universitas'), '-- Pilih Universitas --', masterNames('universitas'));
             syncUniversitasVisibility();
             renderFasilitasCheckboxes();
@@ -2181,7 +2629,7 @@ service cloud.firestore {
                 switchTab('input');
                 const fill = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
                 fill('relawan-id', relawanId);
-                fill('input-nama', d.nama);
+                fill('input-nama', d.nama ? String(d.nama).toUpperCase() : '');
                 fill('input-nik', d.nik);
                 fill('input-wa', d.wa);
                 fill('input-kelurahan', d.kelurahan);
@@ -2275,7 +2723,8 @@ service cloud.firestore {
             return true;
         }
 
-        // Sembunyikan tab "Input Data" untuk peran yang dilarang
+        // Sembunyikan tab "Input Data" untuk peran yang dilarang & tab Admin untuk non-admin.
+        // Tab Profil selalu tersedia untuk semua akun yang login.
         function applyInputTabVisibility() {
             const btn = document.getElementById('tab-btn-input');
             const allowed = isInputAllowed();
@@ -2283,11 +2732,14 @@ service cloud.firestore {
             const adminTabBtn = document.getElementById('tab-btn-admin');
             if (btn) btn.classList.toggle('hidden', !allowed);
             if (adminTabBtn) adminTabBtn.classList.toggle('hidden', !isAdmin);
-            const nav = btn ? btn.parentElement : null;
+            const nav = document.getElementById('main-tab-nav') || (btn ? btn.parentElement : null);
             if (nav) {
-                nav.className = isAdmin
-                    ? 'grid grid-cols-3 gap-1.5'
-                    : (allowed ? 'grid grid-cols-2 gap-1.5' : 'grid grid-cols-1 gap-1.5');
+                // Grid menyesuaikan jumlah tab yang benar-benar tampil (Profil selalu ada).
+                // Kelas ditulis utuh (bukan dirangkai) supaya tetap dikenali Tailwind.
+                if (isAdmin && allowed) nav.className = 'grid grid-cols-4 gap-1.5';
+                else if (isAdmin) nav.className = 'grid grid-cols-3 gap-1.5';
+                else if (allowed) nav.className = 'grid grid-cols-3 gap-1.5';
+                else nav.className = 'grid grid-cols-2 gap-1.5';
             }
             if (!isAdmin && activeTab === 'admin') {
                 switchTab(allowed ? 'input' : 'list');
@@ -2388,6 +2840,10 @@ service cloud.firestore {
                 formWilayah = { rw: '', rt: [] };
                 formFasilitas = [];
                 resetForm();
+                // Bersihkan form Ubah Password agar tidak ada isian tertinggal
+                const pwdForm = document.getElementById('password-form');
+                if (pwdForm) pwdForm.reset();
+                showPasswordError('');
                 showLoginView();
             }
         });
@@ -2418,7 +2874,7 @@ service cloud.firestore {
         // ==========================================
         // NAVIGASI TAB SPA (3 tab)
         // ==========================================
-        // Konstanta kelas tab: font menyesuaikan agar 3 tab muat dalam satu baris di layar HP
+        // Konstanta kelas tab: font menyesuaikan agar 3-4 tab muat dalam satu baris di layar HP
         const TAB_BTN_ACTIVE = 'tab-btn py-3 px-1 text-[11px] sm:text-sm font-semibold border-b-2 border-blue-600 text-blue-600 flex items-center justify-center gap-1 transition';
         const TAB_BTN_IDLE = 'tab-btn py-3 px-1 text-[11px] sm:text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1 transition';
 
@@ -2434,7 +2890,8 @@ service cloud.firestore {
             const tabs = {
                 input: { btn: document.getElementById('tab-btn-input'), content: document.getElementById('tab-content-input') },
                 list: { btn: document.getElementById('tab-btn-list'), content: document.getElementById('tab-content-list') },
-                admin: { btn: document.getElementById('tab-btn-admin'), content: document.getElementById('tab-content-admin') }
+                admin: { btn: document.getElementById('tab-btn-admin'), content: document.getElementById('tab-content-admin') },
+                profil: { btn: document.getElementById('tab-btn-profil'), content: document.getElementById('tab-content-profil') }
             };
 
             Object.keys(tabs).forEach(name => {
@@ -2448,6 +2905,7 @@ service cloud.firestore {
             activeTab = contentName;
 
             if (contentName === 'list') renderRelawanList();
+            if (contentName === 'profil') loadProfil();
             if (contentName === 'admin') {
                 renderAdminStatus();
                 renderFirestoreRules();
@@ -2470,7 +2928,7 @@ service cloud.firestore {
             }
             if (isAdminDenied()) return;
             const id = document.getElementById('relawan-id').value;
-            const nama = document.getElementById('input-nama').value.trim();
+            const nama = document.getElementById('input-nama').value.trim().toUpperCase();
             const nik = document.getElementById('input-nik').value.trim();
             const wa = document.getElementById('input-wa').value.trim();
             const dapilManual = document.getElementById('input-dapil').value;
@@ -2483,6 +2941,13 @@ service cloud.firestore {
             const rtVal = document.getElementById('input-rt').value;
             const rt = rtVal ? [rtVal] : [];
             const peran = document.getElementById('input-peran').value;
+            const existing = id ? relawanData.find(item => item.id === id) : null;
+            const keepingOwnRole = isOwnRelawanRecord(existing) &&
+                String(existing.peran || '').trim().toLowerCase() === String(peran || '').trim().toLowerCase();
+            if (!bolehMenambahkanPeran(currentRole, peran) && !keepingOwnRole) {
+                showToast('Peran yang dipilih tidak berada di bawah peran akun Anda.', 'error');
+                return;
+            }
             const fasilitas = [...document.querySelectorAll('#input-fasilitas-wrap .fasilitas-check:checked')].map(c => c.value);
             // Universitas hanya disimpan bila peran = Mahasiswa KIP
             const universitas = isPeranMahasiswa() ? document.getElementById('input-universitas').value : '';
@@ -2568,17 +3033,25 @@ service cloud.firestore {
             setSaving(true);
 
             try {
+                // identitas = email akun (dipakai createdBy/updatedBy). UID ikut disimpan
+                // sebagai cadangan bila email tidak tersedia.
+                const identitas = String(user.email || user.uid || '').trim();
                 const payload = {
                     nama, nik, wa, dapil, kecamatan, kelurahan,
                     rw, rt, peran, fasilitas, universitas,
                     alamat,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedBy: user.email || user.uid
+                    updatedBy: identitas,
+                    updatedByUid: user.uid || ''
                 };
 
                 if (id) {
                     // Update dokumen di Firestore
                     if (isAdminDenied()) return;
+                    if (!canEditRelawan(existing)) {
+                        showToast('Anda hanya dapat mengedit data milik akun Anda sendiri atau data yang dibuat/diubah oleh akun Anda.', 'error');
+                        return;
+                    }
                     if (nik && await isNikTaken(nik, id)) {
                         showToast('NIK tersebut sudah dipakai relawan lain!', 'error');
                         return;
@@ -2604,7 +3077,8 @@ service cloud.firestore {
                         akunEmail,
                         punyaAkun: true,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        createdBy: user.email || user.uid
+                        createdBy: identitas,
+                        createdByUid: user.uid || ''
                     });
 
                     // Daftarkan akun di koleksi users dengan role relawan + tautan ke datanya
@@ -2683,9 +3157,13 @@ service cloud.firestore {
         function editRelawan(id) {
             const item = relawanData.find(r => r.id === id);
             if (!item) return;
+            if (!canEditRelawan(item)) {
+                showToast('Anda hanya dapat mengedit data milik akun Anda sendiri atau data yang dibuat/diubah oleh akun Anda.', 'error');
+                return;
+            }
 
             document.getElementById('relawan-id').value = item.id;
-            document.getElementById('input-nama').value = item.nama;
+            document.getElementById('input-nama').value = (item.nama || '').toUpperCase();
             document.getElementById('input-nik').value = item.nik;
             document.getElementById('input-wa').value = item.wa;
             document.getElementById('input-kecamatan').value = item.kecamatan;
@@ -2699,6 +3177,14 @@ service cloud.firestore {
             formFasilitas = item.fasilitas || [];
             renderFormMasterOptions();
             const peranEl = document.getElementById('input-peran');
+            if (peranEl && isOwnRelawanRecord(item) &&
+                String(item.peran || '').trim().toLowerCase() === String((currentRole && currentRole.peran) || '').trim().toLowerCase() &&
+                !Array.from(peranEl.options).some(option => option.value === item.peran)) {
+                const ownRoleOption = document.createElement('option');
+                ownRoleOption.value = item.peran;
+                ownRoleOption.textContent = item.peran;
+                peranEl.appendChild(ownRoleOption);
+            }
             if (peranEl) peranEl.value = item.peran || '';
             const uniEl = document.getElementById('input-universitas');
             if (uniEl) uniEl.value = item.universitas || '';
@@ -2728,6 +3214,65 @@ service cloud.firestore {
             document.getElementById('btn-submit-text').textContent = 'Simpan Perubahan';
 
             switchTab('input');
+        }
+
+        // Samakan bentuk identitas agar bisa dibandingkan:
+        // "Budi@PIP.com " → "budi@pip.com", UID tetap apa adanya.
+        function normIdentitas(value) {
+            return String(value == null ? '' : value).trim().toLowerCase();
+        }
+
+        // Identitas pemilik dokumen: dokumennya sendiri atau akun miliknya
+        // (akunUid / akunEmail / ID dokumen = UID / ID dokumen = relawanId akun).
+        function isOwnRelawanRecord(item) {
+            if (!item) return false;
+            const user = currentUser || auth.currentUser;
+            if (!user) return false;
+
+            const email = normIdentitas(user.email);
+            const uid = String(user.uid || '').trim();
+            const relawanId = String((currentRole && currentRole.relawanId) || '').trim();
+
+            return (!!relawanId && item.id === relawanId) ||
+                (!!uid && item.id === uid) ||
+                (!!uid && item.akunUid === uid) ||
+                (!!email && normIdentitas(item.akunEmail) === email);
+        }
+
+        // Cek apakah createdBy / updatedBy dokumen cocok dengan akun yang login.
+        // Nilai di Firestore bisa berupa email (format sekarang) atau UID (data lama).
+        function isCreatedOrUpdatedByMe(item) {
+            if (!item) return false;
+            const user = currentUser || auth.currentUser;
+            if (!user) return false;
+
+            const email = normIdentitas(user.email);
+            const uid = normIdentitas(user.uid);
+
+            const createdBy = normIdentitas(item.createdBy);
+            const updatedBy = normIdentitas(item.updatedBy);
+            const createdByUid = normIdentitas(item.createdByUid);
+            const updatedByUid = normIdentitas(item.updatedByUid);
+
+            const cocok = value => !!value && ((!!email && value === email) || (!!uid && value === uid));
+
+            return cocok(createdBy) || cocok(updatedBy) ||
+                (!!uid && createdByUid === uid) ||
+                (!!uid && updatedByUid === uid);
+        }
+
+        // Tombol Edit tampil bila: data milik akun sendiri ATAU createdBy/updatedBy cocok
+        function canEditRelawan(item) {
+            if (!item || !isInputAllowed()) return false;
+            if (!(currentUser || auth.currentUser)) return false;
+            return isOwnRelawanRecord(item) || isCreatedOrUpdatedByMe(item);
+        }
+
+        // Tombol Hapus hanya untuk data milik akun sendiri atau createdBy/updatedBy cocok.
+        // Admin pun tidak otomatis boleh menghapus data akun lain.
+        function canDeleteRelawan(item) {
+            if (!canEditRelawan(item)) return false;
+            return isOwnRelawanRecord(item) || isCreatedOrUpdatedByMe(item);
         }
 
         // Buka kunci field yang sempat dijadikan read-only (mode "Data Diri Saya")
@@ -2847,6 +3392,11 @@ service cloud.firestore {
         // Modal Konfirmasi Hapus
         function confirmDelete(id, nama) {
             if (isAdminDenied()) return;
+            const item = relawanData.find(row => row.id === id);
+            if (!canEditRelawan(item)) {
+                showToast('Anda hanya dapat menghapus data milik akun Anda sendiri atau data yang dibuat/diubah oleh akun Anda.', 'error');
+                return;
+            }
             deleteTargetId = id;
             document.getElementById('confirm-text').textContent = `Anda yakin ingin menghapus data relawan "${nama}"?`;
             const modal = document.getElementById('confirm-modal');
@@ -2871,6 +3421,11 @@ service cloud.firestore {
             modal.classList.remove('flex');
 
             if (!targetId) return;
+            const item = relawanData.find(row => row.id === targetId);
+            if (!canDeleteRelawan(item)) {
+                showToast('Anda hanya dapat menghapus data milik akun Anda sendiri atau data yang dibuat/diubah oleh akun Anda.', 'error');
+                return;
+            }
 
             btnConfirm.disabled = true;
             btnConfirm.textContent = 'Menghapus...';
@@ -3089,6 +3644,10 @@ service cloud.firestore {
                     ? (cleanWa.startsWith('62') ? '+' + cleanWa : '+62 ' + (cleanWa.startsWith('0') ? cleanWa.slice(1) : cleanWa))
                     : '-';
                 const badgeClass = roleBadgeClass(item.peran);
+                // Tombol Edit & Hapus hanya muncul untuk data akun sendiri atau yang
+                // createdBy / updatedBy-nya cocok dengan akun yang login.
+                const bisaEdit = canEditRelawan(item);
+                const bisaHapus = canDeleteRelawan(item);
                 const card = document.createElement('div');
                 card.className = 'bg-white rounded-2xl p-4 shadow-xs border border-slate-100 hover:border-blue-200 transition';
 
@@ -3109,14 +3668,14 @@ service cloud.firestore {
                                 class="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition">
                                 <i data-lucide="eye" class="w-4 h-4"></i>
                             </button>
-                            <button type="button" onclick="editRelawan('${item.id}')" title="Edit Data" aria-label="Edit data"
+                            ${bisaEdit ? `<button type="button" data-relawan-edit="${escapeHTML(item.id)}" title="Edit Data" aria-label="Edit data"
                                 class="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
-                            </button>
-                            <button type="button" onclick="confirmDelete('${item.id}', '${escapeHTML(item.nama || '').replace(/'/g, "\\'")}')" title="Hapus Data" aria-label="Hapus data"
+                            </button>` : ''}
+                            ${bisaHapus ? `<button type="button" data-relawan-hapus="${escapeHTML(item.id)}" title="Hapus Data" aria-label="Hapus data"
                                 class="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
+                            </button>` : ''}
                         </div>
                     </div>
                 `;
@@ -3129,7 +3688,21 @@ service cloud.firestore {
         // Event listener pencarian & filter
         document.getElementById('relawan-list-container').addEventListener('click', event => {
             const detailButton = event.target.closest('[data-relawan-detail]');
-            if (detailButton) showRelawanDetail(detailButton.getAttribute('data-relawan-detail'));
+            if (detailButton) {
+                showRelawanDetail(detailButton.getAttribute('data-relawan-detail'));
+                return;
+            }
+            const editButton = event.target.closest('[data-relawan-edit]');
+            if (editButton) {
+                editRelawan(editButton.getAttribute('data-relawan-edit'));
+                return;
+            }
+            const hapusButton = event.target.closest('[data-relawan-hapus]');
+            if (hapusButton) {
+                const id = hapusButton.getAttribute('data-relawan-hapus');
+                const item = relawanData.find(row => row.id === id);
+                if (item) confirmDelete(item.id, item.nama || '');
+            }
         });
         document.getElementById('search-input').addEventListener('input', renderRelawanList);
         const filterDapilEl = document.getElementById('filter-dapil');
